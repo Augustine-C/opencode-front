@@ -85,7 +85,7 @@
     "dev": "bun run --cwd packages/app dev",
     "build": "bun run --cwd packages/app build",
     "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck",
-    "test": "bun test --conditions=browser packages/frontend-plugin/test",
+    "test": "bun test --conditions=browser packages/frontend-plugin/test packages/app/test",
     "check": "bun run typecheck && bun run test",
     "desktop": "bun run scripts/desktop.ts"
   },

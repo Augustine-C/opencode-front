@@ -133,6 +133,7 @@ function createServerController(
 ) {
   const language = useLanguage()
   const settings = useSettings()
+  const servers = useServers()
   const connKey = ServerConnection.key(conn)
   const sdk = createServerSdkContext(conn, scope)
   const source = createData({
@@ -157,6 +158,11 @@ function createServerController(
     remove: (sessionID) => sdk.api.session.remove({ sessionID }),
   })
   const sync = createServerSyncContext(sdk, data)
+  createEffect(() => {
+    // Load saved ordering and closed preferences before merging the service inventory.
+    if (!servers.hydrated()) return
+    projects.discover(sync.data.project.map((project) => project.worktree))
+  })
   createPermissionAutoApprover({ sdk, data })
   const notification = createServerNotificationState({ sdk, data, key: connKey, coordinator: notificationCoordinator })
 

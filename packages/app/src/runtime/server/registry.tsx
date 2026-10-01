@@ -1,13 +1,13 @@
 import { createSimpleContext } from "@opencode/ui/context"
 import { batch, createMemo } from "solid-js"
-import { type SetStoreFunction, type Store } from "solid-js/store"
 import { Persist, persisted } from "@/runtime/persistence/storage"
-import { pathKey } from "@/workspaces/path-key"
 import { ServerScope } from "@/runtime/server/scope"
 import { ServerHttp, ServerHttpBase, ServerKey, serverState } from "./persistence"
+import { createServerProjects } from "./projects"
 import type { SshItem } from "@/servers/ssh/types"
 
-type ServerState = ReturnType<typeof serverState>["current"]["Type"]
+export { createServerProjects } from "./projects"
+
 // Retain closed paths until reopened so settings can exclude them from the server inventory.
 // The Home page independently limits the visible recently closed entries.
 export const RECENTLY_CLOSED_DISPLAY_LIMIT = 5
@@ -29,73 +29,6 @@ export function serverName(conn?: ServerConnection.Any, ignoreDisplayName = fals
 function isLocalHost(url: string) {
   const host = url.replace(/^https?:\/\//, "").split(":")[0]
   if (host === "localhost" || host === "127.0.0.1") return "local"
-}
-
-export function createServerProjects(input: {
-  scope: () => ServerScope
-  store: Store<ServerState>
-  setStore: SetStoreFunction<ServerState>
-}) {
-  const setStore = input.setStore
-  const current = () => input.store.projects[input.scope()] ?? []
-  const currentClosed = () => input.store.recentlyClosed?.[input.scope()] ?? []
-  const remove = (directory: string) => {
-    setStore(
-      "projects",
-      input.scope(),
-      current().filter((project) => project.worktree !== directory),
-    )
-  }
-  return {
-    list: current,
-    closed: currentClosed,
-    recentlyClosed: currentClosed,
-    remove,
-    open(directory: string) {
-      const scope = input.scope()
-      const key = pathKey(directory)
-      const closed = currentClosed()
-      if (closed.some((worktree) => pathKey(worktree) === key)) {
-        setStore(
-          "recentlyClosed",
-          scope,
-          closed.filter((worktree) => pathKey(worktree) !== key),
-        )
-      }
-      if (current().some((project) => project.worktree === directory)) return
-      setStore("projects", scope, [{ worktree: directory, expanded: true }, ...current()])
-    },
-    // User-initiated close: removes the project and records it in recently closed.
-    // Internal, non-user removals (e.g. sandbox/worktree normalization) should use remove().
-    close(directory: string) {
-      remove(directory)
-      const key = pathKey(directory)
-      const closed = [directory, ...currentClosed().filter((worktree) => pathKey(worktree) !== key)]
-      setStore("recentlyClosed", input.scope(), closed)
-    },
-    expand(directory: string) {
-      const index = current().findIndex((project) => project.worktree === directory)
-      if (index !== -1) setStore("projects", input.scope(), index, "expanded", true)
-    },
-    collapse(directory: string) {
-      const index = current().findIndex((project) => project.worktree === directory)
-      if (index !== -1) setStore("projects", input.scope(), index, "expanded", false)
-    },
-    move(directory: string, toIndex: number) {
-      const fromIndex = current().findIndex((project) => project.worktree === directory)
-      if (fromIndex === -1 || fromIndex === toIndex) return
-      const next = [...current()]
-      const [item] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, item)
-      setStore("projects", input.scope(), next)
-    },
-    last() {
-      return input.store.lastProject[input.scope()]
-    },
-    touch(directory: string) {
-      setStore("lastProject", input.scope(), directory)
-    },
-  }
 }
 
 export function resolveServerList(input: {
