@@ -13,7 +13,6 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
   const plugins = props.plugins
   const language = useLanguage()
   const [state, setState] = createStore({ error: "", importing: false })
-  const diagnostics = plugins.resolution
   let fileInput!: HTMLInputElement
   return (
     <div class="settings-tab-body settings-tab-body--sectioned" data-component="plugin-manager">
@@ -61,6 +60,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
             }}
           </For>
         </SettingsList>
+        <p class="text-12-regular text-v2-text-text-muted leading-5">{language.t("plugins.visibility")}</p>
       </div>
       <div class="settings-section">
         <h3 class="settings-section-title">{language.t("plugins.configuration")}</h3>
@@ -105,14 +105,6 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
               )}
             </For>
           </div>
-        </Show>
-        <Show when={diagnostics().suppressed.length || diagnostics().degraded.length}>
-          <p class="text-12-regular text-v2-text-text-muted">
-            {language.t("plugins.diagnostics", {
-              suppressed: diagnostics().suppressed.length,
-              degraded: diagnostics().degraded.length,
-            })}
-          </p>
         </Show>
         <Show when={state.error}>
           <p role="alert" class="text-12-regular text-v2-text-text-base break-words">

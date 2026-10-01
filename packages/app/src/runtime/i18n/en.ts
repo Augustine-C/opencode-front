@@ -25,7 +25,7 @@ export const dict = {
   "plugins.state.disabled": "Disabled",
   "plugins.state.loading": "Loading",
   "plugins.state.error": "Failed",
-  "plugins.diagnostics": "Current view: {{suppressed}} inactive or suppressed contributions; {{degraded}} moved to a parent slot.",
+  "plugins.visibility": "Enabled plugins appear on the pages they support.",
   "ssh.label": "SSH",
   "ssh.offline": "Not connected to {{host}}. Your draft is preserved; remote work may still be running.",
   "ssh.placeholder": "ssh user@example.com",
