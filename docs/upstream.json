@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/anomalyco/opencode",
+  "commit": "84c9be93a56304a108f1a22df0c5d62c26d5b6ca",
+  "version": "2.0.20",
+  "packages": ["app", "ui", "session-ui", "client", "schema", "protocol", "util"],
+  "note": "Frontend sources and protocol/client schemas only; no server, core, CLI, or managed sidecar."
+}

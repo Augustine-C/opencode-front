@@ -1,0 +1,13 @@
+{
+  "name": "@opencode/plugin-browser",
+  "version": "2.0.20",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./rpc": "./src/rpc.ts"
+  },
+  "dependencies": {
+    "@opencode/schema": "workspace:*",
+    "effect": "catalog:"
+  }
+}
