@@ -1,0 +1,28 @@
+OpenCode Front — upstream attribution
+
+OpenCode Front is a frontend-only port and independently maintained derivative
+of OpenCode v2:
+
+  Upstream project: OpenCode
+  Repository: https://github.com/anomalyco/opencode
+  Source version: 2.0.20
+  Source commit: 84c9be93a56304a108f1a22df0c5d62c26d5b6ca
+  Source snapshot:
+    https://github.com/anomalyco/opencode/tree/84c9be93a56304a108f1a22df0c5d62c26d5b6ca
+
+The upstream copyright notice is retained unchanged:
+
+  Copyright (c) 2025 opencode
+
+The port includes upstream frontend rendering, shared client/protocol/schema
+code, utilities, assets, and dependency patches. It does not include the
+OpenCode backend, core, CLI, or managed sidecar. Package-level provenance is
+recorded in docs/upstream.json in the source repository.
+
+Changes made by this project include the browser plugin SDK and host, the thin
+Electron desktop shell, service project discovery, and optional project tab
+grouping. These additions and modifications are also released under the MIT
+License. See LICENSE for the full license text.
+
+Third-party dependencies and assets retain their respective licenses and
+copyright notices. This notice supplements and does not replace those notices.
