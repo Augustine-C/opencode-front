@@ -44,6 +44,13 @@ export const clientSettings: Entry<SettingsRootTab>[] = [
   },
   {
     tab: "general",
+    label: "settings.appearance.row.tabGroups.title",
+    description: "settings.appearance.row.tabGroups.description",
+    target: "settings-tab-groups",
+    keywords: "group project tabs vertical horizontal",
+  },
+  {
+    tab: "general",
     label: "settings.workspaces.default.title",
     target: "settings-workspace-destination",
     description: "settings.workspaces.default.description",

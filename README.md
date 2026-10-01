@@ -34,6 +34,10 @@ OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 
 Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater. This is a runnable desktop shell; signed installers and platform packaging are not included yet.
 
+## Organize session tabs
+
+In **Settings → General**, enable **Group tabs by project** beside the **Tabs** layout selector. The preference applies to both web and desktop and defaults to off. Vertical groups have sticky project headings and compact session rows; horizontal groups have compact project labels, separators, and readable tab widths. Drafts and worktree sessions join their project, and different servers remain separate. Drag tabs within a project to reorder them; keyboard cycling and numbered shortcuts follow the displayed order.
+
 ## Customize the interface
 
 Open **Frontend plugins** on the connection screen or at the bottom of the application. It is also available in the command palette. Enable installed plugins or import a frontend/TUI JSON or JSONC configuration.

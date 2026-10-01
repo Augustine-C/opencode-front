@@ -348,6 +348,18 @@ export const SettingsGeneral: Component = () => {
       <SettingsList>
         <LanguageSetting />
         <TabLayoutSetting />
+        <SettingsRow
+          title={language.t("settings.appearance.row.tabGroups.title")}
+          description={language.t("settings.appearance.row.tabGroups.description")}
+        >
+          <div data-action="settings-tab-groups">
+            <Switch
+              aria-label={language.t("settings.appearance.row.tabGroups.title")}
+              checked={settings.appearance.groupTabsByProject()}
+              onChange={(checked) => settings.appearance.setGroupTabsByProject(checked)}
+            />
+          </div>
+        </SettingsRow>
 
         <WorkspaceDestinationSetting />
         <AutoApprovePermissionsSetting />

@@ -101,6 +101,7 @@ const appearanceSchema = Persistence.struct({
   sans: Schema.String,
   terminal: Schema.String,
   tabLayout: Schema.Literals(["horizontal", "vertical"]),
+  groupTabsByProject: Persistence.fallback(Schema.Boolean, () => false),
 })
 
 const permissionsSchema = Persistence.struct({
@@ -249,7 +250,7 @@ export const defaultSettings: Settings = {
     followUpBehavior: "steer",
   },
   sessionSummary: { projectExpanded: true, serverExpanded: true },
-  appearance: { fontSize: 14, mono: "", sans: "", terminal: "", tabLayout: "horizontal" },
+  appearance: { fontSize: 14, mono: "", sans: "", terminal: "", tabLayout: "horizontal", groupTabsByProject: false },
   keybinds: {},
   permissions: { autoApprove: false },
   workspaces: { defaultDestination: "last-used", lastUsed: {} },
@@ -388,6 +389,10 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         terminalFont: withFallback(() => store.appearance?.terminal, defaultSettings.appearance.terminal),
         setTerminalFont(value: string) {
           setStore("appearance", "terminal", value.trim() ? value : "")
+        },
+        groupTabsByProject: withFallback(() => store.appearance?.groupTabsByProject, false),
+        setGroupTabsByProject(value: boolean) {
+          setStore("appearance", "groupTabsByProject", value)
         },
         tabLayout: withFallback(() => store.appearance?.tabLayout, defaultSettings.appearance.tabLayout),
         setTabLayout(value: TabLayout) {
