@@ -494,9 +494,9 @@ export function SessionSidePanel(props: {
                             )}
                           </For>
                           <div class="h-full shrink-0 sticky end-0 z-10 flex items-center justify-center bg-v2-background-bg-base">
-                            {/* With only files to add, the plus stays a one-click "Open file" button. */}
+                            {/* Plugin panels share the native Add tab menu. */}
                             <Show
-                              when={props.browser.available()}
+                              when={props.browser.available() || plugins.host.state.availablePanels.length > 0}
                               fallback={
                                 <Tooltip
                                   value={
@@ -552,20 +552,32 @@ export function SessionSidePanel(props: {
                                           <span>{language.t("command.file.open")}</span>
                                         </div>
                                       </Menu.Item>
-                                      <Menu.Item
-                                        class="!gap-6"
-                                        onSelect={props.browser.open}
-                                        shortcut={
-                                          <Show when={openBrowserKeybind().length > 0}>
-                                            <Keybind keys={openBrowserKeybind()} variant="neutral" />
-                                          </Show>
-                                        }
-                                      >
-                                        <div class="flex items-center gap-2">
-                                          <Icon name="globe" size="small" />
-                                          <span>{language.t("session.tab.browser")}</span>
-                                        </div>
-                                      </Menu.Item>
+                                      <Show when={props.browser.available()}>
+                                        <Menu.Item
+                                          class="!gap-6"
+                                          onSelect={props.browser.open}
+                                          shortcut={
+                                            <Show when={openBrowserKeybind().length > 0}>
+                                              <Keybind keys={openBrowserKeybind()} variant="neutral" />
+                                            </Show>
+                                          }
+                                        >
+                                          <div class="flex items-center gap-2">
+                                            <Icon name="globe" size="small" />
+                                            <span>{language.t("session.tab.browser")}</span>
+                                          </div>
+                                        </Menu.Item>
+                                      </Show>
+                                      <For each={plugins.host.state.availablePanels}>
+                                        {(panel) => (
+                                          <Menu.Item onSelect={() => panel.open()}>
+                                            <div class="flex items-center gap-2">
+                                              <Icon name="extensions" size="small" />
+                                              <span>{panel.title}</span>
+                                            </div>
+                                          </Menu.Item>
+                                        )}
+                                      </For>
                                     </Menu.Content>
                                   </Menu.Portal>
                                 </Menu>
@@ -580,6 +592,30 @@ export function SessionSidePanel(props: {
                           onPointerDown={(event) => event.stopPropagation()}
                           onClick={(event) => event.stopPropagation()}
                         >
+                          <Show when={selectedPlugin()}>
+                            {(panel) => (
+                              <Tooltip
+                                value={language.t(
+                                  panel().presentation === "fullscreen"
+                                    ? "plugins.panel.restore"
+                                    : "plugins.panel.maximize",
+                                )}
+                                placement="bottom"
+                              >
+                                <IconButton
+                                  icon={panel().presentation === "fullscreen" ? "collapse" : "expand"}
+                                  variant="ghost-muted"
+                                  size="normal"
+                                  aria-label={language.t(
+                                    panel().presentation === "fullscreen"
+                                      ? "plugins.panel.restore"
+                                      : "plugins.panel.maximize",
+                                  )}
+                                  onClick={() => plugins.host.togglePanel(panel())}
+                                />
+                              </Tooltip>
+                            )}
+                          </Show>
                           <Show when={!selectedPlugin()}>
                             <OpenInAppButton directory={projectDirectory} />
                           </Show>

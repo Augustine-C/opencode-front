@@ -229,6 +229,11 @@ function SessionScreenContent(props: { session: SessionModel; browser: ReturnTyp
         <SessionMobileViewTabs
           current={mobileView()}
           pluginTitle={mobilePlugin()?.title}
+          pluginEntries={plugins.host.state.availablePanels.map((panel) => ({
+            key: pluginPanelTab({ plugin: panel.plugin, name: panel.name }),
+            title: panel.title,
+            open: panel.open,
+          }))}
           pluginTabs={pluginPanels().map((panel) => ({ key: pluginPanelTab(panel), title: panel.title }))}
           onPluginSelect={(key) => {
             const panel = pluginPanels().find((panel) => pluginPanelTab(panel) === key)

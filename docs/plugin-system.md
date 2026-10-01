@@ -21,6 +21,7 @@ export default define({
       append: "prompt.footer.status",
       render: (input) => <span>{input.sessionID ?? "New session"}</span>,
     })
+    context.ui.panel.register({ name: "queue", title: "Queue" })
     context.ui.command({
       id: "details",
       title: "Open queue details",
@@ -72,6 +73,7 @@ Slots preserve the host layout: wrapping or replacing one boundary does not gran
 - `data.listen(handler)` follows service changes and receives the existing service event stream. Its subscription is disposed automatically with the plugin. API calls and event payloads remain upstream v2 types.
 - `storage.get/set` persist JSON under a plugin-specific localStorage namespace. Browser profiles and desktop renderer storage are independent. Namespace isolation prevents accidental collisions; it is not a security sandbox or cross-client synchronization.
 - `ui.command` contributes a namespaced command to the existing command palette.
+- `ui.panel.register({ name, title, presentation? })` adds a panel to the native **+ Add tab** menu and mobile **More** menu without opening it. It returns a cleanup function, and registrations are removed on disable, reload, failed setup, or host disposal. Panel names must be unique within one plugin. Closing an open tab leaves its menu entry available for reopening.
 - `ui.panel.open(name, { presentation, title })` selects a plugin panel for the current session and returns false without an active session. `current/close` operate on that plugin's panel only.
 - The host owns setup's Solid root, slot registrations, commands, and event subscriptions. `setup` may return a cleanup function or a promise resolving to one. Cleanup runs on disable, replacement, or host disposal. A failed setup rolls back contributions and is shown in the manager. Individual render failures are contained by a Solid error boundary.
 - Use `context.signal` for fetch cancellation and return cleanup for timers, observers, and external listeners. An asynchronous setup completing after disable cannot register a stale claim or command; its returned cleanup still runs. Reactive computations created after an `await` need an explicitly owned Solid root, as with ordinary Solid code.
@@ -101,9 +103,9 @@ The endpoint must allow the frontend origin through CORS and return `{ "label": 
 
 ## Example plugin panel
 
-Enable **Example panel** in **Settings → Frontend plugins**, return to an existing session, then click **Example panel** below the message box. Alternatively, open the command palette with **⌘K** or **⌘⇧P** on macOS (**Ctrl+K** or **Ctrl+Shift+P** elsewhere) and choose **Open example plugin panel**. The demo requires an active session.
+Enable **Example panel** in **Settings → Frontend plugins**, return to an existing session, then select **+ Add tab → Project overview** in the pane containing Review and Context. If that pane is hidden, open it using the existing Review control. On mobile, select **More → Project overview**. Alternatively, open the command palette with **⌘K** or **⌘⇧P** on macOS (**Ctrl+K** or **Ctrl+Shift+P** elsewhere) and choose **Open example plugin panel**. The demo requires an active session.
 
-The panel shows sample build status, an interactive checklist with progress, notes, and the current session ID. It opens in the same tab strip as Review and Context. **Expand panel** maximizes the workspace pane; **Return to side panel** restores the chat alongside it. Wide panels place the checklist and notes side by side. **Reset example** resets the checklist and notes. State lasts until the plugin is disabled or the page is reloaded. The demo performs no network requests or backend changes.
+The panel shows sample build status, an interactive checklist with progress, notes, and the current session ID. It opens in the same tab strip as Review and Context. The pane toolbar’s maximize icon expands the workspace pane; its restore icon brings the chat back alongside it. Wide panels place the checklist and notes side by side. **Reset example** resets the checklist and notes. State lasts until the plugin is disabled or the page is reloaded. The demo performs no network requests or backend changes.
 
 The implementation is in `packages/app/src/plugins/builtin/panel-demo.tsx`. Import `examples/panel-demo.jsonc` for an explicit configuration:
 
@@ -123,4 +125,4 @@ The implementation is in `packages/app/src/plugins/builtin/panel-demo.tsx`. Impo
 }
 ```
 
-`title` sets the panel heading, `presentation` accepts `panel` or `fullscreen`, and `showLauncher: false` hides the message-box shortcut while leaving the command-palette action available. Omitted options use the translated heading, a side panel, and a visible launcher. Configuration import replaces the enabled-plugin configuration, so include other plugins you want to retain.
+`title` sets the panel heading, `presentation` accepts `panel` or `fullscreen`, and `showLauncher: false` hides the native menu entry while leaving the command-palette action available. Omitted options use the translated heading, a side panel, and a native menu entry. Configuration import replaces the enabled-plugin configuration, so include other plugins you want to retain.

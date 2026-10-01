@@ -26,6 +26,7 @@ export function SessionMobileViewTabs(props: {
   current: "session" | "changes" | "files" | "usage" | "terminal" | "plugin"
   onSelect: (view: "session" | "changes" | "files" | "usage" | "terminal" | "plugin") => void
   pluginTitle?: string
+  pluginEntries?: { key: string; title: string; open: () => boolean }[]
   pluginTabs?: { key: string; title: string }[]
   onPluginSelect?: (key: string) => void
   details?: (close: () => void) => JSX.Element
@@ -109,6 +110,13 @@ export function SessionMobileViewTabs(props: {
             <Menu.Item onSelect={() => props.onSelect("usage")}>{language.t("session.tab.usage")}</Menu.Item>
             <For each={props.pluginTabs ?? []}>
               {(panel) => <Menu.Item onSelect={() => props.onPluginSelect?.(panel.key)}>{panel.title}</Menu.Item>}
+            </For>
+            <For
+              each={(props.pluginEntries ?? []).filter(
+                (entry) => !props.pluginTabs?.some((tab) => tab.key === entry.key),
+              )}
+            >
+              {(panel) => <Menu.Item onSelect={() => panel.open()}>{panel.title}</Menu.Item>}
             </For>
             <Show when={props.details}>
               <Menu.Item onSelect={() => setStore({ pending: true, menu: false })}>

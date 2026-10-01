@@ -276,3 +276,86 @@ test("host disposal aborts pending setup and prevents new generations", async ()
   expect(host.state.statuses[0].state).toBe("disabled")
   expect(host.state.claims).toHaveLength(0)
 })
+
+test("panel menu registrations open on demand, reopen after close, and clean up on reload", async () => {
+  let sessionID: string | undefined
+  let stop!: () => void | Promise<void>
+  const host = createPluginHost({ context: { ...context, sessionID: () => sessionID } })
+  host.register(
+    plugin("menu", (ctx) => {
+      stop = ctx.ui.panel.register({ name: "overview", title: "Overview", presentation: "fullscreen" })
+    }),
+  )
+  try {
+    await host.enable("menu")
+    expect(host.state.panels).toHaveLength(0)
+    const entry = host.state.availablePanels[0]
+    const firstStop = stop
+    expect(entry.open()).toBe(false)
+    sessionID = "one"
+    expect(entry.open()).toBe(true)
+    expect(host.state.panel).toMatchObject({
+      plugin: "menu",
+      name: "overview",
+      title: "Overview",
+      sessionID: "one",
+      presentation: "fullscreen",
+    })
+    host.closePanel()
+    expect(host.state.availablePanels).toHaveLength(1)
+    expect(entry.open()).toBe(true)
+    await host.enable("menu")
+    expect(host.state.availablePanels).toHaveLength(1)
+    expect(host.state.panels).toHaveLength(0)
+    expect(entry.open()).toBe(false)
+    await firstStop()
+    expect(host.state.availablePanels).toHaveLength(1)
+    await stop()
+    expect(host.state.availablePanels).toHaveLength(0)
+    await host.enable("menu")
+    await host.disable("menu")
+    expect(host.state.availablePanels).toHaveLength(0)
+  } finally {
+    await host.dispose()
+  }
+})
+
+test("panel registrations isolate owners and roll back duplicate or failed setup", async () => {
+  const host = createPluginHost({ context })
+  host.register(
+    plugin("first", (ctx) => {
+      ctx.ui.panel.register({ name: "overview", title: "First" })
+    }),
+  )
+  host.register(
+    plugin("second", (ctx) => {
+      ctx.ui.panel.register({ name: "overview", title: "Second" })
+    }),
+  )
+  host.register(
+    plugin("duplicate", (ctx) => {
+      ctx.ui.panel.register({ name: "overview", title: "One" })
+      ctx.ui.panel.register({ name: "overview", title: "Two" })
+    }),
+  )
+  host.register(
+    plugin("broken-panel", (ctx) => {
+      ctx.ui.panel.register({ name: "overview", title: "Broken" })
+      throw new Error("setup failed")
+    }),
+  )
+  try {
+    await host.enable("first")
+    await host.enable("second")
+    await host.enable("duplicate")
+    await host.enable("broken-panel")
+    expect(host.state.availablePanels.map((panel) => panel.plugin)).toEqual(["first", "second"])
+    expect(host.state.statuses.find((status) => status.id === "duplicate")?.state).toBe("error")
+    expect(host.state.statuses.find((status) => status.id === "broken-panel")?.state).toBe("error")
+    await host.disable("first")
+    expect(host.state.availablePanels.map((panel) => panel.title)).toEqual(["Second"])
+  } finally {
+    await host.dispose()
+  }
+  expect(host.state.availablePanels).toHaveLength(0)
+})

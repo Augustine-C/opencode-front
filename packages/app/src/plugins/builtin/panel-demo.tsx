@@ -1,5 +1,5 @@
 import { define } from "@opencode/frontend-plugin"
-import { For, Show } from "solid-js"
+import { For } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Button } from "@opencode/ui/button"
 import { Checkbox } from "@opencode/ui/checkbox"
@@ -27,16 +27,7 @@ export function panelDemo(language: ReturnType<typeof useLanguage>) {
 
       context.ui.command({ id: "open", title: language.t("plugins.demo.open"), run: open })
       if (context.options.showLauncher !== false) {
-        context.ui.slot({
-          append: "prompt.footer.status",
-          render: (input) => (
-            <Show when={input.sessionID}>
-              <Button variant="ghost-muted" size="small" icon="extensions" onClick={open}>
-                {language.t("plugins.demo.launcher")}
-              </Button>
-            </Show>
-          ),
-        })
+        context.ui.panel.register({ name: "panel-demo", title, presentation })
       }
       context.ui.slot({
         append: "session.panel",
@@ -99,9 +90,6 @@ export function panelDemo(language: ReturnType<typeof useLanguage>) {
                 </section>
               </div>
               <div class="panel-demo-actions">
-                <Button size="small" variant="outline" onClick={input.toggleFullscreen}>
-                  {language.t(input.presentation === "fullscreen" ? "plugins.demo.collapse" : "plugins.demo.expand")}
-                </Button>
                 <Button
                   size="small"
                   variant="ghost-muted"

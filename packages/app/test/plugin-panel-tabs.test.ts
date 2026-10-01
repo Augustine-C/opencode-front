@@ -131,3 +131,28 @@ test("panels are isolated by owner and session and removed on disable", async ()
     f.dispose()
   }
 })
+
+test("native menu entries remain discoverable after closing their session tab", async () => {
+  const f = await ready()
+  try {
+    f.contexts.first.ui.panel.register({ name: "overview", title: "Project overview" })
+    const entry = f.host.state.availablePanels[0]
+    expect(f.tabs.all()).toEqual([])
+    expect(entry.open()).toBe(true)
+    const key = pluginPanelTab(entry)
+    expect(f.model.activeTab()).toBe(key)
+    expect(f.state.activation).toBe(1)
+    f.tabs.close(key)
+    expect(f.host.state.panels).toHaveLength(0)
+    expect(f.host.state.availablePanels).toHaveLength(1)
+    entry.open()
+    expect(f.tabs.all()).toEqual([key])
+    expect(f.state.activation).toBe(2)
+    await f.host.disable("first")
+    expect(f.tabs.all()).toEqual([])
+    expect(f.host.state.availablePanels).toHaveLength(0)
+  } finally {
+    await f.host.dispose()
+    f.dispose()
+  }
+})

@@ -1,6 +1,6 @@
 import { batch, createRoot, getOwner, runWithOwner, type Owner } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { Command, Context, Definition, Placement, SlotClaim, SlotPath } from "./index"
+import type { Command, Context, Definition, Panel, Placement, SlotClaim, SlotPath } from "./index"
 import type { Claim } from "./structure"
 
 export type Render = SlotClaim["render"]
@@ -26,6 +26,7 @@ export function createPluginHost(input: {
     statuses: [] as PluginStatus[],
     panel: undefined as PluginPanel | undefined,
     panels: [] as PluginPanel[],
+    availablePanels: [] as (Panel & { plugin: string; open: () => boolean })[],
     panelRequest: 0,
   })
   const definitions = new Map<string, Definition>()
@@ -46,6 +47,7 @@ export function createPluginHost(input: {
   function remove(id: string) {
     if (state.panel?.plugin === id) setState("panel", undefined)
     setState("panels", (panels) => panels.filter((panel) => panel.plugin !== id))
+    setState("availablePanels", (panels) => panels.filter((panel) => panel.plugin !== id))
     setState("claims", (claims) => claims.filter((claim) => claim.plugin !== id))
     setState("commands", (commands) => commands.filter((command) => command.plugin !== id))
   }
@@ -127,6 +129,19 @@ export function createPluginHost(input: {
       },
       ui: {
         panel: {
+          register(panel) {
+            if (!alive()) return () => {}
+            if (state.availablePanels.some((entry) => entry.plugin === id && entry.name === panel.name)) {
+              throw new Error(`Duplicate panel: ${id}:${panel.name}`)
+            }
+            const open = () => context.ui.panel.open(panel.name, panel)
+            setState("availablePanels", state.availablePanels.length, {
+              ...panel,
+              plugin: id,
+              open,
+            })
+            return track(() => setState("availablePanels", (panels) => panels.filter((entry) => entry.open !== open)))
+          },
           open(name, options) {
             const sessionID = input.context.sessionID()
             if (!alive() || !sessionID) return false

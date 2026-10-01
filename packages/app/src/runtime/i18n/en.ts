@@ -4,6 +4,8 @@ export const dict = {
   ...DESKTOP_NATIVE_ENGLISH,
   "plugins.connectionStatus": "Connection status",
   "plugins.thirdPartyStatus": "Third-party status",
+  "plugins.panel.maximize": "Maximize panel",
+  "plugins.panel.restore": "Restore panel",
   "plugins.demo.name": "Example panel",
   "plugins.demo.title": "Project overview",
   "plugins.demo.open": "Open example plugin panel",
@@ -35,7 +37,8 @@ export const dict = {
   "plugins.import.button": "Import configuration",
   "plugins.description": "Customize this interface with installed browser plugins.",
   "plugins.import": "Import frontend or TUI plugin configuration (JSON or JSONC)",
-  "plugins.trust": "Installed plugins run as trusted application code and can access the connected service. Only import adapters you trust.",
+  "plugins.trust":
+    "Installed plugins run as trusted application code and can access the connected service. Only import adapters you trust.",
   "plugins.unsupported": "No installed browser adapter for:",
   "plugins.connected": "Connected",
   "plugins.offline": "Offline",

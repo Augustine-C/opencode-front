@@ -30,6 +30,7 @@ export type SlotClaim<P extends SlotPath = SlotPath> = P extends SlotPath
     }[Placement]
   : never
 
+export type Panel = { name: string; title: string; presentation?: "panel" | "fullscreen" }
 export type Command = { id: string; title: string; run: () => void | Promise<void> }
 export type Context = {
   options: Readonly<Record<string, unknown>>
@@ -45,6 +46,8 @@ export type Context = {
     slot<P extends SlotPath>(claim: SlotClaim<P>): Cleanup
     command(command: Command): Cleanup
     panel: {
+      // Adds an entry to the native Add tab menu without opening a session panel.
+      register(panel: Panel): Cleanup
       open(name: string, options?: { presentation?: "panel" | "fullscreen"; title?: string }): boolean
       close(): void
       current(): { name: string; sessionID: string } | undefined

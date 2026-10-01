@@ -48,7 +48,7 @@ In **Settings → General**, enable **Group tabs by project** beside the **Tabs*
 
 Open **Settings → Frontend plugins** to enable installed plugins or import a frontend/TUI JSON or JSONC configuration. The command palette opens the same settings page. Before connecting a service, the small settings icon on the connection screen opens the plugin controls.
 
-For a panel preview, enable **Example panel**, open an existing session, and click **Example panel** below the message box. It opens as a tab alongside Review and Context, with sample status cards, an interactive checklist, notes, and a maximize toggle. No external endpoint is needed. Optional configuration is in [examples/panel-demo.jsonc](examples/panel-demo.jsonc).
+For a panel preview, enable **Example panel**, open an existing session, and select **+ Add tab → Project overview** beside the Review / Context tabs (or **More → Project overview** on mobile). It opens as a tab alongside Review and Context, with sample status cards, an interactive checklist, notes, and the pane’s standard maximize control. No external endpoint is needed. Optional configuration is in [examples/panel-demo.jsonc](examples/panel-demo.jsonc).
 
 The plugin SDK provides typed named slots, commands, session panels, the current service client, event subscriptions, persistent plugin storage, setup/cleanup, and render error isolation. A connection status plugin is enabled by default. An optional third-party status plugin demonstrates external status at several positions and a details panel.
 
