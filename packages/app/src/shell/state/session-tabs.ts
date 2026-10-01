@@ -61,6 +61,13 @@ export function openSessionTab(current: SessionTabState, tab: string): SessionTa
     }
   }
 
+  if (tab.startsWith("plugin-panel:")) {
+    return {
+      tabs: { all: current.tabs.all.includes(tab) ? current.tabs.all : [...current.tabs.all, tab], active: tab },
+      preview,
+    }
+  }
+
   const previewIndex = preview ? current.tabs.all.indexOf(preview) : -1
   const existingIndex = current.tabs.all.indexOf(tab)
   if (existingIndex !== -1) {

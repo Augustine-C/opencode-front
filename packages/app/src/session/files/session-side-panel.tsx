@@ -16,6 +16,9 @@ import { Tooltip } from "@opencode/ui/tooltip"
 import { Menu } from "@opencode/ui/menu"
 import type { FileDiffInfo } from "@opencode/client/promise"
 
+import { usePlugins } from "@/plugins/context"
+import { PluginPanelContent } from "@/plugins/panel"
+import { pluginPanelTab, isPluginPanelTab } from "@/plugins/panel-model"
 import FileTree from "@/session/files/file-tree"
 import { normalizeFileTreeV2Path } from "@/session/files/file-tree-v2-model"
 import { SessionContextUsage } from "@/session/timeline/session-context-usage"
@@ -78,12 +81,19 @@ export function SessionSidePanel(props: {
   btwPanel: () => JSX.Element
 }) {
   const layout = useLayout()
+  const plugins = usePlugins()
   const settings = useSettings()
   const file = useFile()
   const language = useLanguage()
   const command = useCommand()
   const sdk = useWorkspaceLocation()
   const { sessionKey, tabs, view, params } = useSessionLayout()
+  const pluginPanels = createMemo(() => plugins.host.state.panels.filter((panel) => panel.sessionID === params.id))
+  const closePlugin = (tab: string) => {
+    const panel = pluginPanels().find((panel) => pluginPanelTab(panel) === tab)
+    if (panel) plugins.host.dismissPanel(panel)
+    tabs().close(tab)
+  }
   const projectDirectory = createMemo(() => sdk().directory)
 
   const isDesktop = createMediaQuery("(min-width: 768px)")
@@ -177,12 +187,14 @@ export function SessionSidePanel(props: {
     hasReview: () => props.canReview,
     fileBrowser: () => true,
     browser: props.browser.attached,
+    pluginTabs: () => pluginPanels().map(pluginPanelTab),
   })
   const contextOpen = tabState.contextOpen
   const openFileOpen = tabState.openFileOpen
   const panelTabs = tabState.panelTabs
   const openedTabs = tabState.openedTabs
   const activeTab = tabState.activeTab
+  const selectedPlugin = createMemo(() => pluginPanels().find((panel) => pluginPanelTab(panel) === activeTab()))
   const activeFileTab = tabState.activeFileTab
 
   const fileTreeTab = () => layout.fileTree.tab()
@@ -214,6 +226,8 @@ export function SessionSidePanel(props: {
     if (path) void file.load(path)
     openReviewPanel()
     tabs().setActive(next)
+    const panel = pluginPanels().find((panel) => pluginPanelTab(panel) === next)
+    if (panel) plugins.host.selectPanel(panel)
   }
   const fileTab = createMemo(() => {
     const active = activeTab()
@@ -330,7 +344,9 @@ export function SessionSidePanel(props: {
                           }}
                         >
                           <div class="session-review-v2-sidebar-toggle-slot h-full shrink-0 sticky start-0 z-10 flex items-center justify-center bg-v2-background-bg-base">
-                            {props.reviewSidebarToggle(activeTab() === SESSION_OPEN_FILE_TAB)}
+                            <Show when={!isPluginPanelTab(activeTab())}>
+                              {props.reviewSidebarToggle(activeTab() === SESSION_OPEN_FILE_TAB)}
+                            </Show>
                           </div>
                           <Show when={reviewTab() && props.canReview}>
                             <Tabs.Trigger
@@ -387,6 +403,18 @@ export function SessionSidePanel(props: {
                                   />
                                 }
                               >
+                                <Match when={isPluginPanelTab(tab)}>
+                                  <Show when={pluginPanels().find((panel) => pluginPanelTab(panel) === tab)}>
+                                    {(panel) => (
+                                      <SortableTab tab={tab} index={tabs().all().indexOf(tab)} onTabClose={closePlugin}>
+                                        <div class="flex items-center gap-1.5">
+                                          <Icon name="extensions" size="small" />
+                                          <span class="max-w-40 truncate">{panel().title}</span>
+                                        </div>
+                                      </SortableTab>
+                                    )}
+                                  </Show>
+                                </Match>
                                 <Match when={tab === SESSION_BTW_TAB}>
                                   <SortableTab tab={tab} index={tabs().all().indexOf(tab)} onTabClose={tabs().close}>
                                     <div class="flex items-center gap-1.5">
@@ -552,7 +580,9 @@ export function SessionSidePanel(props: {
                           onPointerDown={(event) => event.stopPropagation()}
                           onClick={(event) => event.stopPropagation()}
                         >
-                          <OpenInAppButton directory={projectDirectory} />
+                          <Show when={!selectedPlugin()}>
+                            <OpenInAppButton directory={projectDirectory} />
+                          </Show>
                           <Show when={reviewVisible()}>
                             <div class="size-7 shrink-0" aria-hidden />
                           </Show>
@@ -583,6 +613,17 @@ export function SessionSidePanel(props: {
                             </div>
                           </div>
                         </Tabs.Content>
+                      </Show>
+
+                      <Show when={selectedPlugin()} keyed>
+                        {(panel) => (
+                          <Tabs.Content
+                            value={pluginPanelTab(panel)}
+                            class="flex h-full min-h-0 flex-col overflow-hidden"
+                          >
+                            <PluginPanelContent panel={panel} />
+                          </Tabs.Content>
+                        )}
                       </Show>
 
                       <Show when={activeTab() === "context"}>

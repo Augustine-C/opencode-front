@@ -1,4 +1,8 @@
-import { PluginPanel } from "@/plugins/panel"
+import { PluginPanelContent } from "@/plugins/panel"
+import { usePlugins } from "@/plugins/context"
+import { createPluginPanelTabs, pluginPanelTab } from "@/plugins/panel-model"
+import { Button } from "@opencode/ui/button"
+import { useLanguage } from "@/runtime/i18n/language"
 import { PluginSlot } from "@/plugins/slot"
 import {
   ErrorBoundary,
@@ -63,6 +67,7 @@ export function SessionScreen(props: { session: SessionModel }) {
 
 function SessionScreenContent(props: { session: SessionModel; browser: ReturnType<typeof createSessionBrowser> }) {
   const session = props.session
+  const language = useLanguage()
   const browser = props.browser
   const server = useServer()
   const detailsProject = createMemo(() => {
@@ -170,6 +175,36 @@ function SessionScreenContent(props: { session: SessionModel; browser: ReturnTyp
     return key
   })
   const review = createSessionReview({ session, screen, deferRender: () => store.deferRender })
+  const plugins = usePlugins()
+  const pluginPanels = createMemo(() =>
+    plugins.host.state.panels.filter((panel) => panel.sessionID === session.identity.params.id),
+  )
+  const mobilePlugin = createMemo(() => {
+    const requested = plugins.host.state.panel
+    return (
+      pluginPanels().find((panel) => requested && panel.plugin === requested.plugin && panel.name === requested.name) ??
+      pluginPanels()[0]
+    )
+  })
+  createPluginPanelTabs({
+    sessionID: () => session.identity.params.id,
+    requested: () => plugins.host.state.panel,
+    request: () => plugins.host.state.panelRequest,
+    panels: () => plugins.host.state.panels,
+    tabs: session.layout.tabs,
+    dismiss: plugins.host.dismissPanel,
+    activate: () => {
+      session.layout.view().reviewPanel.open()
+      if (!isDesktop()) {
+        session.layout.view().terminal.close()
+        review.mobile.setTab("plugin")
+      }
+    },
+  })
+  createEffect(() => {
+    if (review.mobile.tab() === "plugin" && !mobilePlugin()) review.mobile.setTab("session")
+  })
+
   const mobileView = createMemo(() => (screen.terminal.open() ? "terminal" : review.mobile.tab()))
   const conversationVisible = createMemo(() => isDesktop() || mobileView() === "session")
   createEffect(() => {
@@ -193,6 +228,16 @@ function SessionScreenContent(props: { session: SessionModel; browser: ReturnTyp
       {(_key) => (
         <SessionMobileViewTabs
           current={mobileView()}
+          pluginTitle={mobilePlugin()?.title}
+          pluginTabs={pluginPanels().map((panel) => ({ key: pluginPanelTab(panel), title: panel.title }))}
+          onPluginSelect={(key) => {
+            const panel = pluginPanels().find((panel) => pluginPanelTab(panel) === key)
+            if (!panel) return
+            plugins.host.selectPanel(panel)
+            session.layout.tabs().setActive(key)
+            review.mobile.setTab("plugin")
+            session.layout.view().terminal.close()
+          }}
           onDetailsOpenChange={review.details.setOpen}
           details={
             !session.data.isChild() && detailsProject()
@@ -304,6 +349,21 @@ function SessionScreenContent(props: { session: SessionModel; browser: ReturnTyp
           <Match when={!isDesktop() && mobileView() === "terminal"}>
             <></>
           </Match>
+          <Match when={!isDesktop() && mobileView() === "plugin"}>
+            <Show when={mobilePlugin()} keyed>
+              {(panel) => (
+                <div class="flex h-full min-h-0 flex-col">
+                  <div class="flex shrink-0 items-center justify-between gap-3 border-b border-v2-border-border-muted px-4 py-2">
+                    <span class="min-w-0 truncate text-13-medium">{panel.title}</span>
+                    <Button variant="ghost-muted" size="small" onClick={() => plugins.host.dismissPanel(panel)}>
+                      {language.t("common.closeTab")}
+                    </Button>
+                  </div>
+                  <PluginPanelContent panel={panel} />
+                </div>
+              )}
+            </Show>
+          </Match>
           <Match when={!isDesktop() && mobileView() === "usage"}>
             <SessionContextTab />
           </Match>
@@ -337,7 +397,6 @@ function SessionScreenContent(props: { session: SessionModel; browser: ReturnTyp
 
   return (
     <>
-      <PluginPanel sessionID={session.identity.params.id ?? ""} />
       <PluginSlot path="session.header" input={{ sessionID: session.identity.params.id ?? "" }} />
       <div class="flex-1 min-h-0 flex flex-col gap-2 px-2 pb-[var(--shell-bottom-inset,8px)] pt-[var(--shell-top-inset,8px)]">
         <div ref={screen.panel.ref} class="relative flex-1 min-h-0 flex flex-col md:flex-row gap-2">
@@ -359,6 +418,7 @@ function SessionScreenContent(props: { session: SessionModel; browser: ReturnTyp
               "duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width] motion-reduce:transition-none":
                 !screen.size.active() && sidePresence.animate(),
               "transition-none": screen.size.active() || !sidePresence.animate(),
+              hidden: screen.panel.fullscreen(),
             }}
             data-slot="session-chat-panel"
             data-width-animating={store.sideWidthMotion}

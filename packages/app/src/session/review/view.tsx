@@ -23,8 +23,11 @@ const MobilePanelDrawer = lazy(async () => {
 })
 
 export function SessionMobileViewTabs(props: {
-  current: "session" | "changes" | "files" | "usage" | "terminal"
-  onSelect: (view: "session" | "changes" | "files" | "usage" | "terminal") => void
+  current: "session" | "changes" | "files" | "usage" | "terminal" | "plugin"
+  onSelect: (view: "session" | "changes" | "files" | "usage" | "terminal" | "plugin") => void
+  pluginTitle?: string
+  pluginTabs?: { key: string; title: string }[]
+  onPluginSelect?: (key: string) => void
   details?: (close: () => void) => JSX.Element
   onDetailsOpenChange?: (open: boolean) => void
 }) {
@@ -63,6 +66,16 @@ export function SessionMobileViewTabs(props: {
               </Tabs.Trigger>
             )}
           </For>
+          <Show when={props.pluginTitle}>
+            <Tabs.Trigger
+              value="plugin"
+              class="min-w-0 flex-1"
+              classes={{ button: "w-full justify-center" }}
+              onClick={() => props.onSelect("plugin")}
+            >
+              <span class="max-w-28 truncate">{props.pluginTitle}</span>
+            </Tabs.Trigger>
+          </Show>
         </Tabs.List>
       </Tabs>
       <Menu
@@ -82,7 +95,7 @@ export function SessionMobileViewTabs(props: {
           variant="ghost-muted"
           size="normal"
           class="mx-1.5 shrink-0"
-          state={props.current === "usage" || store.menu ? "pressed" : undefined}
+          state={props.current === "usage" || props.current === "plugin" || store.menu ? "pressed" : undefined}
           aria-label={language.t("common.moreOptions")}
         />
         <Menu.Portal>
@@ -94,6 +107,9 @@ export function SessionMobileViewTabs(props: {
             }}
           >
             <Menu.Item onSelect={() => props.onSelect("usage")}>{language.t("session.tab.usage")}</Menu.Item>
+            <For each={props.pluginTabs ?? []}>
+              {(panel) => <Menu.Item onSelect={() => props.onPluginSelect?.(panel.key)}>{panel.title}</Menu.Item>}
+            </For>
             <Show when={props.details}>
               <Menu.Item onSelect={() => setStore({ pending: true, menu: false })}>
                 {language.t("session.summary.title")}

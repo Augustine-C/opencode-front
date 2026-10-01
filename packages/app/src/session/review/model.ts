@@ -38,7 +38,7 @@ export function createSessionReview(input: {
   const location = useWorkspaceLocation()
   const server = useServerSDK()
   const [state, setState] = createStore({
-    mobileTab: "session" as "session" | "changes" | "files" | "usage",
+    mobileTab: "session" as "session" | "changes" | "files" | "usage" | "plugin",
     detailsOpen: false,
     scroll: undefined as HTMLDivElement | undefined,
     pendingFile: undefined as string | undefined,
@@ -413,7 +413,7 @@ export function createSessionReview(input: {
     loadDiff,
     mobile: {
       changes: mobileChanges,
-      setTab: (tab: "session" | "changes" | "files" | "usage") => setState("mobileTab", tab),
+      setTab: (tab: "session" | "changes" | "files" | "usage" | "plugin") => setState("mobileTab", tab),
       tab: () => state.mobileTab,
     },
     mode,

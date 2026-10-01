@@ -1,8 +1,9 @@
 import { batch, createMemo, onCleanup, onMount, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { same } from "@/runtime/persistence/equality"
-import { isSessionBrowserTab, SESSION_BTW_TAB, SESSION_OPEN_FILE_TAB } from "@/shell/state/session-tabs"
+import { isPluginPanelTab } from "../plugins/panel-model"
+import { same } from "../runtime/persistence/equality"
+import { isSessionBrowserTab, SESSION_BTW_TAB, SESSION_OPEN_FILE_TAB } from "../shell/state/session-tabs"
 
 export {
   SESSION_BROWSER_TAB,
@@ -10,7 +11,7 @@ export {
   SESSION_OPEN_FILE_TAB,
   sessionBrowserTab,
   isSessionBrowserTab,
-} from "@/shell/state/session-tabs"
+} from "../shell/state/session-tabs"
 
 const emptyTabs: string[] = []
 
@@ -27,6 +28,7 @@ type TabsInput = {
   hasReview?: Accessor<boolean>
   fileBrowser?: Accessor<boolean>
   browser?: Accessor<boolean>
+  pluginTabs?: Accessor<readonly string[]>
 }
 
 export function shouldShowFileTree(input: { visible: boolean; opened: boolean }) {
@@ -38,6 +40,7 @@ export const createSessionTabs = (input: TabsInput) => {
   const hasReview = input.hasReview ?? (() => false)
   const fileBrowser = input.fileBrowser ?? (() => false)
   const browser = input.browser ?? (() => false)
+  const plugins = createMemo(() => new Set(input.pluginTabs?.() ?? []))
   const contextOpen = createMemo(() => input.tabs().active() === "context" || input.tabs().all().includes("context"))
   const openFileOpen = createMemo(
     () =>
@@ -52,6 +55,7 @@ export const createSessionTabs = (input: TabsInput) => {
         .all()
         .flatMap((tab) => {
           if (tab === "context" || tab === "review") return []
+          if (isPluginPanelTab(tab)) return plugins().has(tab) ? [tab] : []
           if (isSessionBrowserTab(tab)) return browser() ? [tab] : []
           if (tab === SESSION_OPEN_FILE_TAB && !fileBrowser()) return []
           const value = input.pathFromTab(tab) ? input.normalizeTab(tab) : tab
@@ -66,13 +70,18 @@ export const createSessionTabs = (input: TabsInput) => {
   const openedTabs = createMemo(
     () =>
       panelTabs().filter(
-        (tab) => tab !== SESSION_OPEN_FILE_TAB && tab !== SESSION_BTW_TAB && !isSessionBrowserTab(tab),
+        (tab) =>
+          tab !== SESSION_OPEN_FILE_TAB &&
+          tab !== SESSION_BTW_TAB &&
+          !isSessionBrowserTab(tab) &&
+          !isPluginPanelTab(tab),
       ),
     emptyTabs,
     { equals: same },
   )
   const activeTab = createMemo(() => {
     const active = input.tabs().active()
+    if (active && plugins().has(active)) return active
     if (active === "context") return active
     if (active === SESSION_BTW_TAB) return active
     if (active === SESSION_OPEN_FILE_TAB && openFileOpen()) return active
@@ -80,7 +89,9 @@ export const createSessionTabs = (input: TabsInput) => {
     if (active === "review" && review()) return active
     if (active && input.pathFromTab(active)) return input.normalizeTab(active)
 
-    const first = openedTabs()[0]
+    const first = panelTabs().find(
+      (tab) => tab !== SESSION_OPEN_FILE_TAB && (input.pathFromTab(tab) || plugins().has(tab)),
+    )
     if (first) return first
     if (contextOpen()) return "context"
     if (review() && hasReview()) return "review"
@@ -93,6 +104,7 @@ export const createSessionTabs = (input: TabsInput) => {
   })
   const closableTab = createMemo<string | undefined>(() => {
     const active = activeTab()
+    if (active && plugins().has(active)) return active
     if (active === "context") return active
     if (active === SESSION_BTW_TAB) return active
     if (active === SESSION_OPEN_FILE_TAB && openFileOpen()) return active

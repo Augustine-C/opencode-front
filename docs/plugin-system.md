@@ -62,7 +62,7 @@ Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `cre
 
 A slot supports exactly one of `prepend`, `append`, `before`, `after`, or `replace`. Additive contributions retain enablement order. At the same target, the last registered replacement wins. A replacement suppresses contributions under its dot-prefixed descendants; before/after siblings on that same boundary survive. An absent additive target falls back to its nearest mounted dot-prefixed ancestor; absent replacements are suppressed. Inactive routes naturally have unmounted slots. The host exposes resolution diagnostics through its API. Settings shows plugin enablement and errors without exposing slot-resolution counts.
 
-Slots preserve the host layout: wrapping or replacing one boundary does not grant a contribution independent control over unrelated columns. `session.panel` is a floating side panel with a fullscreen presentation, separate from the built-in file/review panels. Closing the selected session or switching to another session hides its panel. Disabling the owner removes it.
+Slots preserve the host layout: wrapping or replacing one boundary does not grant a contribution independent control over unrelated columns. `session.panel` opens as a closable, draggable tab alongside Review, Context, and files in the session side pane. It shares the pane’s resizing controls. On narrow screens it appears as a session view; the More menu selects among open plugin panels. Panels belong to their plugin and session: switching sessions shows only that session’s panels, closing a tab dismisses its panel, and disabling its owner removes all its panels. Only the owning plugin renders into a panel. The `width` input measures its actual content area. Fullscreen presentation maximizes the pane within the workspace while retaining the native tabs.
 
 ## Context and lifecycle
 
@@ -103,7 +103,7 @@ The endpoint must allow the frontend origin through CORS and return `{ "label": 
 
 Enable **Example panel** in **Settings → Frontend plugins**, return to an existing session, then click **Example panel** below the message box. Alternatively, open the command palette with **⌘K** or **⌘⇧P** on macOS (**Ctrl+K** or **Ctrl+Shift+P** elsewhere) and choose **Open example plugin panel**. The demo requires an active session.
 
-The panel shows sample build status, an interactive checklist with progress, notes, and the current session ID. **Expand panel** switches to fullscreen; **Return to side panel** restores the narrow layout. Wide panels place the checklist and notes side by side. **Reset example** resets the checklist and notes. State lasts until the plugin is disabled or the page is reloaded. The demo performs no network requests or backend changes.
+The panel shows sample build status, an interactive checklist with progress, notes, and the current session ID. It opens in the same tab strip as Review and Context. **Expand panel** maximizes the workspace pane; **Return to side panel** restores the chat alongside it. Wide panels place the checklist and notes side by side. **Reset example** resets the checklist and notes. State lasts until the plugin is disabled or the page is reloaded. The demo performs no network requests or backend changes.
 
 The implementation is in `packages/app/src/plugins/builtin/panel-demo.tsx`. Import `examples/panel-demo.jsonc` for an explicit configuration:
 

@@ -21,3 +21,13 @@ Upstream attribution and MIT alignment were verified against the local OpenCode 
 Plugin controls were integrated into root client settings on 2026-10-01. `bun run check` passed 24 tests (78 assertions), including restoring the frontend plugin settings URL for single/multiple servers and rejecting server/project-scoped variants. `bun run build` passed with the existing upstream warnings. The command palette uses the settings page while the shell is mounted and falls back to the styled dialog before connection. Live visual, file-picker, and settings-navigation checks remain unperformed because the local browser preview was denied earlier.
 
 The opt-in `panel-demo` example passed application/SDK type checks, the existing 24 tests, and the production build on 2026-10-01. It is registered in the frontend catalog and demonstrates command/launcher entry points, configurable panel title/presentation, interactive sample state, and responsive full-screen layout. These checks do not verify its rendered appearance or live interactions; local browser preview access was denied earlier.
+
+## Native plugin panel tabs (2026-10-01)
+
+Plugin panels now use the existing session side-pane tab strip alongside Review, Context, and files; narrow screens use the session view navigation. Maximizing a plugin expands the workspace pane while preserving the native tabs. Panel rendering is scoped to its owning plugin.
+
+`bun run check` passed application/SDK type checks and 26 tests with 102 assertions. New integration tests exercise the actual plugin host, reactive tab bridge, session tab reducers, and tab derivation: opening/reopening, native close and SDK close, preserving file previews, owner/session isolation, targeted maximize, disabling owners, and removing stale restored tabs. `bun run build` completed successfully.
+
+Before session edits, `packages/app/performance/session-tabs.ts` was bundled with browser resolution and production conditions, then the frozen baseline artifact ran seven samples of 20,000 tab changes/readbacks. The baseline median was 18.205792 ms; the candidate median was 19.013916 ms (about 4.4% or 0.81 ms more per 20,000 operations). All samples retained checksum 592000. This benchmark covers production tab derivation, not browser rendering, transcript performance, or live backend integration. Bun emitted a tsconfig directory warning while bundling both artifacts, but both bundles completed and executed successfully.
+
+Rendered appearance and live browser interactions remain unverified: local browser preview access was denied earlier. No app/server restart or backend mutation was performed.

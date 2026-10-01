@@ -1,13 +1,21 @@
 import { ErrorBoundary, For, onCleanup, Show, type ParentProps } from "solid-js"
 import type { SlotMap, SlotPath } from "@opencode/frontend-plugin"
-import { emptySlotted, type Claim } from "@opencode/frontend-plugin/structure"
+import { resolveSlots, emptySlotted, type Claim } from "@opencode/frontend-plugin/structure"
 import type { Render } from "@opencode/frontend-plugin/host"
 import { usePlugins } from "./context"
 
-export function PluginSlot<P extends SlotPath>(props: ParentProps<{ path: P; input: SlotMap[P] }>) {
+export function PluginSlot<P extends SlotPath>(props: ParentProps<{ path: P; input: SlotMap[P]; owner?: string }>) {
   const plugins = usePlugins()
   onCleanup(plugins.mount(props.path))
-  const claims = () => plugins.resolution().slotted.get(props.path) ?? emptySlotted<Render>()
+  const claims = () => {
+    const resolution = props.owner
+      ? resolveSlots({
+          paths: new Set(plugins.state.paths),
+          claims: plugins.host.state.claims.filter((claim) => claim.plugin === props.owner),
+        })
+      : plugins.resolution()
+    return resolution.slotted.get(props.path) ?? emptySlotted<Render>()
+  }
   const render = (claim: Claim<Render>) => (
     <ErrorBoundary
       fallback={(error) => {

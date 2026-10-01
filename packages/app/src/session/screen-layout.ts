@@ -1,6 +1,8 @@
 import { createEffect, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
+import { usePlugins } from "@/plugins/context"
+import { pluginPanelTab, isPluginPanelTab } from "@/plugins/panel-model"
 import { useLayout } from "@/shell/state/layout"
 import { useSettings } from "@/settings/model"
 import { createSizing, shouldShowFileTree } from "./helpers"
@@ -12,6 +14,7 @@ export function createSessionScreenLayout(session: SessionModel) {
   const layout = useLayout()
   const settings = useSettings()
   const size = createSizing()
+  const plugins = usePlugins()
   const view = session.layout.view
   const reviewOpen = createMemo(() => session.isDesktop() && session.layout.view().reviewPanel.opened())
   const reviewPanelOpen = createMemo(() => reviewOpen() && !!session.identity.params.id)
@@ -27,7 +30,17 @@ export function createSessionScreenLayout(session: SessionModel) {
         opened: layout.fileTree.opened(),
       }),
   )
-  const resizable = createMemo(() => reviewPanelOpen() || sideTerminalOpen())
+  const fullscreen = createMemo(
+    () =>
+      reviewPanelOpen() &&
+      plugins.host.state.panels.some(
+        (panel) =>
+          panel.sessionID === session.identity.params.id &&
+          panel.presentation === "fullscreen" &&
+          pluginPanelTab(panel) === session.layout.tabs().active(),
+      ),
+  )
+  const resizable = createMemo(() => !fullscreen() && (reviewPanelOpen() || sideTerminalOpen()))
   const sidePanelOpen = createMemo(() => resizable() || fileTreeOpen())
   const [rowSize, setRowSize] = createStore<{ width?: number; height?: number }>({})
   let row: HTMLDivElement | undefined
@@ -40,7 +53,10 @@ export function createSessionScreenLayout(session: SessionModel) {
     if (width === undefined) return undefined
     return width - 8
   })
-  const splitReview = createMemo(() => reviewPanelOpen() && layout.review.diffStyle() === "split")
+  const splitReview = createMemo(
+    () =>
+      reviewPanelOpen() && !isPluginPanelTab(session.layout.tabs().active()) && layout.review.diffStyle() === "split",
+  )
   const resizedWidth = createMemo(() =>
     clampSessionPanelWidth({
       width: view().reviewPanel.width(),
@@ -49,6 +65,7 @@ export function createSessionScreenLayout(session: SessionModel) {
     }),
   )
   const panelWidth = createMemo(() => {
+    if (fullscreen()) return "0px"
     if (!sidePanelOpen()) return "100%"
     if (resizable()) return `${resizedWidth()}px`
     return `calc(100% - ${layout.fileTree.width()}px)`
@@ -85,6 +102,7 @@ export function createSessionScreenLayout(session: SessionModel) {
   })
   const sideContentWidth = createMemo<string>((previous) => {
     const width = available()
+    if (fullscreen()) return rowSize.width === undefined ? "100%" : `${rowSize.width}px`
     if (resizable() && width !== undefined) return `${Math.max(0, width - resizedWidth())}px`
     if (fileTreeOpen()) return `${layout.fileTree.width()}px`
     return previous
@@ -93,6 +111,7 @@ export function createSessionScreenLayout(session: SessionModel) {
     centered: createMemo(() => session.isDesktop()),
     files: { open: fileTreeOpen },
     panel: {
+      fullscreen,
       max: panelMax,
       ref: (element: HTMLDivElement) => {
         row = element
