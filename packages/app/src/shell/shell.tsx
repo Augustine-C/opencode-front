@@ -1,5 +1,5 @@
 import { usePlugins } from "@/plugins/context"
-import { lazy, Show, Suspense, type ParentProps } from "solid-js"
+import { lazy, onCleanup, Show, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { ResizeHandle } from "@opencode/ui/resize-handle"
@@ -25,6 +25,7 @@ export default function Layout(props: ParentProps) {
   const command = useCommand()
   const language = useLanguage()
   const plugins = usePlugins()
+  onCleanup(plugins.attachSettings(() => settings.open("frontend-plugins")))
   const mobile = createMediaQuery("(max-width: 767px)")
   const [state, setState] = createStore({
     debugTools: false,
@@ -124,9 +125,6 @@ export default function Layout(props: ParentProps) {
             <DebugBar diagnostics={import.meta.env.DEV} inline />
           </Suspense>
         </Show>
-        <button class="self-end text-xs px-3 py-1" onClick={plugins.open}>
-          {language.t("plugins.title")}
-        </button>
         <ToastRegion />
         <UploadToastHost />
       </div>

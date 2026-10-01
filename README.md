@@ -46,7 +46,7 @@ In **Settings → General**, enable **Group tabs by project** beside the **Tabs*
 
 ## Customize the interface
 
-Open **Frontend plugins** on the connection screen or at the bottom of the application. It is also available in the command palette. Enable installed plugins or import a frontend/TUI JSON or JSONC configuration.
+Open **Settings → Frontend plugins** to enable installed plugins or import a frontend/TUI JSON or JSONC configuration. The command palette opens the same settings page. Before connecting a service, the small settings icon on the connection screen opens the plugin controls.
 
 The plugin SDK provides typed named slots, commands, session panels, the current service client, event subscriptions, persistent plugin storage, setup/cleanup, and render error isolation. A connection status plugin is enabled by default. An optional third-party status plugin demonstrates external status at several positions and a details panel.
 

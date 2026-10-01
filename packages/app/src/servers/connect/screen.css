@@ -1,4 +1,5 @@
 [data-component="connect-server"] {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -8,6 +9,12 @@
     max(32px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   background: var(--v2-background-bg-base);
   color: var(--v2-text-text-base);
+
+  .server-connect-settings {
+    position: absolute;
+    inset-block-start: max(16px, env(safe-area-inset-top));
+    inset-inline-end: max(16px, env(safe-area-inset-right));
+  }
 
   .server-connect-content {
     display: flex;

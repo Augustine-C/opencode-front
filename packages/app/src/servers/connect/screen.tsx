@@ -2,6 +2,7 @@ import { usePlugins } from "@/plugins/context"
 import { lazy, Show, Suspense } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useMutation } from "@tanstack/solid-query"
+import { IconButton } from "@opencode/ui/icon-button"
 import { Button } from "@opencode/ui/button"
 import { TextInput } from "@opencode/ui/text-input"
 import { Wordmark } from "@opencode/ui/wordmark"
@@ -60,10 +61,17 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
 
   return (
     <main data-component="connect-server" aria-labelledby="server-connect-title">
+      <div class="server-connect-settings">
+        <IconButton
+          icon="settings-gear"
+          variant="ghost-muted"
+          size="normal"
+          aria-label={language.t("plugins.title")}
+          title={language.t("plugins.title")}
+          onClick={plugins.open}
+        />
+      </div>
       <div class="server-connect-content">
-        <Button variant="ghost" onClick={plugins.open}>
-          {language.t("plugins.title")}
-        </Button>
         <div class="server-connect-brand" role="img" aria-label="OpenCode">
           <Wordmark />
         </div>

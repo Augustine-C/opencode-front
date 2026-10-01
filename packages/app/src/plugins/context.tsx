@@ -69,6 +69,7 @@ function createPlugins() {
   const resolution = createMemo(() => resolveSlots({ paths: new Set(state.paths), claims: host.state.claims }))
   const available = [connectionStatus(language), ...createCatalog(language)]
   available.forEach(host.register)
+  let openSettings: (() => void) | undefined
   let disposed = false
   async function apply(entries: ResolvedPlugin[]) {
     if (disposed) return
@@ -99,7 +100,7 @@ function createPlugins() {
       id: "plugins.manage",
       title: language.t("plugins.title"),
       category: language.t("plugins.title"),
-      onSelect: () => dialog.show(() => <PluginManager plugins={api} />),
+      onSelect: () => api.open(),
     },
     ...host.state.commands.map((entry) => ({
       id: `plugin.${entry.id}`,
@@ -158,7 +159,16 @@ function createPlugins() {
       setState("unsupported", result.unsupported)
       return save(result.plugins)
     },
-    open: () => dialog.show(() => <PluginManager plugins={api} />),
+    attachSettings(open: () => void) {
+      openSettings = open
+      return () => {
+        if (openSettings === open) openSettings = undefined
+      }
+    },
+    open() {
+      if (openSettings) openSettings()
+      else dialog.show(() => <PluginManager plugins={api} />)
+    },
   }
   return api
 }

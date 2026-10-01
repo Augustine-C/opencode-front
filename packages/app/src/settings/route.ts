@@ -1,6 +1,7 @@
 export type SettingsRootTab =
   | "general"
   | "appearance"
+  | "frontend-plugins"
   | "notifications"
   | "shortcuts"
   | "pairing"
@@ -37,6 +38,7 @@ export type SettingsTransientView = Pick<SettingsView, "target" | "searchActivat
 const rootTabs: Record<SettingsRootTab, true> = {
   general: true,
   appearance: true,
+  "frontend-plugins": true,
   notifications: true,
   shortcuts: true,
   pairing: true,

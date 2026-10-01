@@ -13,6 +13,7 @@ import { useServerCollectionController } from "@/servers/registry/controller"
 import { AddServerMenu } from "@/servers/wsl/settings"
 import { DialogServer } from "@/servers/connect/dialog"
 import { LocationProvider } from "@/workspaces/location"
+import { PluginSettings } from "@/plugins/manager"
 import { SettingsGeneral } from "./general/general"
 import { SettingsAppearance } from "./appearance/appearance"
 import { experimentalSettingsAvailable, SettingsExperimental } from "./experimental/experimental"
@@ -42,6 +43,7 @@ import "@/settings/settings.css"
 const rootClientTabs = [
   { value: "general", icon: pageIcons.general, label: "settings.tab.preferences" },
   { value: "appearance", icon: pageIcons.appearance, label: "settings.general.section.appearance" },
+  { value: "frontend-plugins", icon: pageIcons["frontend-plugins"], label: "plugins.title" },
   { value: "notifications", icon: pageIcons.notifications, label: "settings.tab.notifications" },
   { value: "shortcuts", icon: pageIcons.shortcuts, label: "settings.tab.shortcuts" },
   { value: "pairing", icon: pageIcons.pairing, label: "settings.pairing.title" },
@@ -293,6 +295,9 @@ function RootSettings() {
     >
       <Tabs.Content value="general" class="settings-panel">
         <SettingsGeneral />
+      </Tabs.Content>
+      <Tabs.Content value="frontend-plugins" class="settings-panel">
+        <PluginSettings />
       </Tabs.Content>
       <Tabs.Content value="appearance" class="settings-panel">
         <SettingsAppearance />

@@ -5,6 +5,7 @@ import type { SettingsRootTab } from "./surface"
 export const pageIcons = {
   general: "sliders",
   appearance: "appearance",
+  "frontend-plugins": "extensions",
   notifications: "notifications",
   shortcuts: "keyboard",
   pairing: "server",
@@ -21,6 +22,7 @@ export const pageIcons = {
 export const pageLabels = {
   general: "settings.tab.preferences",
   appearance: "settings.general.section.appearance",
+  "frontend-plugins": "plugins.title",
   notifications: "settings.tab.notifications",
   shortcuts: "settings.shortcuts.title",
   pairing: "settings.pairing.title",
