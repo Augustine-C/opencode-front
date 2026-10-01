@@ -1204,6 +1204,7 @@ export const dict = {
   "settings.appearance.row.tabGroups.title": "Group tabs by project",
   "settings.appearance.row.tabGroups.description": "Keep sessions from the same project together in either tab layout",
   "session.tab.group.unassigned": "Unassigned",
+  "session.tab.unreadOrAttention": "Unread activity or attention required",
   "settings.appearance.row.tabs.title": "Tabs",
   "settings.appearance.row.tabs.description": "Choose how session tabs are arranged",
   "settings.appearance.row.tabs.horizontal": "Horizontal",

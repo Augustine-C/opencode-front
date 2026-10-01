@@ -42,7 +42,7 @@ Electron loads the same web build using `oc://renderer`, an origin already permi
 
 ## Organize session tabs
 
-In **Settings → General**, enable **Group tabs by project** beside the **Tabs** layout selector. The preference applies to both web and desktop and defaults to off. Vertical groups have sticky project headings and compact session rows; horizontal groups use compact project icons or initials, separators, and readable tab widths, with full project details on hover. Drafts and worktree sessions join their project, and different servers remain separate. Drag tabs within a project to reorder them; keyboard cycling and numbered shortcuts follow the displayed order.
+In **Settings → General**, enable **Group tabs by project** beside the **Tabs** layout selector. The preference applies to both web and desktop and defaults to off. Vertical groups have sticky project headings and compact session rows; horizontal groups use compact project icons or initials, separators, and readable tab widths, with full project details on hover. Grouped session tabs omit repeated project icons; running sessions retain their progress indicator, and unread activity or attention requests show a dot. Drafts and worktree sessions join their project, and different servers remain separate. Drag tabs within a project to reorder them; keyboard cycling and numbered shortcuts follow the displayed order.
 
 ## Customize the interface
 

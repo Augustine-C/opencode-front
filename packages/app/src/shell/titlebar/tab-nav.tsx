@@ -10,6 +10,7 @@ import { useGlobal, useServerCtx } from "@/runtime/server/runtime"
 import { useLanguage } from "@/runtime/i18n/language"
 import { ServerConnection, serverName, useServers } from "@/runtime/server/registry"
 import { displayName } from "@/shell/layout/helpers"
+import { useSessionTabAvatarState } from "@/shell/layout/project-avatar-state"
 import { SessionTabAvatar } from "@/shell/layout/session-tab-avatar"
 import { SessionProgressIndicatorV2 } from "@opencode/session-ui/v2/session-progress-indicator-v2"
 import type { SessionInfo } from "@opencode/client/promise"
@@ -20,6 +21,31 @@ import "./tab-nav.css"
 
 // MouseEvent.button uses 1 for the middle/wheel button.
 const MIDDLE_MOUSE_BUTTON = 1
+
+function GroupedSessionStatus(props: { session: SessionInfo; server: ServerConnection.Key }) {
+  const language = useLanguage()
+  const state = useSessionTabAvatarState(
+    () => props.server,
+    () => props.session.id,
+    () => true,
+  )
+  return (
+    <Show when={state.loading() || state.unread()}>
+      <span
+        data-slot="tab-session-status"
+        class="flex size-4 shrink-0 items-center justify-center"
+        role="img"
+        aria-label={
+          state.loading() ? language.t("session.timeline.working") : language.t("session.tab.unreadOrAttention")
+        }
+      >
+        <Show when={state.loading()} fallback={<span data-slot="tab-session-unread" aria-hidden="true" />}>
+          <SessionProgressIndicatorV2 />
+        </Show>
+      </span>
+    </Show>
+  )
+}
 
 export function TabNavItem(props: {
   ref?: Ref<HTMLDivElement>
@@ -37,6 +63,7 @@ export function TabNavItem(props: {
   pressed?: boolean
   hidden?: boolean
   orientation?: "horizontal" | "vertical"
+  grouped?: boolean
 }) {
   const language = useLanguage()
   const [menu, setMenu] = createStore({ open: false, rename: false })
@@ -236,31 +263,55 @@ export function TabNavItem(props: {
         }}
         class="flex h-full min-w-0 flex-1 flex-row items-center gap-1.5 text-[13px] font-medium text-v2-text-text-faint group-data-[active='true']:text-v2-text-text-base group-data-[editing='true']:text-v2-text-text-base [-webkit-user-drag:none]"
       >
-        <span data-slot="project-avatar-slot" class="flex size-4 shrink-0 items-center justify-center">
-          <Show
-            when={props.session}
-            keyed
-            fallback={
-              <Show
-                when={props.preparing}
-                fallback={
-                  <span class="block size-4 rounded-[3px] border border-v2-border-border-muted" aria-hidden="true" />
-                }
-              >
-                <SessionProgressIndicatorV2 />
-              </Show>
-            }
-          >
-            {(session) => (
-              <SessionTabAvatar
-                project={project()}
-                directory={session.location.directory}
-                sessionId={session.id}
-                server={props.server}
-              />
-            )}
-          </Show>
-        </span>
+        <Show
+          when={!props.grouped}
+          fallback={
+            <Show
+              when={props.session}
+              keyed
+              fallback={
+                <Show when={props.preparing}>
+                  <span
+                    data-slot="tab-session-status"
+                    class="flex size-4 shrink-0 items-center justify-center"
+                    role="img"
+                    aria-label={language.t("session.timeline.working")}
+                  >
+                    <SessionProgressIndicatorV2 />
+                  </span>
+                </Show>
+              }
+            >
+              {(session) => <GroupedSessionStatus session={session} server={props.server} />}
+            </Show>
+          }
+        >
+          <span data-slot="project-avatar-slot" class="flex size-4 shrink-0 items-center justify-center">
+            <Show
+              when={props.session}
+              keyed
+              fallback={
+                <Show
+                  when={props.preparing}
+                  fallback={
+                    <span class="block size-4 rounded-[3px] border border-v2-border-border-muted" aria-hidden="true" />
+                  }
+                >
+                  <SessionProgressIndicatorV2 />
+                </Show>
+              }
+            >
+              {(session) => (
+                <SessionTabAvatar
+                  project={project()}
+                  directory={session.location.directory}
+                  sessionId={session.id}
+                  server={props.server}
+                />
+              )}
+            </Show>
+          </span>
+        </Show>
         <span
           ref={(el) => {
             titleEl = el
