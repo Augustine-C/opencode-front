@@ -42,7 +42,7 @@ export default define({
 })
 ```
 
-Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `createCatalog`. Installed plugins appear in **Frontend plugins**, available on the connection screen, at the bottom of the application, and through the command palette. External adapters must use the host's Solid runtime, with `solid-js` as a peer dependency. Source TSX imports are compiled by Vite. A separately published adapter should ship browser-compatible ESM; avoid bundling a second Solid runtime or importing Node APIs. This first release uses an explicit build-time catalog rather than a runtime marketplace.
+Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `createCatalog`. Installed plugins appear in **Settings → Frontend plugins** and through the command palette. Before connecting, the connection screen's settings icon opens the same controls. External adapters must use the host's Solid runtime, with `solid-js` as a peer dependency. Source TSX imports are compiled by Vite. A separately published adapter should ship browser-compatible ESM; avoid bundling a second Solid runtime or importing Node APIs. This first release uses an explicit build-time catalog rather than a runtime marketplace.
 
 ## Slot contract
 
@@ -98,3 +98,29 @@ The optional `third-party-status` plugin is installed but disabled by default. I
 ```
 
 The endpoint must allow the frontend origin through CORS and return `{ "label": "Build queue", "value": "3 pending" }`. It can serve quota, CI, deployments, or another status without changing the renderer. Use your own endpoint for provider-specific authentication and schema conversion. The plugin omits browser credentials and never forwards OpenCode authorization to the endpoint. Failures display **Status unavailable**, clear stale values, and continue polling; missing data is never displayed as zero. Refresh and open-panel commands appear in the command palette when enabled. Polling stops and in-flight requests are cancelled on disable.
+
+## Example plugin panel
+
+Enable **Example panel** in **Settings → Frontend plugins**, return to an existing session, then click **Example panel** below the message box. Alternatively, open the command palette with **⌘K** or **⌘⇧P** on macOS (**Ctrl+K** or **Ctrl+Shift+P** elsewhere) and choose **Open example plugin panel**. The demo requires an active session.
+
+The panel shows sample build status, an interactive checklist with progress, notes, and the current session ID. **Expand panel** switches to fullscreen; **Return to side panel** restores the narrow layout. Wide panels place the checklist and notes side by side. **Reset example** resets the checklist and notes. State lasts until the plugin is disabled or the page is reloaded. The demo performs no network requests or backend changes.
+
+The implementation is in `packages/app/src/plugins/builtin/panel-demo.tsx`. Import `examples/panel-demo.jsonc` for an explicit configuration:
+
+```json
+{
+  "plugins": [
+    "connection-status",
+    {
+      "package": "panel-demo",
+      "options": {
+        "title": "Project overview",
+        "presentation": "panel",
+        "showLauncher": true
+      }
+    }
+  ]
+}
+```
+
+`title` sets the panel heading, `presentation` accepts `panel` or `fullscreen`, and `showLauncher: false` hides the message-box shortcut while leaving the command-palette action available. Omitted options use the translated heading, a side panel, and a visible launcher. Configuration import replaces the enabled-plugin configuration, so include other plugins you want to retain.

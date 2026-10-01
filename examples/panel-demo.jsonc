@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "connection-status",
+    {
+      "package": "panel-demo",
+      "options": {
+        "title": "Project overview",
+        "presentation": "panel",
+        "showLauncher": true
+      }
+    }
+  ]
+}
