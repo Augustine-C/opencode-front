@@ -3,6 +3,7 @@ import { pathKey } from "../../workspaces/path-key"
 export type TabProject = {
   id?: string
   name?: string
+  icon?: { color?: string; url?: string; override?: string }
   worktree: string
   sandboxes?: readonly string[]
   worktrees?: readonly { directory: string }[]

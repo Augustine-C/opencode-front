@@ -297,10 +297,16 @@
 
 [data-grouped="true"][data-orientation="horizontal"] [data-slot="tab-project-group"] {
   height: 28px;
-  max-width: 144px;
-  padding-inline: 10px;
-  margin-inline-start: 8px;
+  box-sizing: border-box;
+  width: 32px;
+  justify-content: center;
+  padding-inline-start: 4px;
+  margin-inline-start: 4px;
   border-inline-start: 1px solid var(--v2-border-border-base);
+}
+
+[data-grouped="true"][data-orientation="horizontal"] [data-slot="tab-project-group"][data-active="true"] {
+  border-inline-start-color: var(--v2-text-text-accent);
 }
 
 [data-grouped="true"][data-orientation="horizontal"] [data-titlebar-tab-slot] {

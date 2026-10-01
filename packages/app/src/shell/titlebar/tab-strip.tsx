@@ -19,7 +19,9 @@ import { showToast } from "@/shell/notifications/toast"
 import { isTabCloseTarget } from "./tab-gesture"
 import { adjacentTabKey, mergeVisibleTabOrder } from "./tab-order"
 import { useSettings } from "@/settings/model"
-import { displayName } from "@/shell/layout/helpers"
+import { ProjectAvatar, type ProjectAvatarStyle } from "@opencode/ui/project-avatar"
+import { getProjectAvatarVariant } from "@/shell/state/layout"
+import { displayName, getProjectAvatarSource } from "@/shell/layout/helpers"
 import { pathKey } from "@/workspaces/path-key"
 import { groupTabs, tabProject } from "./tab-groups"
 import type { SessionInfo } from "@opencode/client/promise"
@@ -279,7 +281,11 @@ export function TitlebarTabStrip(props: {
   let listRef!: HTMLDivElement
   const [visibility, setVisibility] = createStore<Record<string, boolean>>({})
   const projectGroups = createMemo(() => {
-    if (!grouped()) return new Map<string, { key: string; label: string; title: string }>()
+    if (!grouped())
+      return new Map<
+        string,
+        { key: string; label: string; title: string; name: string; src?: string; variant?: ProjectAvatarStyle }
+      >()
     return new Map(
       props.tabs.map((tab) => {
         const conn = global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
@@ -298,7 +304,10 @@ export function TitlebarTabStrip(props: {
           {
             key: JSON.stringify([tab.server, root ? pathKey(root) : null]),
             label: server ? `${label} · ${server}` : label,
-            title: [root, server].filter(Boolean).join(" · ") || label,
+            title: [label, root, server].filter(Boolean).join(" · "),
+            name: label,
+            src: getProjectAvatarSource(project?.id, project?.icon),
+            variant: getProjectAvatarVariant(project?.icon?.color),
           },
         ] as const
       }),
@@ -434,8 +443,23 @@ export function TitlebarTabStrip(props: {
                       data-slot="tab-project-group"
                       data-active={!!props.currentTab && groupKey(props.currentTab) === groupKey(tab)}
                       title={projectGroups().get(id)?.title}
+                      aria-label={projectGroups().get(id)?.title}
+                      role={vertical() ? "heading" : "img"}
+                      aria-level={vertical() ? 3 : undefined}
                     >
-                      <span>{projectGroups().get(id)?.label}</span>
+                      <Show
+                        when={vertical()}
+                        fallback={
+                          <ProjectAvatar
+                            fallback={projectGroups().get(id)?.name ?? ""}
+                            src={projectGroups().get(id)?.src}
+                            variant={projectGroups().get(id)?.variant}
+                            aria-hidden="true"
+                          />
+                        }
+                      >
+                        <span>{projectGroups().get(id)?.label}</span>
+                      </Show>
                     </div>
                   </Show>
                 )
