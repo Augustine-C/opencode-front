@@ -128,3 +128,13 @@ The implementation is in `packages/app/src/plugins/builtin/panel-demo.tsx`. Impo
 ```
 
 `title` sets the panel heading, `presentation` accepts `panel` or `fullscreen`, and `showLauncher: false` hides the native menu entry while leaving the command-palette action available. Omitted options use the translated heading, a side panel, and a native menu entry. Configuration import replaces the enabled-plugin configuration, so include other plugins you want to retain.
+
+## CodeArts Proxy overview example
+
+The optional `codearts-proxy` adapter uses the same browser plugin API and native GUI panel bridge as the other examples. Enable **CodeArts Proxy overview** in **Settings → Frontend plugins**, then open **+ Add tab → CodeArts Proxy overview** in an existing session (or **More** on mobile). The command palette also provides open and refresh actions. Import `examples/codearts-proxy.jsonc` to configure `baseURL` and the polling `interval` in milliseconds (default 60 seconds, minimum 5 seconds). Import replaces the enabled-plugin configuration.
+
+The panel displays login/account information, credential dates, the default model, gateway authentication and telemetry state, daily benefit tokens, package tokens and validity dates. Quotas are separate; missing values remain **Unavailable**, and partial upstream errors appear in their own quota card. Refresh clears previous values so failed queries cannot look current. Polling runs while the panel is mounted, and closing it or disabling the plugin cancels requests. A refresh command can also perform a single query while the panel is closed.
+
+Use the CodeArts Proxy **desktop gateway** with the companion `GET /api/overview` bridge added in `client/src-tauri/src/proxy/server.rs` in the CodeArts Proxy repository. Older desktop builds and the Node CLI do not provide this bridge. The plugin reports unavailable for those versions; `/health` and `/v1/models` cannot substitute for account usage. Installing the updated proxy is a separate step; this frontend never starts or restarts it.
+
+The proxy address field accepts a gateway root or `/v1` URL. If gateway authentication is enabled, enter a gateway API key in the panel. The key stays in memory until plugin disable/reload and is never written to plugin configuration or storage. OpenCode credentials are never forwarded. Requests omit browser credentials and reject redirects. The bridge uses existing gateway API key validation and permits local HTTP/HTTPS origins and the desktop shell's `oc://renderer` origin. Hosted frontends need a separately controlled same-origin bridge; the desktop endpoint does not allow arbitrary website origins. This interface only reads status and usage; it does not log in, claim benefits, or change proxy settings.
