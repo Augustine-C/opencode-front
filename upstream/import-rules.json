@@ -113,6 +113,21 @@
       ]
     },
     {
+      "source": "packages/gui-extensions",
+      "target": "packages/gui-extensions",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
       "source": "packages/plugin-browser",
       "target": "packages/plugin-browser",
       "only": [
@@ -158,22 +173,20 @@
     },
     {
       "id": "session-panels",
-      "reason": "Mount plugin panel state and components into native session tabs and pane geometry.",
+      "reason": "Bridge browser plugin panels to the upstream GUI extension host, preserving session ownership and fullscreen geometry.",
       "files": [
-        "packages/app/src/session/files/session-side-panel.tsx",
-        "packages/app/src/session/helpers.ts",
-        "packages/app/src/session/model.ts",
-        "packages/app/src/session/review/model.ts",
-        "packages/app/src/session/review/view.tsx",
         "packages/app/src/session/screen-layout.ts",
         "packages/app/src/session/screen.tsx",
-        "packages/app/src/shell/state/session-tabs.ts"
+        "packages/app/src/runtime/extension/root.tsx",
+        "packages/app/src/runtime/extension/side-region.tsx"
       ],
       "adapters": [
         "packages/app/src/extensions/session-panel-state.ts",
         "packages/app/src/extensions/session-panels.tsx",
         "packages/app/src/plugins/panel-model.ts",
-        "packages/app/src/plugins/panel.tsx"
+        "packages/app/src/plugins/panel.tsx",
+        "packages/app/src/extensions/plugin-panels.ts",
+        "packages/app/src/extensions/plugin-panel-host.tsx"
       ]
     },
     {
@@ -228,7 +241,6 @@
         "packages/app/src/app.tsx",
         "packages/app/src/composer/composer.tsx",
         "packages/app/src/home/route.tsx",
-        "packages/app/src/session/summary/panel.tsx",
         "packages/app/src/shell/shell.tsx"
       ],
       "adapters": [

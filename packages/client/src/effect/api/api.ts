@@ -198,6 +198,7 @@ export type SessionStatsOperation<E = never> = (input?: SessionStatsInput) => Ef
 
 export type SessionCreateInput = {
   readonly id?: Session.ID | undefined
+  readonly parentID?: Session.ID | undefined
   readonly title?: string | undefined
   readonly agent?: Agent.ID | undefined
   readonly model?: Model.Ref | undefined
@@ -1414,7 +1415,11 @@ export type SessionFormReplyOperation<E = never> = (
   input: SessionFormReplyInput,
 ) => Effect.Effect<SessionFormReplyOutput, E>
 
-export type SessionFormCancelInput = { readonly sessionID: string; readonly formID: Form.ID }
+export type SessionFormCancelInput = {
+  readonly sessionID: string
+  readonly formID: Form.ID
+  readonly message?: string | undefined
+}
 export type SessionFormCancelOutput = void
 export type SessionFormCancelOperation<E = never> = (
   input: SessionFormCancelInput,

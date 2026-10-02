@@ -6,6 +6,7 @@ This Bun workspace ports the OpenCode frontend and connects to an existing servi
 
 - `packages/app/src`: SolidJS application; `extensions/` contains port-owned adapters and `plugins/` hosts browser plugins.
 - `packages/frontend-plugin/src`: plugin SDK, configuration, and lifecycle runtime.
+- `packages/gui-extensions`: upstream native panel features and SDK; this port loads renderer exports only.
 - `packages/ui`, `session-ui`: shared components, rendering, and assets. `client`, `schema`, `protocol`, and `util` retain upstream contracts/utilities.
 - Tests live in `packages/app/test`, `packages/frontend-plugin/test`, and `scripts/upstream/test`.
 - `scripts/desktop*`: thin Electron shell. `upstream/` records import policy and inventory; `docs/` documents architecture and validation.

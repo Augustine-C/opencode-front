@@ -1,15 +1,31 @@
 import { expect, test } from "bun:test"
-import { createRoot } from "solid-js"
+import { createRoot, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createPluginHost } from "../../frontend-plugin/src/runtime"
 import { define, type Context } from "../../frontend-plugin/src/index"
-import { createPluginPanelTabs, createPluginPanelView, pluginPanelTab } from "../src/plugins/panel-model"
-import { createSessionTabs } from "../src/session/helpers"
+import { createPluginPanelView, pluginPanelTab } from "../src/plugins/panel-model"
+import { attachPluginPanels } from "../src/extensions/plugin-panels"
+import {
+  Layout,
+  Sessions,
+  Panel,
+  Menu,
+  type Context as NativeContext,
+  type SessionView,
+} from "@opencode/gui-extensions/sdk"
 import { openSessionTab, closeSessionTab, type SessionTabState } from "../src/shell/state/session-tabs"
 
 function fixture() {
   return createRoot((dispose) => {
-    const [state, set] = createStore({ session: "one", activation: 0, sessions: {} as Record<string, SessionTabState> })
+    const [state, set] = createStore({
+      session: "one",
+      activation: 0,
+      ready: true,
+      located: true,
+      narrow: false,
+      mobile: "session",
+      sessions: {} as Record<string, SessionTabState>,
+    })
     const empty: SessionTabState = { tabs: { all: [] } }
     const current = () => state.sessions[state.session] ?? empty
     const tabs = {
@@ -39,25 +55,83 @@ function fixture() {
           },
         }),
       )
-    const panels = () => host.state.panels.filter((panel) => panel.sessionID === state.session)
-    createPluginPanelTabs({
-      sessionID: () => state.session,
-      requested: () => host.state.panel,
-      request: () => host.state.panelRequest,
-      panels: () => host.state.panels,
-      tabs: () => tabs,
-      activate: () => set("activation", (value) => value + 1),
-      dismiss: host.dismissPanel,
+    const contributions: { point: string; value: unknown }[] = []
+    const views = new Map<string, SessionView>()
+    for (const id of ["one", "two"])
+      views.set(id, {
+        id,
+        key: id,
+        get location() {
+          return state.located ? { directory: "/project" } : undefined
+        },
+      } as SessionView)
+    const nativePanels = () =>
+      contributions.filter((item) => item.point === Panel.id).map((item) => item.value as Panel)
+    const closeNative = (key: string, view: SessionView) => {
+      const id = key.slice("plugin-panel:".length)
+      const provider = nativePanels().find((panel) => panel.id === id)
+      const tab = provider?.list(view, [id]).find((tab) => tab.id === id)
+      set("sessions", view.id, closeSessionTab(state.sessions[view.id] ?? empty, key))
+      if (tab) provider?.close?.(tab, view)
+    }
+    const context = {
+      use(token: { id: string }) {
+        if (token.id === Sessions.id)
+          return { list: () => [...views.values()], current: () => views.get(state.session) }
+        if (token.id !== Layout.id) throw new Error("Unexpected service")
+        return {
+          ready: () => state.ready,
+          narrow: () => state.narrow,
+          open(key: string, view: SessionView, options?: { select?: boolean }) {
+            const current = state.sessions[view.id] ?? empty
+            const next = options?.select
+              ? {
+                  tabs: {
+                    all: current.tabs.all.includes(key) ? current.tabs.all : [...current.tabs.all, key],
+                    active: key,
+                  },
+                  preview: current.preview,
+                }
+              : openSessionTab(current, key)
+            set("sessions", view.id, next)
+            set("activation", (value) => value + 1)
+          },
+          close: closeNative,
+          stored: (view: SessionView) =>
+            (state.sessions[view.id]?.tabs.all ?? []).flatMap((key) =>
+              key.startsWith("plugin-panel:") ? [key.slice("plugin-panel:".length)] : [],
+            ),
+        }
+      },
+      add(point: { id: string }, value: unknown) {
+        const item = {
+          point: point.id,
+          value: typeof value === "function" ? createMemo(value as () => unknown) : value,
+        }
+        contributions.push(item)
+        return () => {
+          contributions.splice(contributions.indexOf(item), 1)
+        }
+      },
+    } as unknown as NativeContext
+    attachPluginPanels({
+      context,
+      host,
+      render: () => null,
+      mobile: { current: () => state.mobile, select: (key) => set("mobile", key) },
     })
-    const model = createSessionTabs({
-      tabs: () => tabs,
-      pluginTabs: () => panels().map(pluginPanelTab),
-      pathFromTab: (tab) => (tab.startsWith("file://") ? tab.slice(7) : undefined),
-      normalizeTab: (tab) => tab,
-      review: () => true,
-      hasReview: () => true,
-    })
-    return { state, set, tabs, host, contexts, model, dispose }
+    const panels = () => nativePanels().flatMap((panel) => panel.list(views.get(state.session)!, []))
+    const model = {
+      activeTab: tabs.active,
+      panelTabs: () => panels().map((panel) => `plugin-panel:${panel.id}`),
+    }
+    const menu = () =>
+      contributions
+        .filter((item) => item.point === Menu.id)
+        .map((item) => (item.value as () => Menu | undefined)())
+        .filter(Boolean)
+    const nativeClose = (key: string) => closeNative(key, views.get(state.session)!)
+    return { state, set, tabs, host, contexts, model, nativeClose, menu, panels, dispose }
   })
 }
 
@@ -80,16 +154,15 @@ test("plugin panels use closable native tabs without replacing file previews", a
     expect(f.tabs.all()).toEqual(["context", "file://preview", key])
     expect(f.state.sessions.one.preview).toBe("file://preview")
     expect(f.model.activeTab()).toBe(key)
-    expect(f.model.closableTab()).toBe(key)
-    expect(f.model.activeFileTab()).toBeUndefined()
-    expect(f.model.openedTabs()).toEqual(["file://preview"])
+    expect(f.panels().map((panel) => panel.id)).toEqual([key.slice("plugin-panel:".length)])
+    expect(f.panels()[0]).toBe(f.panels()[0])
     f.tabs.open("review")
     expect(f.host.state.panels).toHaveLength(1)
     f.contexts.first.ui.panel.open("details")
     expect(f.tabs.active()).toBe(key)
     expect(f.tabs.all().filter((tab) => tab === key)).toHaveLength(1)
     expect(f.state.activation).toBe(2)
-    f.tabs.close(key)
+    f.nativeClose(key)
     expect(f.host.state.panels).toHaveLength(0)
     f.contexts.first.ui.panel.open("details")
     expect(f.tabs.active()).toBe(key)
@@ -114,17 +187,17 @@ test("panels are isolated by owner and session and removed on disable", async ()
     expect(f.host.state.panel?.presentation).toBe("panel")
     f.set("session", "two")
     expect(f.model.panelTabs()).toEqual([])
-    f.contexts.first.ui.panel.open("details")
+    f.contexts.first.ui.panel.open("details", { title: "Second session" })
+    expect(f.panels().map((panel) => panel.title)).toEqual(["Second session"])
     expect(f.host.state.panels).toHaveLength(3)
     f.set("session", "one")
     expect(f.tabs.all()).toContain(pluginPanelTab(second))
+    expect(f.panels().map((panel) => panel.title)).toEqual(["first", "second"])
     await f.host.disable("first")
     expect(f.tabs.all()).not.toContain(pluginPanelTab(first))
     expect(f.host.state.panels).toHaveLength(1)
     expect(f.model.activeTab()).toBe(pluginPanelTab(second))
     f.set("session", "two")
-    expect(f.tabs.all()).toEqual([])
-    f.tabs.open("plugin-panel:removed/details")
     expect(f.tabs.all()).toEqual([])
   } finally {
     await f.host.dispose()
@@ -135,19 +208,23 @@ test("panels are isolated by owner and session and removed on disable", async ()
 test("native menu entries remain discoverable after closing their session tab", async () => {
   const f = await ready()
   try {
-    f.contexts.first.ui.panel.register({ name: "overview", title: "Project overview" })
+    const unregister = f.contexts.first.ui.panel.register({ name: "overview", title: "Project overview" })
     const entry = f.host.state.availablePanels[0]
     expect(f.tabs.all()).toEqual([])
+    expect(f.menu().map((item) => item!.title)).toEqual(["Project overview"])
     expect(entry.open()).toBe(true)
     const key = pluginPanelTab(entry)
     expect(f.model.activeTab()).toBe(key)
     expect(f.state.activation).toBe(1)
-    f.tabs.close(key)
+    f.nativeClose(key)
     expect(f.host.state.panels).toHaveLength(0)
     expect(f.host.state.availablePanels).toHaveLength(1)
     entry.open()
     expect(f.tabs.all()).toEqual([key])
     expect(f.state.activation).toBe(2)
+    unregister()
+    expect(f.menu()).toEqual([])
+    expect(f.tabs.all()).toEqual([key])
     await f.host.disable("first")
     expect(f.tabs.all()).toEqual([])
     expect(f.host.state.availablePanels).toHaveLength(0)
@@ -191,6 +268,48 @@ test("shared panel projection follows session, native selection, maximize, and r
     expect(view.keys()).toEqual([])
   } finally {
     view.dispose()
+    await f.host.dispose()
+    f.dispose()
+  }
+})
+
+test("panel requests wait for loaded layout and location, including reauthentication", async () => {
+  const f = await ready()
+  try {
+    f.set("ready", false)
+    f.contexts.first.ui.panel.open("details")
+    expect(f.tabs.all()).toEqual([])
+    f.set("located", false)
+    f.set("ready", true)
+    expect(f.tabs.all()).toEqual([])
+    f.set("located", true)
+    const key = pluginPanelTab(f.host.state.panel!)
+    expect(f.tabs.all()).toEqual([key])
+    f.set("located", false)
+    await f.host.disable("first")
+    expect(f.tabs.all()).toEqual([key])
+    f.set("located", true)
+    expect(f.tabs.all()).toEqual([])
+  } finally {
+    await f.host.dispose()
+    f.dispose()
+  }
+})
+
+test("narrow-screen plugin requests select the native view and closing restores the conversation", async () => {
+  const f = await ready()
+  try {
+    f.set("narrow", true)
+    f.contexts.first.ui.panel.register({ name: "overview", title: "Overview" })
+    f.host.state.availablePanels[0].open()
+    expect(f.state.mobile).toBe(pluginPanelTab(f.host.state.panel!))
+    f.contexts.first.ui.panel.close()
+    expect(f.state.mobile).toBe("session")
+    f.host.state.availablePanels[0].open()
+    await f.host.disable("first")
+    expect(f.state.mobile).toBe("session")
+    expect(f.tabs.all()).toEqual([])
+  } finally {
     await f.host.dispose()
     f.dispose()
   }

@@ -1,6 +1,6 @@
-import { createMemo, type Accessor } from "solid-js"
+import { type Accessor } from "solid-js"
 import { usePlugins } from "@/plugins/context"
-import { createPluginPanelView, pluginPanelTab } from "@/plugins/panel-model"
+import { createPluginPanelView } from "@/plugins/panel-model"
 
 // Keep upstream callers limited to state inputs and small component mount points.
 export function useSessionPanelExtension(input: {
@@ -8,8 +8,4 @@ export function useSessionPanelExtension(input: {
   activeTab: Accessor<string | undefined>
 }) {
   return createPluginPanelView({ host: usePlugins().host, ...input })
-}
-export function useSessionPanelKeys(sessionID: Accessor<string | undefined>) {
-  const host = usePlugins().host
-  return createMemo(() => host.state.panels.filter((panel) => panel.sessionID === sessionID()).map(pluginPanelTab))
 }

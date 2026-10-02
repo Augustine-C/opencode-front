@@ -58,12 +58,14 @@ Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `cre
 | `session.composer.top` | sessionID                                                     | Above the active session composer          |
 | `session.header`       | sessionID                                                     | Above session content                      |
 | `session.panel`        | sessionID, name, width, presentation, close, toggleFullscreen | An explicitly opened plugin panel          |
-| `sidebar.content`      | sessionID                                                     | Top of the session summary                 |
-| `sidebar.footer`       | sessionID                                                     | Bottom of the session summary              |
+| `sidebar.content`      | sessionID                                                     | Native side-pane sidebar content                 |
+| `sidebar.footer`       | sessionID                                                     | Beneath the native side-pane sidebar              |
 
 A slot supports exactly one of `prepend`, `append`, `before`, `after`, or `replace`. Additive contributions retain enablement order. At the same target, the last registered replacement wins. A replacement suppresses contributions under its dot-prefixed descendants; before/after siblings on that same boundary survive. An absent additive target falls back to its nearest mounted dot-prefixed ancestor; absent replacements are suppressed. Inactive routes naturally have unmounted slots. The host exposes resolution diagnostics through its API. Settings shows plugin enablement and errors without exposing slot-resolution counts.
 
-Slots preserve the host layout: wrapping or replacing one boundary does not grant a contribution independent control over unrelated columns. `session.panel` opens as a closable, draggable tab alongside Review, Context, and files in the session side pane. It shares the pane’s resizing controls. On narrow screens it appears as a session view; the More menu selects among open plugin panels. Panels belong to their plugin and session: switching sessions shows only that session’s panels, closing a tab dismisses its panel, and disabling its owner removes all its panels. Only the owning plugin renders into a panel. The `width` input measures its actual content area. Fullscreen presentation maximizes the pane within the workspace while retaining the native tabs.
+Slots preserve the host layout: wrapping or replacing one boundary does not grant a contribution independent control over unrelated columns. `session.panel` opens as a closable, draggable tab alongside Review, Context, and files in the session side pane. It shares the pane’s resizing controls. On narrow screens it appears as a session view; the More menu opens registered panels and selects active plugin panels. Panels belong to their plugin and session: switching sessions shows only that session’s panels, closing a tab dismisses its panel, and disabling its owner removes all its panels. Only the owning plugin renders into a panel. The `width` input measures its actual content area. Fullscreen presentation maximizes the pane within the workspace while retaining the native tabs.
+
+As of upstream v2.0.22, a port-owned bridge publishes browser plugin panels as native GUI SDK `Panel`/`Menu` contributions. Existing browser plugin API v1, configuration files, and persisted panel keys remain supported. Closing the selected mobile plugin view returns to the conversation.
 
 ## Context and lifecycle
 

@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "@opencode/plugin-browser",
-  "version": "2.0.20",
+  "version": "2.0.22",
   "type": "module",
   "private": true,
   "exports": {

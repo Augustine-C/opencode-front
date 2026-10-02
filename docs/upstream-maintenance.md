@@ -4,9 +4,9 @@ The frontend is pinned by `docs/upstream.json`. The import policy is executable 
 
 ## Import policy
 
-The seven retained packages (`app`, `ui`, `session-ui`, `client`, `schema`, `protocol`, `util`) use recursive imports with explicit exclusions for unit tests, component tests, E2E suites, stories, and test-browser fixtures. Runtime code and assets newly added within these roots are selected automatically. Playwright configuration files and icons remain included; exclusions match test files and directories rather than names that merely mention a test tool. The four existing client API/type fixture files are explicit exceptions to preserve the existing port’s import footprint.
+The eight retained packages (`app`, `ui`, `session-ui`, `client`, `schema`, `protocol`, `util`, `gui-extensions`) use recursive imports with explicit exclusions for unit tests, component tests, E2E suites, stories, and test-browser fixtures. Runtime code and assets newly added within these roots are selected automatically. Playwright configuration files and icons remain included; exclusions match test files and directories rather than names that merely mention a test tool. The four existing client API/type fixture files are explicit exceptions to preserve the existing port’s import footprint.
 
-`plugin-browser` imports only `package.json` and `src/rpc.ts`. Its implementation and the upstream backend/core/CLI/managed desktop shell are outside the import scope. Dependency patches use an explicit frontend-only list: review that list together with the root dependency catalog and lockfile whenever dependencies change. The upstream root license is included.
+`plugin-browser` imports only `package.json` and `src/rpc.ts`. Its implementation and the upstream backend/core/CLI/managed desktop shell are outside the import scope. `gui-extensions` supplies the native frontend features and SDK introduced in v2.0.22. Its main-process entries remain pristine imported sources, but this port loads only its renderer/SDK exports; the thin Electron shell does not activate those entries or manage services. Dependency patches use an explicit frontend-only list: review that list together with the root dependency catalog and lockfile whenever dependencies change. The upstream root license is included.
 
 Each imported target falls into one of these categories:
 
@@ -51,9 +51,11 @@ bun run build
 
 | Adapter | Owns | Native mount points |
 | --- | --- | --- |
-| `src/extensions/session-panel-state.ts` | Connects plugin state to session identities and active-tab accessors | Session model, screen, pane geometry, side pane |
-| `src/plugins/panel-model.ts` | Panel state projection, resource lifetime bridge, menu entries, session isolation | Accessed through the session adapter |
-| `src/extensions/session-panels.tsx` | Native plugin tab, menu entries, toolbar, desktop/mobile content | Small JSX mount points in the existing session pane/screen |
+| `src/extensions/session-panel-state.ts` | Connects plugin state to session identities and active-tab accessors | Pane geometry and toolbar |
+| `src/plugins/panel-model.ts` | Panel keys and state projection | Accessed through the session adapter |
+| `src/extensions/plugin-panels.ts` | Native SDK panel/menu contributions, session lifetime, storage readiness, mobile selection | Upstream extension definition list |
+| `src/extensions/plugin-panel-host.tsx` | Attaches the SDK bridge and scopes plugin rendering | Shell |
+| `src/extensions/session-panels.tsx` | Selected plugin fullscreen toolbar | Native side region |
 | `src/extensions/project-tabs.tsx` | Project group resolution, display ordering, group headings | Titlebar tab strip |
 | `src/extensions/project-tab-model.ts` | Pure project matching and grouping | Group adapter and tests |
 | `src/extensions/grouped-tab-status.tsx` | Grouped session progress/unread indicator | Session tab avatar fallback |
@@ -63,3 +65,8 @@ bun run build
 Rendering and data adapters are separate so session model/geometry code does not import the panel renderer. The existing plugin manager and named slot renderer stay in `src/plugins`; the standalone SDK stays in `packages/frontend-plugin`.
 
 For future customization, put state projection, presentation, and feature-specific styles in these port-owned modules. Upstream components should pass accessors, invoke adapter operations, and mount small components. Keyboard navigation, drag sensors, file loading, transcript rendering, and review geometry remain with the upstream components that own them. Persisted settings and tab-state extensions still require explicit native integration; this extraction does not eliminate all merge conflicts or introduce an automatic three-way merge workflow.
+
+
+## v2.0.22 panel migration
+
+Review, Context, files, terminals, and related features moved from app session folders to `gui-extensions`. Follow the native `Panel`, `Menu`, `Layout`, and `Sessions` SDK contracts instead of restoring removed session helpers. Browser plugin API v1 and persisted `plugin-panel:` keys remain compatible through the port adapter. `Layout.open(..., { select: true })` appends/selects plugin tabs while preserving file previews; no plugin-specific session reducer is needed. Hold layout writes until storage and the session location are available. Sidebar slot boundaries now wrap the native side-pane sidebar rather than the removed session-summary implementation.

@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/anomalyco/opencode",
-  "commit": "84c9be93a56304a108f1a22df0c5d62c26d5b6ca",
-  "version": "2.0.20",
+  "commit": "527f0b931d1f9b3ebd34e106c51b31ce5db5b075",
+  "version": "2.0.22",
   "packages": [
     "app",
     "ui",
@@ -10,9 +10,10 @@
     "schema",
     "protocol",
     "util",
+    "gui-extensions",
     "plugin-browser"
   ],
-  "note": "Frontend sources and protocol/client schemas only; no server, core, CLI, or managed sidecar.",
+  "note": "Frontend sources, GUI extension renderers/SDK, and protocol/client schemas; no server, core, CLI, or managed sidecar. Imported GUI main entries are dormant and are not loaded by this port.",
   "license": "MIT",
   "copyright": "Copyright (c) 2025 opencode",
   "licenseFile": "LICENSE",

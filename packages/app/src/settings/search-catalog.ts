@@ -26,20 +26,6 @@ export const clientSettings: Entry<SettingsRootTab>[] = [
   { tab: "appearance", label: "settings.general.section.appearance" },
   { tab: "notifications", label: "settings.tab.notifications" },
   { tab: "shortcuts", label: "settings.shortcuts.title", keywords: "keybind keyboard hotkey" },
-  {
-    tab: "pairing",
-    label: "settings.pairing.title",
-    keywords: "pair device qr local",
-    available: "desktop",
-  },
-  {
-    tab: "pairing",
-    label: "pair.screenActive.title",
-    description: "pair.screenActive.description",
-    target: "settings-keep-screen-active",
-    keywords: "display sleep awake local",
-    available: "desktop",
-  },
   { tab: "about", label: "settings.tab.about", keywords: "version license credits" },
   { tab: "general", label: "settings.general.row.language.title", target: "settings-language" },
   {
@@ -104,20 +90,6 @@ export const clientSettings: Entry<SettingsRootTab>[] = [
     target: "settings-timeline-detail",
     section: "settings.timeline.title",
     keywords: "thinking reasoning tools timeline summary detailed",
-  },
-  {
-    tab: "general",
-    label: "settings.general.row.releaseNotes.title",
-    target: "settings-release-notes",
-    section: "settings.general.section.updates",
-    available: "desktop",
-  },
-  {
-    tab: "general",
-    label: "settings.updates.row.check.title",
-    target: "settings-check-updates",
-    section: "settings.general.section.updates",
-    available: "desktop",
   },
   {
     tab: "general",
@@ -212,7 +184,7 @@ export const serverSettings: Entry<SettingsServerTab>[] = [
     label: "settings.extensions.tab.mcps",
     keywords: "model context protocol tools",
   },
-  { tab: "extensions", subtab: "plugins", label: "status.popover.tab.plugins" },
+  { tab: "extensions", subtab: "plugins", label: "settings.extensions.tab.plugins" },
   { tab: "extensions", subtab: "skills", label: "settings.extensions.tab.skills" },
   {
     tab: "general",
@@ -242,7 +214,7 @@ export const projectSettings: Entry<SettingsProjectTab>[] = [
     label: "settings.extensions.tab.mcps",
     keywords: "model context protocol tools",
   },
-  { tab: "extensions", subtab: "plugins", label: "status.popover.tab.plugins" },
+  { tab: "extensions", subtab: "plugins", label: "settings.extensions.tab.plugins" },
   { tab: "extensions", subtab: "skills", label: "settings.extensions.tab.skills" },
   { tab: "extensions", subtab: "lsps", label: "project.settings.extensions.tab.lsps", keywords: "language servers" },
 ]

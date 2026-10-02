@@ -49,3 +49,16 @@ Session panel state/rendering, project group presentation and CSS, grouped statu
 The production tab derivation benchmark recorded before session edits measured a median 18.508500 ms versus 17.828750 ms afterward, for 20,000 operations per sample. Every sample retained checksum 592000. These measurements do not benchmark the new menu/group rendering or establish a browser performance improvement. Bun emitted its existing tsconfig directory warning while producing both successful benchmark bundles.
 
 Live visual and drag/menu interaction verification remains pending because preview access was denied earlier. No app/backend was restarted, and the original upstream checkout was not modified. Automatic three-way merging and a full upstream-version integration test are outside this change; the new plan is an explicit review report.
+
+
+## Upstream v2.0.22 (2026-10-03)
+
+The latest remote `v2` tag was verified as `v2.0.22`, commit `527f0b931d1f9b3ebd34e106c51b31ce5db5b075`. Both source tags were fetched into an isolated bare repository; the original `opencode-dev/opencode_v2` checkout remained clean. The inventory now records 3,198 imported targets, with 3,155 pristine files and 43 declared overlays. The new `gui-extensions` root retains the upstream renderer features and SDK. Its main entries are not loaded by the thin desktop shell.
+
+Browser plugins now publish panels and menu entries through the native GUI SDK. Project inventory discovery, grouped horizontal/vertical tabs, settings, named slots, existing plugin configuration, and persisted `plugin-panel:` keys are retained. The old app session tab helpers were removed with upstream; the existing panel regression suite now drives the real browser plugin host and the new production bridge against a native-layout contract fixture. Tests cover preview preservation, native/SDK close, stable panel descriptors, reopening, owner/session isolation, disabling an owner, delayed layout/location readiness, and narrow-screen selection/close fallback. Withdrawing a menu registration removes its native entry while its open panel remains usable. A mutation that omitted native `select` was confirmed to fail the preview-preservation test, then reverted. Sidebar slots wrap the new native side-pane sidebar.
+
+`bun run check` passed the import audit, all type checks, and 37 tests (166 assertions). `bun run build` completed with inherited CSS/import/chunk warnings and generated PWA assets. Root and redistributed MIT notices retain upstream attribution and identify the new source commit.
+
+Before session edits, the production benchmark was changed to a common reducer workload, because upstream removed the old tab-derivation API. Frozen pre-upgrade and candidate bundles each ran seven samples of 20,000 file-tab preview/open/close cycles after warmup. The baseline median was 7.907333 ms and the candidate median 7.062750 ms; every sample retained checksum 720000. This measures reducer work only, not rendered UI, transcript performance, or backend latency, and small timing differences are not a speed guarantee.
+
+Rendered desktop/mobile interactions and live backend compatibility remain unverified because browser preview access was denied earlier in this chat. No app or backend was restarted or otherwise managed.

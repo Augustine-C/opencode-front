@@ -177,6 +177,9 @@ export function PluginsProvider(props: ParentProps) {
   const value = createPlugins()
   return <Context.Provider value={value}>{props.children}</Context.Provider>
 }
+export function PluginScope(props: ParentProps<{ value: PluginsApi }>) {
+  return <Context.Provider value={props.value}>{props.children}</Context.Provider>
+}
 export function usePlugins() {
   const context = useContext(Context)
   if (!context) throw new Error("PluginsProvider is missing")
