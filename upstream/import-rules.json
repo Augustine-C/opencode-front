@@ -255,6 +255,7 @@
     {
       "patterns": [
         ".gitignore",
+        "AGENTS.md",
         "NOTICE",
         "README.md",
         "bun.lock",
