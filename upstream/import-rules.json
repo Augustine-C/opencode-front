@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "imports": [
+    {
+      "source": "packages/app",
+      "target": "packages/app",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/ui",
+      "target": "packages/ui",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/session-ui",
+      "target": "packages/session-ui",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/client",
+      "target": "packages/client",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ],
+      "keep": [
+        "test/api.types.ts",
+        "test/fixture/service-fixture.ts",
+        "test/fixture/service-timing.ts",
+        "test/fixture/service.ts"
+      ]
+    },
+    {
+      "source": "packages/schema",
+      "target": "packages/schema",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/protocol",
+      "target": "packages/protocol",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/util",
+      "target": "packages/util",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/plugin-browser",
+      "target": "packages/plugin-browser",
+      "only": [
+        "package.json",
+        "src/rpc.ts"
+      ]
+    },
+    {
+      "source": "patches",
+      "target": "patches",
+      "only": [
+        "@dnd-kit%2Fdom@0.5.0.patch",
+        "@pierre%2Ftrees@1.0.0-beta.4.patch",
+        "@tanstack%2Fvirtual-core@3.17.8.patch",
+        "ghostty-web@0.3.0.patch",
+        "solid-js@1.9.15.patch",
+        "vite@8.2.2.patch"
+      ]
+    },
+    {
+      "source": "LICENSE",
+      "target": "LICENSE"
+    }
+  ],
+  "overlays": [
+    {
+      "id": "generated-icons",
+      "reason": "Generated frontend icons are retained independently of upstream icon generation inputs.",
+      "files": [
+        "packages/app/public/apple-touch-icon-v3.png",
+        "packages/app/public/apple-touch-icon.png",
+        "packages/app/public/favicon-96x96-v3.png",
+        "packages/app/public/favicon-96x96.png",
+        "packages/app/public/favicon-v3.ico",
+        "packages/app/public/favicon-v3.svg",
+        "packages/app/public/favicon.ico",
+        "packages/app/public/favicon.svg",
+        "packages/app/public/social-share-zen.png",
+        "packages/app/public/social-share.png",
+        "packages/app/public/web-app-manifest-192x192.png",
+        "packages/app/public/web-app-manifest-512x512.png"
+      ]
+    },
+    {
+      "id": "session-panels",
+      "reason": "Mount plugin panel state and components into native session tabs and pane geometry.",
+      "files": [
+        "packages/app/src/session/files/session-side-panel.tsx",
+        "packages/app/src/session/helpers.ts",
+        "packages/app/src/session/model.ts",
+        "packages/app/src/session/review/model.ts",
+        "packages/app/src/session/review/view.tsx",
+        "packages/app/src/session/screen-layout.ts",
+        "packages/app/src/session/screen.tsx",
+        "packages/app/src/shell/state/session-tabs.ts"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/session-panel-state.ts",
+        "packages/app/src/extensions/session-panels.tsx",
+        "packages/app/src/plugins/panel-model.ts",
+        "packages/app/src/plugins/panel.tsx"
+      ]
+    },
+    {
+      "id": "project-tabs",
+      "reason": "Optional project grouping and compact session indicators in both tab orientations.",
+      "files": [
+        "packages/app/src/settings/general/general.tsx",
+        "packages/app/src/settings/model.tsx",
+        "packages/app/src/shell/titlebar/tab-nav.tsx",
+        "packages/app/src/shell/titlebar/tab-strip.tsx",
+        "packages/app/src/shell/titlebar/titlebar.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/project-tabs.tsx",
+        "packages/app/src/extensions/project-tab-model.ts",
+        "packages/app/src/extensions/project-tabs.css",
+        "packages/app/src/extensions/grouped-tab-status.tsx"
+      ]
+    },
+    {
+      "id": "plugin-settings",
+      "reason": "Expose frontend plugin management in the existing client settings routes.",
+      "files": [
+        "packages/app/src/runtime/i18n/en.ts",
+        "packages/app/src/settings/pages.ts",
+        "packages/app/src/settings/route.ts",
+        "packages/app/src/settings/search-catalog.ts",
+        "packages/app/src/settings/shell.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/plugins/manager.tsx"
+      ]
+    },
+    {
+      "id": "service-attachment",
+      "reason": "Connect to an existing service and discover its projects without managing a backend.",
+      "files": [
+        "packages/app/src/runtime/platform/web.ts",
+        "packages/app/src/runtime/server/registry.tsx",
+        "packages/app/src/runtime/server/runtime.tsx",
+        "packages/app/src/servers/connect/screen.css",
+        "packages/app/src/servers/connect/screen.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/project-inventory.ts"
+      ]
+    },
+    {
+      "id": "plugin-slots",
+      "reason": "Mount the frontend provider and named slot boundaries around upstream content.",
+      "files": [
+        "packages/app/src/app.tsx",
+        "packages/app/src/composer/composer.tsx",
+        "packages/app/src/home/route.tsx",
+        "packages/app/src/session/summary/panel.tsx",
+        "packages/app/src/shell/shell.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/plugins/context.tsx",
+        "packages/app/src/plugins/slot.tsx"
+      ]
+    },
+    {
+      "id": "frontend-tooling",
+      "reason": "Frontend-only build, package configuration, environment types, and contributor instructions.",
+      "files": [
+        "packages/app/AGENTS.md",
+        "packages/app/package.json",
+        "packages/app/src/custom-elements.d.ts",
+        "packages/app/tsconfig.json",
+        "packages/app/vite.config.ts",
+        "packages/app/vite.icons.ts",
+        "packages/client/package.json",
+        "packages/plugin-browser/package.json"
+      ]
+    }
+  ],
+  "local": [
+    {
+      "patterns": [
+        ".gitignore",
+        "NOTICE",
+        "README.md",
+        "bun.lock",
+        "package.json",
+        "docs/**",
+        "examples/**",
+        "scripts/**",
+        "upstream/**",
+        ".github/**"
+      ],
+      "reason": "Independent project metadata, tooling, documentation, and examples."
+    },
+    {
+      "patterns": [
+        "packages/frontend-plugin/**",
+        "packages/app/src/plugins/**",
+        "packages/app/src/extensions/**",
+        "packages/app/test/**",
+        "packages/app/performance/**",
+        "packages/app/.env.example",
+        "packages/app/icons/**",
+        "packages/app/public/LICENSE",
+        "packages/app/public/NOTICE"
+      ],
+      "reason": "Port-owned extension modules, regression tests, icon inputs, and redistributed notices."
+    }
+  ]
+}

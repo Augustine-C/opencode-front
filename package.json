@@ -84,10 +84,14 @@
   "scripts": {
     "dev": "bun run --cwd packages/app dev",
     "build": "bun run --cwd packages/app build",
-    "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck",
-    "test": "bun test --conditions=browser packages/frontend-plugin/test packages/app/test",
-    "check": "bun run typecheck && bun run test",
-    "desktop": "bun run scripts/desktop.ts"
+    "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck && bun run typecheck:upstream",
+    "test": "bun test --conditions=browser packages/frontend-plugin/test packages/app/test scripts/upstream/test",
+    "check": "bun run upstream:check && bun run typecheck && bun run test",
+    "desktop": "bun run scripts/desktop.ts",
+    "upstream:check": "bun run scripts/upstream/check.ts check",
+    "upstream:plan": "bun run scripts/upstream/check.ts plan",
+    "typecheck:upstream": "tsgo --noEmit --module ESNext --moduleResolution Bundler --target ESNext --types bun --skipLibCheck scripts/upstream/check.ts scripts/upstream/model.ts scripts/upstream/test/imports.test.ts",
+    "upstream:record": "bun run scripts/upstream/check.ts record"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

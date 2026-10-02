@@ -27,5 +27,7 @@
     "plugin-browser": [
       "src/rpc.ts"
     ]
-  }
+  },
+  "importRules": "upstream/import-rules.json",
+  "inventory": "upstream/inventory.json"
 }

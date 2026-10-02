@@ -1,8 +1,8 @@
 import { batch } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
-import { pathKey } from "../../workspaces/path-key"
-import type { ServerScope } from "./scope"
-import type { serverState } from "./persistence"
+import { pathKey } from "../workspaces/path-key"
+import type { ServerScope } from "../runtime/server/scope"
+import type { serverState } from "../runtime/server/persistence"
 
 type ServerState = ReturnType<typeof serverState>["current"]["Type"]
 

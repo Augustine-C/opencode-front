@@ -8,8 +8,7 @@ import { same } from "@/runtime/persistence/equality"
 import { containsDirectory, isProjectDirectory, isWorkspaceDirectory } from "@/workspaces/paths"
 import { projectForSession } from "@/shell/layout/helpers"
 import { useBrowserAttachments } from "./browser/attachments"
-import { usePlugins } from "@/plugins/context"
-import { pluginPanelTab } from "@/plugins/panel-model"
+import { useSessionPanelKeys } from "@/extensions/session-panel-state"
 import { createSessionTabs } from "./helpers"
 import {
   normalizeSessionTab,
@@ -28,7 +27,6 @@ const idle = { type: "idle" as const }
 
 export function useSessionModel() {
   const file = useFile()
-  const plugins = usePlugins()
   const data = useData()
   const server = useServer()
   const shellTabs = useTabs()
@@ -82,7 +80,7 @@ export function useSessionModel() {
   const normalizeTab = (tab: string) => normalizeSessionTab(tab, file.tab)
   const tabs = createSessionTabs({
     tabs: layout.tabs,
-    pluginTabs: () => plugins.host.state.panels.filter((panel) => panel.sessionID === sessionID()).map(pluginPanelTab),
+    pluginTabs: useSessionPanelKeys(sessionID),
     pathFromTab: file.pathFromTab,
     normalizeTab,
     review: isDesktop,

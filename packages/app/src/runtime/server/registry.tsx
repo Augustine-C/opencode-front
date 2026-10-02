@@ -3,10 +3,10 @@ import { batch, createMemo } from "solid-js"
 import { Persist, persisted } from "@/runtime/persistence/storage"
 import { ServerScope } from "@/runtime/server/scope"
 import { ServerHttp, ServerHttpBase, ServerKey, serverState } from "./persistence"
-import { createServerProjects } from "./projects"
+import { createServerProjects } from "@/extensions/project-inventory"
 import type { SshItem } from "@/servers/ssh/types"
 
-export { createServerProjects } from "./projects"
+export { createServerProjects } from "@/extensions/project-inventory"
 
 // Retain closed paths until reopened so settings can exclude them from the server inventory.
 // The Home page independently limits the visible recently closed entries.

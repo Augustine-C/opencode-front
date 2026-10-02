@@ -1,4 +1,4 @@
-import { pathKey } from "../../workspaces/path-key"
+import { pathKey } from "../workspaces/path-key"
 
 export type TabProject = {
   id?: string

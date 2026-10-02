@@ -1,8 +1,8 @@
 import { createEffect, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
-import { usePlugins } from "@/plugins/context"
-import { pluginPanelTab, isPluginPanelTab } from "@/plugins/panel-model"
+import { useSessionPanelExtension } from "@/extensions/session-panel-state"
+import { isPluginPanelTab } from "@/plugins/panel-model"
 import { useLayout } from "@/shell/state/layout"
 import { useSettings } from "@/settings/model"
 import { createSizing, shouldShowFileTree } from "./helpers"
@@ -14,7 +14,6 @@ export function createSessionScreenLayout(session: SessionModel) {
   const layout = useLayout()
   const settings = useSettings()
   const size = createSizing()
-  const plugins = usePlugins()
   const view = session.layout.view
   const reviewOpen = createMemo(() => session.isDesktop() && session.layout.view().reviewPanel.opened())
   const reviewPanelOpen = createMemo(() => reviewOpen() && !!session.identity.params.id)
@@ -30,16 +29,11 @@ export function createSessionScreenLayout(session: SessionModel) {
         opened: layout.fileTree.opened(),
       }),
   )
-  const fullscreen = createMemo(
-    () =>
-      reviewPanelOpen() &&
-      plugins.host.state.panels.some(
-        (panel) =>
-          panel.sessionID === session.identity.params.id &&
-          panel.presentation === "fullscreen" &&
-          pluginPanelTab(panel) === session.layout.tabs().active(),
-      ),
-  )
+  const panels = useSessionPanelExtension({
+    sessionID: () => session.identity.params.id,
+    activeTab: () => session.layout.tabs().active(),
+  })
+  const fullscreen = createMemo(() => reviewPanelOpen() && panels.fullscreen())
   const resizable = createMemo(() => !fullscreen() && (reviewPanelOpen() || sideTerminalOpen()))
   const sidePanelOpen = createMemo(() => resizable() || fileTreeOpen())
   const [rowSize, setRowSize] = createStore<{ width?: number; height?: number }>({})

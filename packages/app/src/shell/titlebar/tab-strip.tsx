@@ -7,7 +7,7 @@ import { RestrictToHorizontalAxis, RestrictToVerticalAxis } from "@dnd-kit/abstr
 import { RestrictToElement } from "@dnd-kit/dom/modifiers"
 import { arrayMove } from "@dnd-kit/helpers"
 import { tabHref, tabKey, type SessionTab, type Tab } from "@/shell/tabs/tabs"
-import { ServerConnection, serverName } from "@/runtime/server/registry"
+import { ServerConnection } from "@/runtime/server/registry"
 import { DraftTabItem, TabNavItem } from "@/shell/titlebar/tab-nav"
 import { useGlobal, useServerCtx, type ServerCtx } from "@/runtime/server/runtime"
 import { useLanguage } from "@/runtime/i18n/language"
@@ -18,12 +18,7 @@ import { base64Encode } from "@opencode/util/encode"
 import { showToast } from "@/shell/notifications/toast"
 import { isTabCloseTarget } from "./tab-gesture"
 import { adjacentTabKey, mergeVisibleTabOrder } from "./tab-order"
-import { useSettings } from "@/settings/model"
-import { ProjectAvatar, type ProjectAvatarStyle } from "@opencode/ui/project-avatar"
-import { getProjectAvatarVariant } from "@/shell/state/layout"
-import { displayName, getProjectAvatarSource } from "@/shell/layout/helpers"
-import { pathKey } from "@/workspaces/path-key"
-import { groupTabs, tabProject } from "./tab-groups"
+import { useProjectTabGroups } from "@/extensions/project-tabs"
 import type { SessionInfo } from "@opencode/client/promise"
 
 function SessionTabSlot(props: {
@@ -275,47 +270,13 @@ export function TitlebarTabStrip(props: {
   const global = useGlobal()
   const language = useLanguage()
   const command = useCommand()
-  const settings = useSettings()
-  const tabs = useTabs()
-  const grouped = () => settings.appearance.groupTabsByProject()
   const vertical = () => props.orientation === "vertical"
   let listRef!: HTMLDivElement
   const [visibility, setVisibility] = createStore<Record<string, boolean>>({})
-  const projectGroups = createMemo(() => {
-    if (!grouped())
-      return new Map<
-        string,
-        { key: string; label: string; title: string; name: string; src?: string; variant?: ProjectAvatarStyle }
-      >()
-    return new Map(
-      props.tabs.map((tab) => {
-        const conn = global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
-        const ctx = conn ? global.ensureServerCtx(conn) : undefined
-        const session = tab.type === "session" ? ctx?.data.session.get(tab.sessionId) : undefined
-        const draft = tab.type === "draft" ? tab : tabs.pendingSession(tab.server, tab.sessionId)?.draft
-        const directory = session?.location.directory ?? draft?.directory ?? tabs.info[tabKey(tab)]?.directory
-        const project = tabProject(draft?.worktree ?? directory, session?.projectID, ctx?.sync.data.project ?? [])
-        const root = project?.worktree ?? draft?.worktree ?? directory
-        const label = root
-          ? displayName({ name: project?.name, worktree: root })
-          : language.t("session.tab.group.unassigned")
-        const server = conn && global.servers.list().length > 1 ? serverName(conn) : undefined
-        return [
-          tabKey(tab),
-          {
-            key: JSON.stringify([tab.server, root ? pathKey(root) : null]),
-            label: server ? `${label} · ${server}` : label,
-            title: [label, root, server].filter(Boolean).join(" · "),
-            name: label,
-            src: getProjectAvatarSource(project?.id, project?.icon),
-            variant: getProjectAvatarVariant(project?.icon?.color),
-          },
-        ] as const
-      }),
-    )
-  })
-  const groupKey = (tab: Tab) => projectGroups().get(tabKey(tab))?.key ?? JSON.stringify([tab.server, null])
-  const displayedTabs = createMemo(() => (grouped() ? groupTabs(props.tabs, groupKey) : props.tabs))
+  const projectGroups = useProjectTabGroups({ tabs: () => props.tabs, current: () => props.currentTab, vertical })
+  const grouped = projectGroups.enabled
+  const groupKey = projectGroups.key
+  const displayedTabs = projectGroups.ordered
   const visibleTabs = createMemo(() => displayedTabs().filter((tab) => tab.type === "draft" || visibility[tabKey(tab)]))
   const visibleTabIds = () => visibleTabs().map(tabKey)
 
@@ -426,44 +387,14 @@ export function TitlebarTabStrip(props: {
                 const id = tabKey(tab)
                 let ref!: HTMLDivElement
                 const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
-                const groupIndex = () =>
-                  grouped()
-                    ? visibleTabs()
-                        .filter((item) => groupKey(item) === groupKey(tab))
-                        .findIndex((item) => tabKey(item) === id)
-                    : undefined
+                const groupIndex = () => projectGroups.index(tab, visibleTabs())
                 useTabShortcut(visibleIndex, () => props.onNavigate(tab, ref))
                 const serverCtx = useServerCtx(() => {
                   if (tab.type !== "session") return
                   return global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
                 })
 
-                const GroupHeader = () => (
-                  <Show when={grouped() && visibleTabs().find((item) => groupKey(item) === groupKey(tab)) === tab}>
-                    <div
-                      data-slot="tab-project-group"
-                      data-active={!!props.currentTab && groupKey(props.currentTab) === groupKey(tab)}
-                      title={projectGroups().get(id)?.title}
-                      aria-label={projectGroups().get(id)?.title}
-                      role={vertical() ? "heading" : "img"}
-                      aria-level={vertical() ? 3 : undefined}
-                    >
-                      <Show
-                        when={vertical()}
-                        fallback={
-                          <ProjectAvatar
-                            fallback={projectGroups().get(id)?.name ?? ""}
-                            src={projectGroups().get(id)?.src}
-                            variant={projectGroups().get(id)?.variant}
-                            aria-hidden="true"
-                          />
-                        }
-                      >
-                        <span>{projectGroups().get(id)?.label}</span>
-                      </Show>
-                    </div>
-                  </Show>
-                )
+                const GroupHeader = () => projectGroups.heading(tab, visibleTabs)
 
                 if (tab.type === "session") {
                   return (

@@ -3,7 +3,7 @@ import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createPluginHost } from "../../frontend-plugin/src/runtime"
 import { define, type Context } from "../../frontend-plugin/src/index"
-import { createPluginPanelTabs, pluginPanelTab } from "../src/plugins/panel-model"
+import { createPluginPanelTabs, createPluginPanelView, pluginPanelTab } from "../src/plugins/panel-model"
 import { createSessionTabs } from "../src/session/helpers"
 import { openSessionTab, closeSessionTab, type SessionTabState } from "../src/shell/state/session-tabs"
 
@@ -152,6 +152,45 @@ test("native menu entries remain discoverable after closing their session tab", 
     expect(f.tabs.all()).toEqual([])
     expect(f.host.state.availablePanels).toHaveLength(0)
   } finally {
+    await f.host.dispose()
+    f.dispose()
+  }
+})
+
+test("shared panel projection follows session, native selection, maximize, and registered menu state", async () => {
+  const f = await ready()
+  const view = createRoot((dispose) => ({
+    ...createPluginPanelView({ host: f.host, sessionID: () => f.state.session, activeTab: f.tabs.active }),
+    dispose,
+  }))
+  try {
+    f.contexts.first.ui.panel.register({ name: "overview", title: "Overview" })
+    expect(view.entries()[0].title).toBe("Overview")
+    view.entries()[0].open()
+    const key = view.keys()[0]
+    expect(view.selected()?.name).toBe("overview")
+    expect(view.mobile()?.name).toBe("overview")
+    expect(view.tabs()).toEqual([{ key, title: "Overview" }])
+    view.toggle(view.selected())
+    expect(view.fullscreen()).toBe(true)
+    f.tabs.open("review")
+    expect(view.selected()).toBeUndefined()
+    expect(view.fullscreen()).toBe(false)
+    f.set("session", "two")
+    expect(view.mobile()).toBeUndefined()
+    expect(view.keys()).toEqual([])
+    view.entries()[0].open()
+    expect(view.selected()?.sessionID).toBe("two")
+    view.dismiss(key)
+    expect(view.keys()).toEqual([])
+    f.set("session", "one")
+    expect(view.keys()).toEqual([key])
+    expect(view.select(key)?.sessionID).toBe("one")
+    await f.host.disable("first")
+    expect(view.entries()).toEqual([])
+    expect(view.keys()).toEqual([])
+  } finally {
+    view.dispose()
     await f.host.dispose()
     f.dispose()
   }

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { createComputed, createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
-import { createServerProjects } from "../src/runtime/server/projects"
+import { createServerProjects } from "../src/extensions/project-inventory"
 import { ServerScope } from "../src/runtime/server/scope"
 import type { serverState } from "../src/runtime/server/persistence"
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { groupTabs, tabProject } from "../src/shell/titlebar/tab-groups"
+import { groupTabs, tabProject } from "../src/extensions/project-tab-model"
 import { adjacentTabKey, mergeVisibleTabOrder } from "../src/shell/titlebar/tab-order"
 
 const projects = [
