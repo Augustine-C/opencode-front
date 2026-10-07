@@ -74,3 +74,7 @@ Review, Context, files, terminals, and related features moved from app session f
 ## v2.0.23–v2.0.24 SDK migration
 
 The browser plugin bridge uses the native `MenuItem` registry and `ctx.layout` / `ctx.sessions` host APIs. Panel list/render/focus/close callbacks now receive props with session and screen getters; renderers must read those getters when acting rather than retain a previous routed session. Selection uses `Layout.open(..., { tab: "select" })` to retain file previews. `useExtensionAttachment` lives in `runtime/extension/attachment`. The bridge retains browser plugin API v1 and existing `plugin-panel:` persisted keys. See [release analysis](upstream-v2.0.24.md).
+
+## Native CodeArts Proxy example
+
+`packages/codearts-proxy-extension` is a port-owned standalone package using the native SDK. Its port-owned composition lives in `app/src/extensions/native.ts`; its only host mount is an import and list spread in the declared `runtime/extension/root.tsx` overlay; app package dependencies are part of the existing tooling overlay. The upstream GUI extension sources remain pristine. Browser compatibility adapters remain for other plugins. Native CodeArts preferences migrate through `Store.global(..., { key, pick })`, and the panel declares its previous browser tab key through `Panel.legacy`.

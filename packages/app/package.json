@@ -70,6 +70,7 @@
     "solid-js": "catalog:",
     "solid-presence": "0.2.0",
     "tailwindcss": "4.3.3",
-    "@opencode/frontend-plugin": "workspace:*"
+    "@opencode/frontend-plugin": "workspace:*",
+    "@opencode-front/codearts-proxy-extension": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test"
-import { fetchOverview, overviewURL, parseOverview } from "../src/plugins/builtin/codearts-proxy-api"
+import { fetchOverview, overviewURL, parseOverview } from "../src/api"
 
 const snapshot = () => ({
   version: 1,

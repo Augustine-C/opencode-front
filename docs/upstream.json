@@ -22,7 +22,8 @@
     "Browser plugin SDK and host",
     "Thin Electron desktop shell",
     "Service project discovery",
-    "Optional project tab grouping"
+    "Optional project tab grouping",
+    "Native CodeArts Proxy GUI extension"
   ],
   "partialPackages": {
     "plugin-browser": [

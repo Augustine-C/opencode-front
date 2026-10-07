@@ -1,3 +1,4 @@
+import { nativeExtensions } from "@/extensions/native"
 import { frontendPanels } from "@/extensions/plugin-panels"
 import { createMemo, lazy, onCleanup, Show, Suspense, type ParentProps } from "solid-js"
 import { extensionEnabled } from "@opencode/gui-extensions/sdk/bridge"
@@ -40,7 +41,7 @@ export function ExtensionRoot(props: ParentProps) {
   const os = platform.platform === "desktop" ? platform.os : undefined
 
   // Built-ins only: installed `.ocdx` archives run their main entry until that format ships renderer bundles.
-  const definitions = [...builtins, frontendPanels].filter(
+  const definitions = [...builtins, frontendPanels, ...nativeExtensions].filter(
     (definition: Definition) => !definition.os || (!!os && definition.os.includes(os)),
   )
 

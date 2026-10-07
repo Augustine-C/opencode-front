@@ -23,6 +23,7 @@
         "@dnd-kit/solid": "0.5.0",
         "@ibm/plex": "6.4.1",
         "@kobalte/core": "catalog:",
+        "@opencode-front/codearts-proxy-extension": "workspace:*",
         "@opencode/client": "workspace:*",
         "@opencode/frontend-plugin": "workspace:*",
         "@opencode/gui-extensions": "workspace:*",
@@ -94,6 +95,20 @@
         "effect",
         "solid-js",
       ],
+    },
+    "packages/codearts-proxy-extension": {
+      "name": "@opencode-front/codearts-proxy-extension",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@opencode/gui-extensions": "workspace:*",
+        "@opencode/ui": "workspace:*",
+      },
+      "peerDependencies": {
+        "@opencode/gui-extensions": ">=2.0.24",
+        "@opencode/ui": ">=2.0.24",
+        "effect": "4.0.0-rc.112",
+        "solid-js": ">=1.9.0",
+      },
     },
     "packages/frontend-plugin": {
       "name": "@opencode/frontend-plugin",
@@ -775,6 +790,7 @@
 
     "@npmcli/run-script": ["@npmcli/run-script@10.0.4", "", { "dependencies": { "@npmcli/node-gyp": "^5.0.0", "@npmcli/package-json": "^7.0.0", "@npmcli/promise-spawn": "^9.0.0", "node-gyp": "^12.1.0", "proc-log": "^6.0.0" } }, "sha512-mGUWr1uMnf0le2TwfOZY4SFxZGXGfm4Jtay/nwAa2FLNAKXUoUwaGwBMNH36UHPtinWfTSJ3nqFQr0091CxVGg=="],
 
+    "@opencode-front/codearts-proxy-extension": ["@opencode-front/codearts-proxy-extension@workspace:packages/codearts-proxy-extension"],
 
     "@opencode/app": ["@opencode/app@workspace:packages/app"],
 
