@@ -22,10 +22,12 @@ export default function Layout(props: ParentProps) {
   onCleanup(plugins.attachSettings(() => settings.open("frontend-plugins")))
   useFrontendPanels()
   const mobile = createMediaQuery("(max-width: 767px)")
-  const [state, setState] = createStore({
+
+  const [state, setState] = createStore<{ tabsWidth: number; tabsMount: HTMLElement | undefined }>({
     tabsWidth: 260,
-    tabsMount: undefined as HTMLElement | undefined,
+    tabsMount: undefined,
   })
+
   const verticalTabs = () => preferences.appearance.tabLayout() === "vertical" && !mobile()
   const bottomTitlebar = () => mobile() && preferences.general.mobileTitlebarPosition() === "bottom"
 
@@ -87,7 +89,7 @@ export default function Layout(props: ParentProps) {
             </ExtensionServerCover>
           </main>
         </div>
-        <ExtensionSlot at="shell.bottom" input={{}} />
+        <ExtensionSlot at="window.bottom" input={{}} />
         <ToastRegion />
         <UploadToastHost />
       </div>

@@ -13,7 +13,6 @@ import { Dynamic } from "solid-js/web"
 import { CommandProvider } from "@/shell/commands/command"
 import { DesktopCommands } from "@/shell/commands/desktop"
 import { GlobalProvider } from "@/runtime/server/runtime"
-import { HighlightsProvider } from "@/shell/updates/highlights"
 import { LanguageProvider, UiI18nBridge, type Locale } from "@/runtime/i18n/language"
 import { ServerConnection, ServersProvider } from "@/runtime/server/registry"
 import { SettingsProvider } from "@/settings/model"
@@ -34,6 +33,7 @@ function QueryProvider(props: ParentProps) {
       },
     },
   })
+
   return <QueryClientProvider client={client}>{props.children}</QueryClientProvider>
 }
 
@@ -67,6 +67,7 @@ export function AppBaseProviders(
             <ErrorBoundary
               fallback={(error) => {
                 void import("@sentry/solid").then(({ captureException }) => captureException(error))
+
                 return <ErrorPage error={error} />
               }}
             >
@@ -102,12 +103,10 @@ export function AppInterface(props: {
         <CommandProvider>
           <DesktopCommands />
           <PluginsProvider>
-            <HighlightsProvider>
-              <PluginSlot path="app" input={{}}>
-                {props.children}
-                {rootProps.children}
-              </PluginSlot>
-            </HighlightsProvider>
+            <PluginSlot path="app" input={{}}>
+              {props.children}
+              {rootProps.children}
+            </PluginSlot>
           </PluginsProvider>
         </CommandProvider>
       </GlobalProvider>

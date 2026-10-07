@@ -1,13 +1,11 @@
 import { createEffect, createRoot, onCleanup, untrack, type Accessor, type JSX } from "solid-js"
 import {
-  Layout,
-  Menu,
+  MenuItem,
   Panel,
-  Sessions,
   type Context,
   type Definition,
   type PanelTab,
-  type SessionView,
+  type SessionRef,
 } from "@opencode/gui-extensions/sdk"
 import type { PluginHost, PluginPanel } from "@opencode/frontend-plugin/host"
 import { pluginPanelTab } from "@/plugins/panel-model"
@@ -24,12 +22,12 @@ export function attachPluginPanels(input: {
   render: (panel: Accessor<PluginPanel | undefined>) => JSX.Element
   mobile: { current: Accessor<string>; select: (key: string) => void }
 }) {
-  const layout = input.context.use(Layout)
-  const sessions = input.context.use(Sessions)
+  const layout = input.context.layout
+  const sessions = input.context.sessions
   const registrations = new Map<string, () => void>()
   const requests = new Map<string, number>()
   const id = (panel: Pick<PluginPanel, "plugin" | "name">) => pluginPanelTab(panel).slice("plugin-panel:".length)
-  const find = (key: string, view: SessionView) =>
+  const find = (key: string, view: SessionRef) =>
     input.host.state.panels.find((panel) => panel.sessionID === view.id && id(panel) === key)
   // A permanent transient provider also removes stale persisted tabs after all plugins are disabled.
   const removeEmpty = input.context.add(Panel, {
@@ -60,7 +58,8 @@ export function attachPluginPanels(input: {
         get mobile() {
           return { title: available()?.title ?? definition.title, order: 50, kind: "menu" as const }
         },
-        list(view) {
+        list(props) {
+          const view = props.session
           const panel = find(key, view)
           if (!panel) {
             tabs.delete(view.key)
@@ -78,19 +77,19 @@ export function attachPluginPanels(input: {
           }
           return [tab]
         },
-        render: (_, view) => input.render(() => find(key, view)),
-        close: (_, view) => {
-          const panel = find(key, view)
+        render: (props) => input.render(() => find(key, props.session)),
+        close: (props) => {
+          const panel = find(key, props.session)
           if (panel) input.host.dismissPanel(panel)
         },
-        focus: (_, view) => {
-          const panel = find(key, view)
+        focus: (props) => {
+          const panel = find(key, props.session)
           if (panel) input.host.selectPanel(panel)
         },
       })
       // Its reactive contribution must outlive this reconciliation effect's next run.
       const removeMenu = createRoot((dispose) => {
-        const remove = input.context.add(Menu, () => {
+        const remove = input.context.add(MenuItem, () => {
           const panel = available()
           if (!panel) return undefined
           return {
@@ -119,9 +118,9 @@ export function attachPluginPanels(input: {
     if (!view?.location || !layout.ready()) return
     const request = input.host.state.panelRequest
     const panel = input.host.state.panel
-    if (panel?.sessionID !== view.id || requests.get(view.key) === request) return
+    if (!panel || panel.sessionID !== view.id || requests.get(view.key) === request) return
     untrack(() => {
-      layout.open(pluginPanelTab(panel), view, { select: true })
+      layout.open(pluginPanelTab(panel), view, { tab: "select" })
       if (layout.narrow()) input.mobile.select(pluginPanelTab(panel))
       requests.set(view.key, request)
     })

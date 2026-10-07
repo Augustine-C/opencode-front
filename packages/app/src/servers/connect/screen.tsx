@@ -3,6 +3,7 @@ import { lazy, Show, Suspense } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useMutation } from "@tanstack/solid-query"
 import { IconButton } from "@opencode/ui/icon-button"
+import { Icon } from "@opencode/ui/icon"
 import { Button } from "@opencode/ui/button"
 import { TextInput } from "@opencode/ui/text-input"
 import { Wordmark } from "@opencode/ui/wordmark"
@@ -25,35 +26,48 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
   const check = useCheckServerHealth()
   const camera = createCameraAvailability()
   const [state, setState] = createStore({ url: props.url ?? "", password: "", error: "", scanning: false })
+
   const connectionError = () =>
     language.t(
       platform.platform === "web" && isMixedContent(location.href, state.url)
         ? "server.connect.mixedContent"
         : "server.connect.failed",
     )
+
   const request = useMutation(() => ({
     mutationFn: async () => {
       const link = pairingLink(state.url)
+
       if (link) {
         const redeemed = await redeemPairingLink(link)
+
         if (!redeemed) {
           setState("error", language.t("server.connect.link.expired"))
+
           return
         }
+
         // Keep the token in the form so a failed connection check can retry without the spent code.
         setState({ url: link.url, password: redeemed.password })
       }
+
       const url = serverAddress(state.url)
+
       if (!url) {
         setState("error", language.t("server.connect.address.invalid"))
+
         return
       }
+
       const http = { url, password: state.password || undefined }
       const result = await check(http)
+
       if (!result.healthy) {
         setState("error", connectionError())
+
         return
       }
+
       servers.add({ type: "http", http })
     },
     onError: () => setState("error", connectionError()),
@@ -63,7 +77,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
     <main data-component="connect-server" aria-labelledby="server-connect-title">
       <div class="server-connect-settings">
         <IconButton
-          icon="settings-gear"
+          icon={<Icon name="settings-gear" />}
           variant="ghost-muted"
           size="normal"
           aria-label={language.t("plugins.title")}
@@ -99,6 +113,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
           <form
             onSubmit={(event) => {
               event.preventDefault()
+
               if (request.isPending) return
               setState("error", "")
               request.mutate()

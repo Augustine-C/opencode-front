@@ -1,5 +1,6 @@
 import { Show, type Accessor } from "solid-js"
 import { IconButton } from "@opencode/ui/icon-button"
+import { Icon } from "@opencode/ui/icon"
 import { Tooltip } from "@opencode/ui/tooltip"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useSessionPanelExtension } from "./session-panel-state"
@@ -16,7 +17,7 @@ export function PluginPanelToolbar(props: {
       {(panel) => (
         <Tooltip value={label()} placement="bottom">
           <IconButton
-            icon={extension.fullscreen() ? "collapse" : "expand"}
+            icon={<Icon name={extension.fullscreen() ? "collapse" : "expand"} />}
             variant="ghost-muted"
             size="normal"
             aria-label={label()}

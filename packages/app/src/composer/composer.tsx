@@ -82,6 +82,7 @@ function ComposerModelControl(props: {
   onUnpaidClick: () => void
 }) {
   const shouldAnimate = createMemo<boolean>((previous) => previous ?? props.loading)
+
   const content = () => (
     <>
       <Show when={props.provider}>
@@ -98,6 +99,7 @@ function ComposerModelControl(props: {
       </span>
     </>
   )
+
   return (
     <Show when={!props.loading}>
       <Tooltip

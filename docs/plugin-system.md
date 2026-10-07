@@ -65,7 +65,7 @@ A slot supports exactly one of `prepend`, `append`, `before`, `after`, or `repla
 
 Slots preserve the host layout: wrapping or replacing one boundary does not grant a contribution independent control over unrelated columns. `session.panel` opens as a closable, draggable tab alongside Review, Context, and files in the session side pane. It shares the pane’s resizing controls. On narrow screens it appears as a session view; the More menu opens registered panels and selects active plugin panels. Panels belong to their plugin and session: switching sessions shows only that session’s panels, closing a tab dismisses its panel, and disabling its owner removes all its panels. Only the owning plugin renders into a panel. The `width` input measures its actual content area. Fullscreen presentation maximizes the pane within the workspace while retaining the native tabs.
 
-As of upstream v2.0.22, a port-owned bridge publishes browser plugin panels as native GUI SDK `Panel`/`Menu` contributions. Existing browser plugin API v1, configuration files, and persisted panel keys remain supported. Closing the selected mobile plugin view returns to the conversation.
+As of upstream v2.0.22, a port-owned bridge publishes browser plugin panels as native GUI SDK `Panel`/`MenuItem` contributions (updated for v2.0.24). Existing browser plugin API v1, configuration files, and persisted panel keys remain supported. Closing the selected mobile plugin view returns to the conversation.
 
 ## Context and lifecycle
 
