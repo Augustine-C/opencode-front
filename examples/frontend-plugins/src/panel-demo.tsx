@@ -22,7 +22,9 @@ export function panelDemo() {
       const tasks = ["Review changes", "Run checks", "Prepare release"]
       const completed = () => state.completed.filter(Boolean).length
 
+      // The panel is session-scoped, so don't expose a command that cannot open it from Home.
       createEffect(() => {
+        if (!context.sessionID()) return
         onCleanup(untrack(() => context.ui.command({ id: "open", title: "Open example plugin panel", run: open })))
       })
       createEffect(() => {
