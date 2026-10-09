@@ -61,6 +61,7 @@ jobs:
           --out=dist/desktop --overwrite
       - name: Package and ad hoc sign macOS app
         if: runner.os == 'macOS'
+        # Ad hoc signatures have no Team ID, so disable hardened runtime library validation.
         run: >-
           bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
           --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
@@ -69,6 +70,7 @@ jobs:
           --osx-sign.identity=-
           --no-osx-sign.identityValidation
           --no-osx-sign.continueOnError
+          --no-osx-sign.hardenedRuntime
       - name: Verify ad hoc macOS signature
         if: runner.os == 'macOS'
         env:
@@ -77,6 +79,7 @@ jobs:
           set -euo pipefail
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
           codesign --display --verbose=4 "$APP_PATH" 2>&1 | grep -F 'Signature=adhoc'
+          "$APP_PATH/Contents/MacOS/OpenCode-Front" --version
       - name: Archive macOS app
         if: runner.os == 'macOS'
         run: >-
