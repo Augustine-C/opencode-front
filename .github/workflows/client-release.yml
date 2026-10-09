@@ -79,7 +79,45 @@ jobs:
           set -euo pipefail
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
           codesign --display --verbose=4 "$APP_PATH" 2>&1 | grep -F 'Signature=adhoc'
-          "$APP_PATH/Contents/MacOS/OpenCode-Front" --version
+          python3 - <<'PY'
+          import os
+          import signal
+          import subprocess
+          import sys
+          import tempfile
+          import time
+
+          executable = os.path.join(os.environ["APP_PATH"], "Contents/MacOS/OpenCode-Front")
+          with tempfile.TemporaryFile() as output:
+              process = subprocess.Popen([executable], stdout=output, stderr=output, start_new_session=True)
+              try:
+                  deadline = time.monotonic() + 15
+                  while time.monotonic() < deadline:
+                      if process.poll() is not None:
+                          output.seek(0)
+                          sys.stderr.write(output.read().decode(errors="replace"))
+                          raise SystemExit(f"Electron exited during launch with status {process.returncode}")
+                      time.sleep(0.5)
+
+                  processes = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True, check=True)
+                  if not any("OpenCode-Front Helper" in line and "--type=renderer" in line for line in processes.stdout.splitlines()):
+                      output.seek(0)
+                      sys.stderr.write(output.read().decode(errors="replace"))
+                      raise SystemExit("Electron did not start a renderer helper")
+              finally:
+                  try:
+                      os.killpg(process.pid, signal.SIGTERM)
+                  except ProcessLookupError:
+                      pass
+                  try:
+                      process.wait(timeout=5)
+                  except subprocess.TimeoutExpired:
+                      try:
+                          os.killpg(process.pid, signal.SIGKILL)
+                      except ProcessLookupError:
+                          pass
+                      process.wait()
+          PY
       - name: Archive macOS app
         if: runner.os == 'macOS'
         run: >-
