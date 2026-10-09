@@ -67,8 +67,8 @@ jobs:
           --electron-version=44.4.5 --build-version=${{ steps.stage.outputs.version }}
           --out=dist/desktop --overwrite
           --osx-sign.identity=-
-          --osx-sign.identityValidation=false
-          --osx-sign.continueOnError=false
+          --no-osx-sign.identityValidation
+          --no-osx-sign.continueOnError
       - name: Verify ad hoc macOS signature
         if: runner.os == 'macOS'
         env:
