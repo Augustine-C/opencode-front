@@ -46,7 +46,7 @@ The endpoint must allow the frontend origin through CORS and return `{ "label": 
 
 ## Example panel options
 
-Enable `panel-demo` for a session and choose **+ Add tab → Project overview**, **More** on mobile, or **Open example plugin panel** in the command palette. The panel demonstrates a session-scoped checklist, notes, progress display, a configurable title and panel presentation, and a reset action. It makes no network request or backend change.
+Enable `panel-demo`, open a session, then choose **+ Add tab → Project overview**, **More** on mobile, or **Open example plugin panel** in the command palette. The panel demonstrates a session-scoped checklist, notes, progress display, a configurable title and panel presentation, and a reset action. It makes no network request or backend change.
 
 ```json
 {

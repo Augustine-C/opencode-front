@@ -3,6 +3,7 @@ import { createRoot, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createPluginHost } from "../../frontend-plugin/src/runtime"
 import { define, type Context } from "../../frontend-plugin/src/index"
+import { panelDemo } from "../../../examples/frontend-plugins/src/panel-demo"
 import { createPluginPanelView, pluginPanelTab } from "../src/plugins/panel-model"
 import { attachPluginPanels } from "../src/extensions/plugin-panels"
 import {
@@ -309,5 +310,35 @@ test("narrow-screen plugin requests select the native view and closing restores 
   } finally {
     await f.host.dispose()
     f.dispose()
+  }
+})
+
+test("panel demo command is available only while a session is active", async () => {
+  const [state, setState] = createStore({ sessionID: undefined as string | undefined })
+  const host = createPluginHost({
+    context: {
+      app: { version: "test", platform: "web" },
+      client: () => undefined,
+      sessionID: () => state.sessionID,
+      connection: () => undefined,
+      data: { listen: () => () => {} },
+    },
+  })
+  host.register(panelDemo())
+
+  try {
+    await host.enable("panel-demo", { title: "Project overview" })
+    expect(host.state.commands).toHaveLength(0)
+
+    setState("sessionID", "session-1")
+    const command = host.state.commands.at(0)
+    if (!command) throw new Error("The panel demo command should be registered for an active session")
+    await command.run()
+    expect(host.state.panel).toMatchObject({ plugin: "panel-demo", name: "panel-demo", sessionID: "session-1" })
+
+    setState("sessionID", undefined)
+    expect(host.state.commands).toHaveLength(0)
+  } finally {
+    await host.dispose()
   }
 })
