@@ -38,7 +38,9 @@ For desktop development while Vite is running:
 OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 ```
 
-Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater. This is a runnable desktop shell; signed installers and platform packaging are not included yet.
+Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
+
+The **Build client** GitHub Action packages macOS (Apple Silicon and Intel) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Pushing a version tag such as `0.0.1` also creates a GitHub release with the archives attached; the packaged app version matches the tag. Extract the archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. These builds are unsigned and macOS builds are not notarized.
 
 ## Organize session tabs
 

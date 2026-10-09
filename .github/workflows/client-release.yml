@@ -1,0 +1,100 @@
+name: Build client
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: darwin
+            arch: arm64
+          - os: macos-15-intel
+            platform: darwin
+            arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.14'
+      - name: Install dependencies
+        # Bun 1.3.14 re-resolves the patched Git dependency even with a current lockfile.
+        run: bun install --linker=hoisted
+      - name: Build frontend
+        run: bun run build
+      - name: Stage desktop app
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            node scripts/desktop-stage.cjs "$REF_NAME"
+          else
+            node scripts/desktop-stage.cjs
+          fi
+      - name: Package desktop app
+        run: >-
+          bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
+          --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
+          --electron-version=44.4.5 --out=dist/desktop --overwrite
+      - name: Archive macOS app
+        if: runner.os == 'macOS'
+        run: >-
+          tar -czf dist/opencode-front-macos-${{ matrix.arch }}.tar.gz
+          -C dist/desktop OpenCode-Front-darwin-${{ matrix.arch }}
+      - name: Archive Windows app
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path dist/desktop/OpenCode-Front-win32-x64 -DestinationPath dist/opencode-front-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            dist/opencode-front-*.tar.gz
+            dist/opencode-front-*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish release assets
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: client-*
+          merge-multiple: true
+          path: artifacts
+      - name: Create release and upload builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" artifacts/* --clobber
