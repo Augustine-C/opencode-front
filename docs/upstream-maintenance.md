@@ -78,3 +78,9 @@ The browser plugin bridge uses the native `MenuItem` registry and `ctx.layout` /
 ## Native CodeArts Proxy example
 
 `packages/codearts-proxy-extension` is a port-owned standalone package using the native SDK. Its port-owned composition lives in `app/src/extensions/native.ts`; its only host mount is an import and list spread in the declared `runtime/extension/root.tsx` overlay; app package dependencies are part of the existing tooling overlay. The upstream GUI extension sources remain pristine. Browser compatibility adapters remain for other plugins. Native CodeArts preferences migrate through `Store.global(..., { key, pick })`, and the panel declares its previous browser tab key through `Panel.legacy`.
+
+## v2.0.25–v2.0.26 sync and release numbering
+
+The port now follows v2.0.26, including the v2.0.25 Office preview, pairing, mobile navigation, recent-tab and rendering changes. Preserve the existing-service connection overlay when importing upstream server selection changes. The current native SDK remains compatible with the port-owned panel bridge and CodeArts extension. See [release analysis](upstream-v2.0.26.md).
+
+Release tags use `<upstream version>.<port revision>`, starting with `2.0.26.0`. The root/Electron package version is the equivalent valid SemVer `2.0.26+0`; retained upstream package versions stay pristine. The desktop staging script maps four-part release tags, and the workflow uses the Windows four-part file version and a three-part macOS bundle version. Run staging validation whenever changing this mapping.

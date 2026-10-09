@@ -1,6 +1,7 @@
 import { PluginSlot } from "@/plugins/slot"
 import { usePlugins } from "@/plugins/context"
 import { Show, createMemo } from "solid-js"
+import { createMediaQuery } from "@solid-primitives/media"
 import { Button } from "@opencode/ui/button"
 import { useDialog } from "@opencode/ui/context/dialog"
 import { Icon } from "@opencode/ui/icon"
@@ -82,6 +83,7 @@ function ComposerModelControl(props: {
   onUnpaidClick: () => void
 }) {
   const shouldAnimate = createMemo<boolean>((previous) => previous ?? props.loading)
+  const mobile = createMediaQuery("(max-width: 767px)")
 
   const content = () => (
     <>
@@ -103,6 +105,7 @@ function ComposerModelControl(props: {
   return (
     <Show when={!props.loading}>
       <Tooltip
+        inactive={mobile()}
         placement="top"
         gutter={4}
         value={
@@ -113,7 +116,7 @@ function ComposerModelControl(props: {
         }
       >
         <Show
-          when={props.paid}
+          when={props.paid || mobile()}
           fallback={
             <Button
               data-action="composer-model"
@@ -131,6 +134,7 @@ function ComposerModelControl(props: {
         >
           <ModelSelectorPopover
             model={props.model}
+            unpaid={!props.paid}
             trigger={(triggerProps) => (
               <Button
                 {...triggerProps}
@@ -140,7 +144,7 @@ function ComposerModelControl(props: {
                 class="min-w-0 max-w-[220px] justify-start ![font-weight:440] group"
                 classList={{ "animate-in fade-in": shouldAnimate() }}
                 data-action="composer-model"
-                data-control-type="popover"
+                data-control-type={mobile() ? "drawer" : "popover"}
               >
                 {content()}
               </Button>

@@ -2,7 +2,7 @@
 
 A frontend-only port of OpenCode v2 with a shared web/desktop UI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
 
-This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.24**, commit [`e7a34f0`](https://github.com/anomalyco/opencode/tree/e7a34f09bfd9134dfade5a8ddb843f7030bc9a69). The source was copied from the local `opencode-dev/opencode_v2` checkout. Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
+This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.26**, commit [`9b4ec57`](https://github.com/anomalyco/opencode/tree/9b4ec5714d481559990db0a816d5dec19541a814). The source was copied from the local `opencode-dev/opencode_v2` checkout. Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
 
 ## License and attribution
 
@@ -40,7 +40,9 @@ OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 
 Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
 
-The **Build client** GitHub Action packages macOS (Apple Silicon and Intel) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Pushing a version tag such as `0.0.1` also creates a GitHub release with the archives attached; the packaged app version matches the tag. Extract the archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. These builds are unsigned and macOS builds are not notarized.
+The **Build client** GitHub Action packages macOS (Apple Silicon and Intel) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.26.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.26+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the archives attached. Extract the archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. These builds are unsigned and macOS builds are not notarized.
+
+See [v2.0.25 and v2.0.26 changes and sync details](docs/upstream-v2.0.26.md) for this release.
 
 ## Organize session tabs
 
