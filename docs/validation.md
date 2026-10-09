@@ -4,7 +4,7 @@ Validated locally on 2026-10-01 with Bun 1.3.14 on macOS.
 
 - `bun run check`: application and plugin SDK type checks passed; 12 focused tests passed (42 assertions).
 - `bun run build`: production Vite build and inherited PWA generation passed. Upstream CSS `::highlight` optimization warnings, large chunks, and existing mixed static/dynamic import warnings remain.
-- Browser production preview: connection screen and plugin manager rendered; importing `examples/plugins.jsonc` enabled both installed plugins without an endpoint request. See `screenshots/plugin-manager.jpg`.
+- Browser production preview at that time: connection screen and plugin manager rendered; importing `examples/plugins.jsonc` enabled both then-catalogued examples without an endpoint request. See `screenshots/plugin-manager.jpg`. In release 2.0.26.2, those example adapters moved to a separate source archive and are no longer part of the application catalog.
 - Desktop shell: launched and rendered the production connection screen at `oc://renderer/`. This verifies the thin desktop runtime, not a signed installer or native SSH/browser tooling.
 - Development server: startup passed with the final installed dependencies. An additional browser preview was declined; the production UI import test above provides the UI verification.
 - `opencode service status` reported `stopped`. No backend was started or restarted. Live authenticated sessions, model execution, remote TLS/CORS configurations, permission flows, PTY streams, and provider-specific status endpoints therefore remain unverified against a running service in this task.
@@ -20,7 +20,7 @@ Upstream attribution and MIT alignment were verified against the local OpenCode 
 
 Plugin controls were integrated into root client settings on 2026-10-01. `bun run check` passed 24 tests (78 assertions), including restoring the frontend plugin settings URL for single/multiple servers and rejecting server/project-scoped variants. `bun run build` passed with the existing upstream warnings. The command palette uses the settings page while the shell is mounted and falls back to the styled dialog before connection. Live visual, file-picker, and settings-navigation checks remain unperformed because the local browser preview was denied earlier.
 
-The opt-in `panel-demo` example passed application/SDK type checks, the existing 24 tests, and the production build on 2026-10-01. It is registered in the frontend catalog and demonstrates command/launcher entry points, configurable panel title/presentation, interactive sample state, and responsive full-screen layout. These checks do not verify its rendered appearance or live interactions; local browser preview access was denied earlier.
+The opt-in `panel-demo` example passed application/SDK type checks, the existing 24 tests, and the production build on 2026-10-01. At that time it was registered in the frontend catalog and demonstrated command/launcher entry points, configurable panel title/presentation, interactive sample state, and responsive full-screen layout. In release 2.0.26.2, it and `third-party-status` move to the separate source module in [`examples/frontend-plugins`](../examples/frontend-plugins/README.md). These earlier checks do not verify the extracted module's current rendered appearance or live interactions.
 
 ## Native plugin panel tabs (2026-10-01)
 
@@ -50,7 +50,6 @@ The production tab derivation benchmark recorded before session edits measured a
 
 Live visual and drag/menu interaction verification remains pending because preview access was denied earlier. No app/backend was restarted, and the original upstream checkout was not modified. Automatic three-way merging and a full upstream-version integration test are outside this change; the new plan is an explicit review report.
 
-
 ## Upstream v2.0.22 (2026-10-03)
 
 The latest remote `v2` tag was verified as `v2.0.22`, commit `527f0b931d1f9b3ebd34e106c51b31ce5db5b075`. Both source tags were fetched into an isolated bare repository; the original `opencode-dev/opencode_v2` checkout remained clean. The inventory now records 3,198 imported targets, with 3,155 pristine files and 43 declared overlays. The new `gui-extensions` root retains the upstream renderer features and SDK. Its main entries are not loaded by the thin desktop shell.
@@ -77,7 +76,6 @@ The web plugin settings page and overview panel were exercised against the insta
 
 At a temporary 390 × 844 browser viewport, the More menu opens the plugin, account details wrap, quota cards stack, and selecting Session returns to the conversation. The overview container measured 340px for both clientWidth and scrollWidth, with no horizontal overflow. The normal browser viewport was restored. These are responsive web checks, not physical-device or Electron runtime checks. Validation screenshots remain local temporary artifacts rather than repository fixtures. No code fixes or app/backend restarts were needed.
 
-
 ## Upstream v2.0.23 and v2.0.24 (2026-10-08)
 
 The port is pinned to v2.0.24, commit `e7a34f09bfd9134dfade5a8ddb843f7030bc9a69`, incorporating both releases since v2.0.22. The inventory records 3,210 imports: 3,167 pristine and 43 overlays. The initial plan had 796 changes, 173 additions and 161 removals, with no local collisions or missing roots. Ten overlay conflicts were resolved; browser plugin adapters and existing panel tests now follow the new host APIs, MenuItem registry and panel callback props. Two custom IconButton mounts now render JSX icons. See [release analysis and sync details](upstream-v2.0.24.md).
@@ -85,7 +83,6 @@ The port is pinned to v2.0.24, commit `e7a34f09bfd9134dfade5a8ddb843f7030bc9a69`
 `bun run check` passes all type checks and 40 tests with 199 assertions; `bun run build` passes and generates PWA assets. A clean frozen-lockfile dependency installation succeeds. The production session-tab reducer benchmark measured a median 13.490 ms before and 12.456 ms after, across seven samples of 20,000 preview/open/close cycles, retaining checksum 720000 in every sample. This is reducer work only, not a browser-rendering or backend benchmark.
 
 Headless Chromium against a temporary static production preview verified the connection screen, settings icon, plugin manager and Example panel enable/disable. At 390 × 844, document clientWidth and scrollWidth both measured 390px. The page error log was empty. These checks used an isolated browser profile without service credentials. Live session execution, native plugin maximize/restore in a connected session, and Electron interactions remain unverified. No existing app or backend was restarted, started, stopped or upgraded; only a temporary static asset server was used for validation.
-
 
 ## Native CodeArts Proxy GUI extension (2026-10-08)
 

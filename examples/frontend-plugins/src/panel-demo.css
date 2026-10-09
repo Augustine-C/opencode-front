@@ -94,6 +94,12 @@
     gap: 12px;
   }
 
+  .panel-demo-task {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   textarea {
     width: 100%;
     min-height: 96px;
@@ -129,6 +135,16 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .panel-demo-reset {
+    min-height: 32px;
+    padding: 4px 10px;
+    border: 1px solid var(--v2-border-border-muted);
+    border-radius: 6px;
+    background: var(--v2-background-bg-layer-02);
+    color: var(--v2-text-text-base);
+    cursor: pointer;
   }
 }
 

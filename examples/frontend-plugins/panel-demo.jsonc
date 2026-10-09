@@ -1,4 +1,5 @@
 {
+  // Reference configuration; register the adapter in the build-time catalog first.
   "plugins": [
     "connection-status",
     {
@@ -6,8 +7,8 @@
       "options": {
         "title": "Project overview",
         "presentation": "panel",
-        "showLauncher": true
-      }
-    }
-  ]
+        "showLauncher": true,
+      },
+    },
+  ],
 }

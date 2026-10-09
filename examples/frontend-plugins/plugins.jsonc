@@ -1,0 +1,4 @@
+{
+  // Reference configuration; register the adapter in the build-time catalog first.
+  "plugins": ["connection-status", { "package": "third-party-status", "options": {} }],
+}

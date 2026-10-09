@@ -40,7 +40,7 @@ OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 
 Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
 
-The **Build client** GitHub Action packages macOS (Apple Silicon and Intel) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.26.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.26+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the archives attached. Extract the archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. These builds are unsigned and macOS builds are not notarized.
+The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.26.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.26+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives and a separate `opencode-front-example-plugins-<version>.zip` source module. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. These builds are unsigned and macOS builds are not notarized.
 
 See [v2.0.25 and v2.0.26 changes and sync details](docs/upstream-v2.0.26.md) for this release.
 
@@ -52,9 +52,9 @@ In **Settings → General**, enable **Group tabs by project** beside the **Tabs*
 
 Open **Settings → Frontend plugins** to enable installed plugins or import a frontend/TUI JSON or JSONC configuration. The command palette opens the same settings page. Before connecting a service, the small settings icon on the connection screen opens the plugin controls.
 
-For a panel preview, enable **Example panel**, open an existing session, and select **+ Add tab → Project overview** beside the Review / Context tabs (or **More → Project overview** on mobile). It opens as a tab alongside Review and Context, with sample status cards, an interactive checklist, notes, and the pane’s standard maximize control. No external endpoint is needed. Optional configuration is in [examples/panel-demo.jsonc](examples/panel-demo.jsonc).
+Two frontend plugin examples are published as a separate source module for reference, rather than bundled into the desktop app. See [examples/frontend-plugins](examples/frontend-plugins/README.md) for the panel and third-party status adapters, setup steps, and sample configurations.
 
-The plugin SDK provides typed named slots, commands, session panels, the current service client, event subscriptions, persistent plugin storage, setup/cleanup, and render error isolation. A connection status plugin is enabled by default. An optional third-party status plugin demonstrates external status at several positions and a details panel.
+The plugin SDK provides typed named slots, commands, session panels, the current service client, event subscriptions, persistent plugin storage, setup/cleanup, and render error isolation. A connection status plugin is enabled by default. The optional third-party status and session panel adapters are source examples available in the separate release module.
 
 TUI configuration can select explicitly installed browser adapters and reuse their options. Terminal JSX needs a browser renderer; arbitrary TUI packages cannot execute unchanged in the browser. Unsupported packages are reported. See the [plugin API and adapter guide](docs/plugin-system.md).
 

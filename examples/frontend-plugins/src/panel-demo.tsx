@@ -1,35 +1,29 @@
 import { define } from "@opencode/frontend-plugin"
 import { createEffect, For, onCleanup, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
-import { Button } from "@opencode/ui/button"
-import { Checkbox } from "@opencode/ui/checkbox"
-import type { useLanguage } from "@/runtime/i18n/language"
 import "./panel-demo.css"
 
 // A local-only example: no client requests, endpoints, or project mutations.
-export function panelDemo(language: ReturnType<typeof useLanguage>) {
+export function panelDemo() {
   return define({
     id: "panel-demo",
-    get name() {
-      return language.t("plugins.demo.name")
-    },
+    name: "Example panel",
     apiVersion: 1,
     setup(context) {
       const [state, setState] = createStore({ completed: [true, false, false], note: "" })
       const title = () =>
         typeof context.options.title === "string" && context.options.title.trim()
           ? context.options.title.trim()
-          : language.t("plugins.demo.title")
+          : "Project overview"
       const presentation = context.options.presentation === "fullscreen" ? "fullscreen" : "panel"
       const open = () => {
         context.ui.panel.open("panel-demo", { title: title(), presentation })
       }
-      const tasks = ["plugins.demo.task.review", "plugins.demo.task.checks", "plugins.demo.task.release"] as const
+      const tasks = ["Review changes", "Run checks", "Prepare release"]
       const completed = () => state.completed.filter(Boolean).length
 
       createEffect(() => {
-        const label = language.t("plugins.demo.open")
-        onCleanup(untrack(() => context.ui.command({ id: "open", title: label, run: open })))
+        onCleanup(untrack(() => context.ui.command({ id: "open", title: "Open example plugin panel", run: open })))
       })
       createEffect(() => {
         if (context.options.showLauncher === false) return
@@ -42,16 +36,16 @@ export function panelDemo(language: ReturnType<typeof useLanguage>) {
           input.name === "panel-demo" ? (
             <section data-component="plugin-panel-demo">
               <div class="panel-demo-intro">
-                <span class="panel-demo-badge">{language.t("plugins.demo.sample")}</span>
-                <p>{language.t("plugins.demo.description")}</p>
+                <span class="panel-demo-badge">Sample data</span>
+                <p>Explore a sample project overview, checklist, and notes.</p>
               </div>
               <dl class="panel-demo-metrics">
                 <div>
-                  <dt>{language.t("plugins.demo.build")}</dt>
-                  <dd class="panel-demo-ready">{language.t("plugins.demo.ready")}</dd>
+                  <dt>Build status</dt>
+                  <dd class="panel-demo-ready">Ready</dd>
                 </div>
                 <div>
-                  <dt>{language.t("plugins.demo.completed")}</dt>
+                  <dt>Completed checks</dt>
                   <dd>
                     {completed()} / {tasks.length}
                   </dd>
@@ -59,10 +53,10 @@ export function panelDemo(language: ReturnType<typeof useLanguage>) {
               </dl>
               <div class="panel-demo-sections">
                 <section class="panel-demo-card">
-                  <h3>{language.t("plugins.demo.checklist")}</h3>
+                  <h3>Checklist</h3>
                   <div
                     role="progressbar"
-                    aria-label={language.t("plugins.demo.checklist")}
+                    aria-label="Checklist"
                     aria-valuemin={0}
                     aria-valuemax={tasks.length}
                     aria-valuenow={completed()}
@@ -73,37 +67,39 @@ export function panelDemo(language: ReturnType<typeof useLanguage>) {
                   <div class="panel-demo-tasks">
                     <For each={tasks}>
                       {(task, index) => (
-                        <Checkbox
-                          checked={state.completed[index()]}
-                          onChange={(checked) => setState("completed", index(), checked)}
-                        >
-                          {language.t(task)}
-                        </Checkbox>
+                        <label class="panel-demo-task">
+                          <input
+                            type="checkbox"
+                            checked={state.completed[index()]}
+                            onChange={(event) => setState("completed", index(), event.currentTarget.checked)}
+                          />
+                          <span>{task}</span>
+                        </label>
                       )}
                     </For>
                   </div>
                 </section>
                 <section class="panel-demo-card">
-                  <label for="panel-demo-note">{language.t("plugins.demo.notes")}</label>
+                  <label for="panel-demo-note">Notes</label>
                   <textarea
                     id="panel-demo-note"
                     rows={4}
                     value={state.note}
-                    placeholder={language.t("plugins.demo.notesPlaceholder")}
+                    placeholder="Try adding a note…"
                     onInput={(event) => setState("note", event.currentTarget.value)}
                   />
-                  <span class="panel-demo-session-label">{language.t("plugins.demo.session")}</span>
+                  <span class="panel-demo-session-label">Current session</span>
                   <code class="panel-demo-session-id">{input.sessionID}</code>
                 </section>
               </div>
               <div class="panel-demo-actions">
-                <Button
-                  size="small"
-                  variant="ghost-muted"
+                <button
+                  type="button"
+                  class="panel-demo-reset"
                   onClick={() => setState({ completed: [true, false, false], note: "" })}
                 >
-                  {language.t("plugins.demo.reset")}
-                </Button>
+                  Reset example
+                </button>
               </div>
             </section>
           ) : null,

@@ -58,8 +58,8 @@ Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `cre
 | `session.composer.top` | sessionID                                                     | Above the active session composer          |
 | `session.header`       | sessionID                                                     | Above session content                      |
 | `session.panel`        | sessionID, name, width, presentation, close, toggleFullscreen | An explicitly opened plugin panel          |
-| `sidebar.content`      | sessionID                                                     | Native side-pane sidebar content                 |
-| `sidebar.footer`       | sessionID                                                     | Beneath the native side-pane sidebar              |
+| `sidebar.content`      | sessionID                                                     | Native side-pane sidebar content           |
+| `sidebar.footer`       | sessionID                                                     | Beneath the native side-pane sidebar       |
 
 A slot supports exactly one of `prepend`, `append`, `before`, `after`, or `replace`. Additive contributions retain enablement order. At the same target, the last registered replacement wins. A replacement suppresses contributions under its dot-prefixed descendants; before/after siblings on that same boundary survive. An absent additive target falls back to its nearest mounted dot-prefixed ancestor; absent replacements are suppressed. Inactive routes naturally have unmounted slots. The host exposes resolution diagnostics through its API. Settings shows plugin enablement and errors without exposing slot-resolution counts.
 
@@ -82,52 +82,11 @@ As of upstream v2.0.22, a port-owned bridge publishes browser plugin panels as n
 
 Plugins are trusted application code. The same-realm API does **not** sandbox packages or enforce permissions; a plugin can access the DOM, browser storage, networking, and the connected service's capabilities. A future untrusted plugin tier would require iframe/worker isolation with a declarative, permissioned RPC API. Do not claim a manifest or namespaced storage provides that isolation.
 
-## Third-party status example
+## Example plugins
 
-The optional `third-party-status` plugin is installed but disabled by default. It performs no request without an explicitly supplied endpoint. Import:
+Two source examples are published separately from the desktop app in the `opencode-front-example-plugins-<version>.zip` release asset. The module is under [`examples/frontend-plugins`](../examples/frontend-plugins/README.md). It contains a local session panel that demonstrates Solid state and plugin panel APIs, plus an opt-in status panel that demonstrates HTTP requests, polling, cancellation, and cleanup.
 
-```json
-{
-  "plugins": [
-    "connection-status",
-    {
-      "package": "third-party-status",
-      "options": {
-        "endpoint": "https://your-service.example/status",
-        "interval": 60000
-      }
-    }
-  ]
-}
-```
-
-The endpoint must allow the frontend origin through CORS and return `{ "label": "Build queue", "value": "3 pending" }`. It can serve quota, CI, deployments, or another status without changing the renderer. Use your own endpoint for provider-specific authentication and schema conversion. The plugin omits browser credentials and never forwards OpenCode authorization to the endpoint. Failures display **Status unavailable**, clear stale values, and continue polling; missing data is never displayed as zero. Refresh and open-panel commands appear in the command palette when enabled. Polling stops and in-flight requests are cancelled on disable.
-
-## Example plugin panel
-
-Enable **Example panel** in **Settings → Frontend plugins**, return to an existing session, then select **+ Add tab → Project overview** in the pane containing Review and Context. If that pane is hidden, open it using the existing Review control. On mobile, select **More → Project overview**. Alternatively, open the command palette with **⌘K** or **⌘⇧P** on macOS (**Ctrl+K** or **Ctrl+Shift+P** elsewhere) and choose **Open example plugin panel**. The demo requires an active session.
-
-The panel shows sample build status, an interactive checklist with progress, notes, and the current session ID. It opens in the same tab strip as Review and Context. The pane toolbar’s maximize icon expands the workspace pane; its restore icon brings the chat back alongside it. Wide panels place the checklist and notes side by side. **Reset example** resets the checklist and notes. State lasts until the plugin is disabled or the page is reloaded. The demo performs no network requests or backend changes.
-
-The implementation is in `packages/app/src/plugins/builtin/panel-demo.tsx`. Import `examples/panel-demo.jsonc` for an explicit configuration:
-
-```json
-{
-  "plugins": [
-    "connection-status",
-    {
-      "package": "panel-demo",
-      "options": {
-        "title": "Project overview",
-        "presentation": "panel",
-        "showLauncher": true
-      }
-    }
-  ]
-}
-```
-
-`title` sets the panel heading, `presentation` accepts `panel` or `fullscreen`, and `showLauncher: false` hides the native menu entry while leaving the command-palette action available. Omitted options use the translated heading, a side panel, and a native menu entry. Configuration import replaces the enabled-plugin configuration, so include other plugins you want to retain.
+These examples are reference source and are not bundled with the application. The current frontend uses an explicit build-time catalog; to try one, import it into `packages/app/src/plugins/catalog.ts`, rebuild, and then enable it in **Settings → Frontend plugins**. Example configurations and integration notes are included in the separate module. The status adapter makes no request until an endpoint is configured and does not forward OpenCode authorization.
 
 ## CodeArts Proxy native GUI extension
 
@@ -135,4 +94,4 @@ CodeArts Proxy has moved out of this browser-plugin system into a standard OpenC
 
 Existing saved `codearts-proxy` browser-plugin enablement and options migrate once into its native preference store. The old JSONC example and browser catalog entry have been removed; do not add `codearts-proxy` to new browser-plugin configuration imports. If an old browser import lists it as unsupported, remove that entry from the browser config and manage it through its native settings page.
 
-See the [native extension guide](../packages/codearts-proxy-extension/README.md) for its structure, source integration into another OpenCode v2 build, migration behavior and gateway requirements. Connection status, third-party status and the generic panel demo still use the browser-plugin system described above.
+See the [native extension guide](../packages/codearts-proxy-extension/README.md) for its structure, source integration into another OpenCode v2 build, migration behavior and gateway requirements. Connection status remains in the built-in browser catalog. Third-party status and the generic panel demo are reference sources in the separate example module above.

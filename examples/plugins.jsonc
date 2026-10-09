@@ -1,7 +1,0 @@
-{
-  // Shared TUI directive syntax. Only installed browser adapters can execute.
-  "plugins": [
-    "connection-status",
-    { "package": "third-party-status", "options": {} },
-  ],
-}

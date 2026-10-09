@@ -1,6 +1,6 @@
 {
   "name": "opencode-front",
-  "version": "2.0.26+1",
+  "version": "2.0.26+2",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -84,7 +84,8 @@
   "scripts": {
     "dev": "bun run --cwd packages/app dev",
     "build": "bun run --cwd packages/app build",
-    "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck && bun run --cwd packages/codearts-proxy-extension typecheck && bun run typecheck:upstream",
+    "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck && bun run --cwd packages/codearts-proxy-extension typecheck && bun run typecheck:upstream && bun run typecheck:examples",
+    "typecheck:examples": "tsgo --noEmit -p examples/frontend-plugins/tsconfig.json",
     "test": "bun test --conditions=browser packages/frontend-plugin/test packages/app/test scripts/upstream/test packages/codearts-proxy-extension/test",
     "check": "bun run upstream:check && bun run typecheck && bun run test",
     "desktop": "bun run scripts/desktop.ts",

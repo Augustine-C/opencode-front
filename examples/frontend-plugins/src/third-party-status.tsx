@@ -1,16 +1,13 @@
 import { define } from "@opencode/frontend-plugin"
 import { createStore } from "solid-js/store"
 import { createEffect, onCleanup, untrack } from "solid-js"
-import type { useLanguage } from "@/runtime/i18n/language"
 
 // An opt-in example: no requests run until the user supplies an endpoint.
 // Expected JSON: { "label": "Build queue", "value": "3 pending" }.
-export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
+export function thirdPartyStatus() {
   return define({
     id: "third-party-status",
-    get name() {
-      return language.t("plugins.thirdPartyStatus")
-    },
+    name: "Third-party status",
     apiVersion: 1,
     setup(context) {
       const [state, setState] = createStore({ label: "", value: "", error: "", loading: false })
@@ -26,8 +23,7 @@ export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
         setState({ loading: true, error: "" })
         try {
           const url = new URL(endpoint)
-          if (url.protocol !== "https:" && url.protocol !== "http:")
-            throw new Error(language.t("plugins.statusUnavailable"))
+          if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Status unavailable")
           const response = await fetch(url, { signal: context.signal, credentials: "omit" })
           if (!response.ok) throw new Error(`HTTP ${response.status}`)
           const result: unknown = await response.json()
@@ -39,7 +35,7 @@ export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
             typeof result.label !== "string" ||
             typeof result.value !== "string"
           )
-            throw new Error(language.t("plugins.statusInvalid"))
+            throw new Error("Expected a JSON response with string label and value fields.")
           if (!context.signal.aborted) setState({ label: result.label, value: result.value })
         } catch (error) {
           if (!context.signal.aborted)
@@ -52,12 +48,12 @@ export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
       const content = () => (
         <span class="text-xs px-3 py-1">
           {!endpoint
-            ? language.t("plugins.statusConfigure")
+            ? "Configure a status endpoint in plugin options."
             : state.error
-              ? language.t("plugins.statusUnavailable")
+              ? "Status unavailable"
               : state.value
                 ? `${state.label}: ${state.value}`
-                : language.t("plugins.statusLoading")}
+                : "Loading status…"}
         </span>
       )
       context.ui.slot({ append: "home.footer.status", render: content })
@@ -71,20 +67,20 @@ export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
               {content()}
               <p role={state.error ? "alert" : undefined}>{state.error}</p>
               <button onClick={() => void refresh()} disabled={state.loading}>
-                {language.t("plugins.statusRefresh")}
+                Refresh status
               </button>
             </div>
           ) : null,
       })
       createEffect(() => {
-        const refreshTitle = language.t("plugins.statusRefresh")
-        const panelTitle = language.t("plugins.statusPanel")
-        onCleanup(untrack(() => context.ui.command({ id: "refresh", title: refreshTitle, run: refresh })))
+        onCleanup(
+          untrack(() => context.ui.command({ id: "refresh", title: "Refresh third-party status", run: refresh })),
+        )
         onCleanup(
           untrack(() =>
             context.ui.command({
               id: "panel",
-              title: panelTitle,
+              title: "Open third-party status panel",
               run: () => {
                 context.ui.panel.open("third-party-status")
               },
