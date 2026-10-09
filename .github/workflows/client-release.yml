@@ -53,76 +53,22 @@ jobs:
           fi
           node -e 'const pkg = require("./dist/desktop-app/package.json"); console.log("version=" + (process.platform === "win32" ? pkg.releaseVersion : pkg.version.split("+")[0]))' >> "$GITHUB_OUTPUT"
       - name: Package desktop app
-        if: runner.os == 'Windows'
-        run: >-
-          bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
-          --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
-          --electron-version=44.4.5 --build-version=${{ steps.stage.outputs.version }}
-          --out=dist/desktop --overwrite
-      - name: Package and ad hoc sign macOS app
-        if: runner.os == 'macOS'
-        # Ad hoc signatures have no Team ID, so disable hardened runtime library validation.
-        run: >-
-          bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
-          --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
-          --electron-version=44.4.5 --build-version=${{ steps.stage.outputs.version }}
-          --out=dist/desktop --overwrite
-          --osx-sign.identity=-
-          --no-osx-sign.identityValidation
-          --no-osx-sign.continueOnError
-          --no-osx-sign.hardenedRuntime
-      - name: Verify ad hoc macOS signature
-        if: runner.os == 'macOS'
-        env:
-          APP_PATH: dist/desktop/OpenCode-Front-darwin-arm64/OpenCode-Front.app
-        run: |
-          set -euo pipefail
-          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-          codesign --display --verbose=4 "$APP_PATH" 2>&1 | grep -F 'Signature=adhoc'
-          python3 - <<'PY'
-          import os
-          import signal
-          import subprocess
-          import sys
-          import tempfile
-          import time
-
-          executable = os.path.join(os.environ["APP_PATH"], "Contents/MacOS/OpenCode-Front")
-          with tempfile.TemporaryFile() as output:
-              process = subprocess.Popen([executable], stdout=output, stderr=output, start_new_session=True)
-              try:
-                  deadline = time.monotonic() + 15
-                  while time.monotonic() < deadline:
-                      if process.poll() is not None:
-                          output.seek(0)
-                          sys.stderr.write(output.read().decode(errors="replace"))
-                          raise SystemExit(f"Electron exited during launch with status {process.returncode}")
-                      time.sleep(0.5)
-
-                  processes = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True, check=True)
-                  if not any("OpenCode-Front Helper" in line and "--type=renderer" in line for line in processes.stdout.splitlines()):
-                      output.seek(0)
-                      sys.stderr.write(output.read().decode(errors="replace"))
-                      raise SystemExit("Electron did not start a renderer helper")
-              finally:
-                  try:
-                      os.killpg(process.pid, signal.SIGTERM)
-                  except ProcessLookupError:
-                      pass
-                  try:
-                      process.wait(timeout=5)
-                  except subprocess.TimeoutExpired:
-                      try:
-                          os.killpg(process.pid, signal.SIGKILL)
-                      except ProcessLookupError:
-                          pass
-                      process.wait()
-          PY
+        run: node scripts/desktop-package.mjs '${{ matrix.platform }}' '${{ matrix.arch }}' '${{ steps.stage.outputs.version }}'
       - name: Archive macOS app
         if: runner.os == 'macOS'
         run: >-
           tar -czf dist/opencode-front-macos-${{ matrix.arch }}.tar.gz
           -C dist/desktop OpenCode-Front-darwin-${{ matrix.arch }}
+      - name: Verify archived macOS signatures and launch
+        if: runner.os == 'macOS'
+        env:
+          ARCHIVE_PATH: dist/opencode-front-macos-${{ matrix.arch }}.tar.gz
+        run: |
+          set -euo pipefail
+          VERIFY_DIR="$(mktemp -d)"
+          trap 'rm -rf "$VERIFY_DIR"' EXIT
+          tar -xzf "$ARCHIVE_PATH" -C "$VERIFY_DIR"
+          python3 scripts/desktop-verify-macos.py "$VERIFY_DIR/OpenCode-Front-darwin-arm64/OpenCode-Front.app"
       - name: Archive Windows app
         if: runner.os == 'Windows'
         shell: pwsh

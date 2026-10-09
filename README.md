@@ -42,6 +42,8 @@ Electron loads the same web build using `oc://renderer`, an origin already permi
 
 The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.26.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.26+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives and a separate `opencode-front-example-plugins-<version>.zip` source module. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
 
+Ad hoc macOS builds disable hardened runtime through the signing tool's per-file options so the app and its helpers can load the bundled Electron libraries without a Team ID. Before uploading, the workflow extracts the release archive, verifies every Mach-O signature, rejects hardened runtime and explicit library validation flags, and checks that the app starts a renderer helper.
+
 See [v2.0.25 and v2.0.26 changes and sync details](docs/upstream-v2.0.26.md) for this release.
 
 ## Organize session tabs
