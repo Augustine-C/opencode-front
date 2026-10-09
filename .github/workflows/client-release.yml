@@ -53,11 +53,30 @@ jobs:
           fi
           node -e 'const pkg = require("./dist/desktop-app/package.json"); console.log("version=" + (process.platform === "win32" ? pkg.releaseVersion : pkg.version.split("+")[0]))' >> "$GITHUB_OUTPUT"
       - name: Package desktop app
+        if: runner.os != 'macOS' || github.ref_type != 'tag'
         run: >-
           bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
           --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
           --electron-version=44.4.5 --build-version=${{ steps.stage.outputs.version }}
           --out=dist/desktop --overwrite
+      - name: Package and ad hoc sign macOS app
+        if: runner.os == 'macOS' && github.ref_type == 'tag'
+        run: >-
+          bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
+          --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
+          --electron-version=44.4.5 --build-version=${{ steps.stage.outputs.version }}
+          --out=dist/desktop --overwrite
+          --osx-sign.identity=-
+          --osx-sign.identityValidation=false
+          --osx-sign.continueOnError=false
+      - name: Verify ad hoc macOS signature
+        if: runner.os == 'macOS' && github.ref_type == 'tag'
+        env:
+          APP_PATH: dist/desktop/OpenCode-Front-darwin-arm64/OpenCode-Front.app
+        run: |
+          set -euo pipefail
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          codesign --display --verbose=4 "$APP_PATH" 2>&1 | grep -F 'Signature=adhoc'
       - name: Archive macOS app
         if: runner.os == 'macOS'
         run: >-
