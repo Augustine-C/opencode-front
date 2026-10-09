@@ -22,6 +22,7 @@ export function createSessionScreenLayout(
   const dockSide = createMemo(() => session.isDesktop() && settings.general.terminalPlacement() === "side")
   const dockBottom = createMemo(() => session.isDesktop() && settings.general.terminalPlacement() === "bottom")
   const dockSideOpen = createMemo(() => dockOpen() && dockSide())
+
   const fileTreeOpen = createMemo(
     () => session.isDesktop() && input.sidebar() && settings.visibility.fileTree() && layout.fileTree.opened(),
   )
@@ -38,12 +39,17 @@ export function createSessionScreenLayout(
     () => row,
     ({ width, height }) => setRowSize({ width, height }),
   )
+
   const available = createMemo<number | undefined>(() => {
     const width = rowSize.width
+
     if (width === undefined) return undefined
+
     return width - 8
   })
+
   const splitSide = createMemo(() => tabsOpen() && input.wide())
+
   const resizedWidth = createMemo(() =>
     clampSessionPanelWidth({
       width: view().session.width(),
@@ -51,46 +57,65 @@ export function createSessionScreenLayout(
       split: splitSide(),
     }),
   )
+
   const panelWidth = createMemo(() => {
     if (fullscreen()) return "0px"
     if (!besideOpen()) return "100%"
+
     if (resizable()) return `${resizedWidth()}px`
+
     return `calc(100% - ${layout.fileTree.width()}px)`
   })
+
   const panelMax = createMemo(() => {
     const width = available()
+
     if (width === undefined) return 1000
+
     return sessionPanelWidthMax({ available: width, split: splitSide() })
   })
+
   const panelLayout = createMemo(() => ({
     visible: tabsOpen() || dockSideOpen() || fileTreeOpen(),
     stacked: tabsOpen() && dockSideOpen(),
   }))
+
   const [motion, setMotion] = createStore({ gap: panelLayout().stacked, closing: false })
   createEffect((previous) => {
     const stacked = panelLayout().stacked
+
     if (previous !== stacked) setMotion({ gap: stacked, closing: !stacked })
+
     return stacked
   }, panelLayout().stacked)
   const sideRegionOpen = createMemo(() => tabsOpen() || fileTreeOpen())
-  const dockPane = createMemo(() =>
+
+  const dockRegion = createMemo(() =>
     Math.min(view().dock.height(), typeof window === "undefined" ? 600 : window.innerHeight * 0.6),
   )
-  const dockPaneHeight = createMemo(() => `${dockPane()}px`)
+
+  const dockRegionHeight = createMemo(() => `${dockRegion()}px`)
   const sideHeight = createMemo(() => rowSize.height)
   const fullSideHeight = createMemo(() => (sideHeight() === undefined ? "100%" : `${sideHeight()}px`))
+
   const stackedRegionHeight = createMemo(() => {
     const height = sideHeight()
-    if (height === undefined) return `calc(100% - ${dockPaneHeight()} - 8px)`
-    return `${Math.max(0, height - dockPane() - 8)}px`
+
+    if (height === undefined) return `calc(100% - ${dockRegionHeight()} - 8px)`
+
+    return `${Math.max(0, height - dockRegion() - 8)}px`
   })
+
   const sideContentWidth = createMemo<string>((previous) => {
     const width = available()
     if (fullscreen()) return rowSize.width === undefined ? "100%" : `${rowSize.width}px`
     if (resizable() && width !== undefined) return `${Math.max(0, width - resizedWidth())}px`
+
     if (fileTreeOpen()) return `${layout.fileTree.width()}px`
+
     return previous
   }, "100%")
+
   return {
     centered: createMemo(() => session.isDesktop()),
     files: { open: fileTreeOpen },
@@ -114,17 +139,21 @@ export function createSessionScreenLayout(
       region: {
         height: createMemo(() => {
           if (!sideRegionOpen()) return "0px"
+
           if (dockSideOpen()) return stackedRegionHeight()
+
           return fullSideHeight()
         }),
         open: sideRegionOpen,
       },
       tabs: { open: tabsOpen },
       dock: {
-        contentHeight: createMemo(() => (sideRegionOpen() ? dockPaneHeight() : fullSideHeight())),
+        contentHeight: createMemo(() => (sideRegionOpen() ? dockRegionHeight() : fullSideHeight())),
         height: createMemo(() => {
           if (!dockSideOpen()) return "0px"
-          if (sideRegionOpen()) return dockPaneHeight()
+
+          if (sideRegionOpen()) return dockRegionHeight()
+
           return fullSideHeight()
         }),
       },

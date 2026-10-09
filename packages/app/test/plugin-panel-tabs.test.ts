@@ -6,12 +6,10 @@ import { define, type Context } from "../../frontend-plugin/src/index"
 import { createPluginPanelView, pluginPanelTab } from "../src/plugins/panel-model"
 import { attachPluginPanels } from "../src/extensions/plugin-panels"
 import {
-  Layout,
-  Sessions,
   Panel,
-  Menu,
+  MenuItem,
   type Context as NativeContext,
-  type SessionView,
+  type MountedSession,
 } from "@opencode/gui-extensions/sdk"
 import { openSessionTab, closeSessionTab, type SessionTabState } from "../src/shell/state/session-tabs"
 
@@ -56,7 +54,7 @@ function fixture() {
         }),
       )
     const contributions: { point: string; value: unknown }[] = []
-    const views = new Map<string, SessionView>()
+    const views = new Map<string, MountedSession>()
     for (const id of ["one", "two"])
       views.set(id, {
         id,
@@ -64,44 +62,40 @@ function fixture() {
         get location() {
           return state.located ? { directory: "/project" } : undefined
         },
-      } as SessionView)
+      } as MountedSession)
     const nativePanels = () =>
       contributions.filter((item) => item.point === Panel.id).map((item) => item.value as Panel)
-    const closeNative = (key: string, view: SessionView) => {
+    const closeNative = (key: string, view: MountedSession) => {
       const id = key.slice("plugin-panel:".length)
       const provider = nativePanels().find((panel) => panel.id === id)
-      const tab = provider?.list(view, [id]).find((tab) => tab.id === id)
+      const tab = provider?.list({ session: view, screen: {} as never, open: [id] }).find((tab) => tab.id === id)
       set("sessions", view.id, closeSessionTab(state.sessions[view.id] ?? empty, key))
-      if (tab) provider?.close?.(tab, view)
+      if (tab) provider?.close?.({ tab, session: view, screen: {} as never })
     }
     const context = {
-      use(token: { id: string }) {
-        if (token.id === Sessions.id)
-          return { list: () => [...views.values()], current: () => views.get(state.session) }
-        if (token.id !== Layout.id) throw new Error("Unexpected service")
-        return {
-          ready: () => state.ready,
-          narrow: () => state.narrow,
-          open(key: string, view: SessionView, options?: { select?: boolean }) {
-            const current = state.sessions[view.id] ?? empty
-            const next = options?.select
-              ? {
-                  tabs: {
-                    all: current.tabs.all.includes(key) ? current.tabs.all : [...current.tabs.all, key],
-                    active: key,
-                  },
-                  preview: current.preview,
-                }
-              : openSessionTab(current, key)
-            set("sessions", view.id, next)
-            set("activation", (value) => value + 1)
-          },
-          close: closeNative,
-          stored: (view: SessionView) =>
-            (state.sessions[view.id]?.tabs.all ?? []).flatMap((key) =>
-              key.startsWith("plugin-panel:") ? [key.slice("plugin-panel:".length)] : [],
-            ),
-        }
+      sessions: { list: () => [...views.values()], current: () => views.get(state.session) },
+      layout: {
+        ready: () => state.ready,
+        narrow: () => state.narrow,
+        open(key: string, view: MountedSession, options?: { tab?: "select" }) {
+          const current = state.sessions[view.id] ?? empty
+          const next = options?.tab === "select"
+            ? {
+                tabs: {
+                  all: current.tabs.all.includes(key) ? current.tabs.all : [...current.tabs.all, key],
+                  active: key,
+                },
+                preview: current.preview,
+              }
+            : openSessionTab(current, key)
+          set("sessions", view.id, next)
+          set("activation", (value) => value + 1)
+        },
+        close: closeNative,
+        stored: (view: MountedSession) =>
+          (state.sessions[view.id]?.tabs.all ?? []).flatMap((key) =>
+            key.startsWith("plugin-panel:") ? [key.slice("plugin-panel:".length)] : [],
+          ),
       },
       add(point: { id: string }, value: unknown) {
         const item = {
@@ -120,15 +114,18 @@ function fixture() {
       render: () => null,
       mobile: { current: () => state.mobile, select: (key) => set("mobile", key) },
     })
-    const panels = () => nativePanels().flatMap((panel) => panel.list(views.get(state.session)!, []))
+    const panels = () =>
+      nativePanels().flatMap((panel) =>
+        panel.list({ session: views.get(state.session)!, screen: {} as never, open: [] }),
+      )
     const model = {
       activeTab: tabs.active,
       panelTabs: () => panels().map((panel) => `plugin-panel:${panel.id}`),
     }
     const menu = () =>
       contributions
-        .filter((item) => item.point === Menu.id)
-        .map((item) => (item.value as () => Menu | undefined)())
+        .filter((item) => item.point === MenuItem.id)
+        .map((item) => (item.value as () => MenuItem | undefined)())
         .filter(Boolean)
     const nativeClose = (key: string) => closeNative(key, views.get(state.session)!)
     return { state, set, tabs, host, contexts, model, nativeClose, menu, panels, dispose }

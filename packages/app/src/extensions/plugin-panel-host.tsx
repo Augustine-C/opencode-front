@@ -2,7 +2,7 @@ import { Show } from "solid-js"
 import { PluginScope, usePlugins } from "@/plugins/context"
 import { PluginPanelContent } from "@/plugins/panel"
 import { useExtensionHost } from "@/runtime/extension/host"
-import { useExtensionAttachment } from "@/runtime/extension/services"
+import { useExtensionAttachment } from "@/runtime/extension/attachment"
 import { attachPluginPanels, frontendPanels } from "./plugin-panels"
 
 export function useFrontendPanels() {

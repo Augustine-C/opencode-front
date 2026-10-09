@@ -2,7 +2,7 @@
 
 A frontend-only port of OpenCode v2 with a shared web/desktop UI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
 
-This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.22**, commit [`84c9be9`](https://github.com/anomalyco/opencode/tree/527f0b931d1f9b3ebd34e106c51b31ce5db5b075). The source was copied from the local `opencode-dev/opencode_v2` checkout. Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
+This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.24**, commit [`e7a34f0`](https://github.com/anomalyco/opencode/tree/e7a34f09bfd9134dfade5a8ddb843f7030bc9a69). The source was copied from the local `opencode-dev/opencode_v2` checkout. Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
 
 ## License and attribution
 
@@ -78,3 +78,5 @@ The frontend and plugin SDK are type-checked. Focused tests cover lifecycle clea
 Upstream imports are declared in [import rules](upstream/import-rules.json) and pinned by a per-file [inventory](upstream/inventory.json). `bun run check` audits this boundary. Plugin panels and project grouping use the port-owned `packages/app/src/extensions` adapter layer. See the [maintenance workflow](docs/upstream-maintenance.md) for the read-only upgrade report and inventory recording commands.
 
 The original `opencode-dev` checkout is unchanged. Future upstream ports should preserve `@opencode/client` generated files and update the app/UI/protocol snapshot together. The frontend plugin API has its own version independent of the service version.
+
+The [CodeArts Proxy example](packages/codearts-proxy-extension/README.md) is a standard OpenCode v2 GUI renderer extension. Configure it under **Settings → CodeArts Proxy**; its panels and commands use the upstream extension SDK directly.

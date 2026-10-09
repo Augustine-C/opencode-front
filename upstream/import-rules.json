@@ -173,7 +173,7 @@
     },
     {
       "id": "session-panels",
-      "reason": "Bridge browser plugin panels to the upstream GUI extension host, preserving session ownership and fullscreen geometry.",
+      "reason": "Register native GUI examples and bridge browser plugin panels to the upstream GUI extension host, preserving session ownership and fullscreen geometry.",
       "files": [
         "packages/app/src/session/screen-layout.ts",
         "packages/app/src/session/screen.tsx",
@@ -293,6 +293,12 @@
         "packages/app/public/NOTICE"
       ],
       "reason": "Port-owned extension modules, regression tests, icon inputs, and redistributed notices."
+    },
+    {
+      "patterns": [
+        "packages/codearts-proxy-extension/**"
+      ],
+      "reason": "Portable native OpenCode v2 CodeArts Proxy GUI extension."
     }
   ]
 }

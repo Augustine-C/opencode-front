@@ -14,7 +14,7 @@
     },
     "packages/app": {
       "name": "@opencode/app",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@corvu/drawer": "catalog:",
         "@dnd-kit/abstract": "0.5.0",
@@ -23,6 +23,7 @@
         "@dnd-kit/solid": "0.5.0",
         "@ibm/plex": "6.4.1",
         "@kobalte/core": "catalog:",
+        "@opencode-front/codearts-proxy-extension": "workspace:*",
         "@opencode/client": "workspace:*",
         "@opencode/frontend-plugin": "workspace:*",
         "@opencode/gui-extensions": "workspace:*",
@@ -72,7 +73,7 @@
     },
     "packages/client": {
       "name": "@opencode/client",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@opencode/protocol": "workspace:*",
         "@opencode/schema": "workspace:*",
@@ -95,6 +96,20 @@
         "solid-js",
       ],
     },
+    "packages/codearts-proxy-extension": {
+      "name": "@opencode-front/codearts-proxy-extension",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@opencode/gui-extensions": "workspace:*",
+        "@opencode/ui": "workspace:*",
+      },
+      "peerDependencies": {
+        "@opencode/gui-extensions": ">=2.0.24",
+        "@opencode/ui": ">=2.0.24",
+        "effect": "4.0.0-rc.112",
+        "solid-js": ">=1.9.0",
+      },
+    },
     "packages/frontend-plugin": {
       "name": "@opencode/frontend-plugin",
       "version": "0.1.0",
@@ -110,7 +125,7 @@
     },
     "packages/gui-extensions": {
       "name": "@opencode/gui-extensions",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@dnd-kit/abstract": "0.5.0",
         "@dnd-kit/dom": "0.5.0",
@@ -155,7 +170,7 @@
     },
     "packages/plugin-browser": {
       "name": "@opencode/plugin-browser",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -163,7 +178,7 @@
     },
     "packages/protocol": {
       "name": "@opencode/protocol",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -178,7 +193,7 @@
     },
     "packages/schema": {
       "name": "@opencode/schema",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@standard-schema/spec": "catalog:",
         "effect": "catalog:",
@@ -192,7 +207,7 @@
     },
     "packages/session-ui": {
       "name": "@opencode/session-ui",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@kobalte/core": "catalog:",
         "@opencode/client": "workspace:*",
@@ -227,7 +242,7 @@
     },
     "packages/ui": {
       "name": "@opencode/ui",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@kobalte/core": "catalog:",
         "@pierre/diffs": "catalog:",
@@ -262,7 +277,7 @@
     },
     "packages/util": {
       "name": "@opencode/util",
-      "version": "2.0.22",
+      "version": "2.0.24",
       "dependencies": {
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
@@ -305,10 +320,10 @@
   ],
   "patchedDependencies": {
     "ghostty-web@github:anomalyco/ghostty-web#83c0a07": "patches/ghostty-web@0.3.0.patch",
-    "@pierre/trees@1.0.0-beta.4": "patches/@pierre%2Ftrees@1.0.0-beta.4.patch",
+    "solid-js@1.9.15": "patches/solid-js@1.9.15.patch",
     "vite@8.2.2": "patches/vite@8.2.2.patch",
     "@dnd-kit/dom@0.5.0": "patches/@dnd-kit%2Fdom@0.5.0.patch",
-    "solid-js@1.9.15": "patches/solid-js@1.9.15.patch",
+    "@pierre/trees@1.0.0-beta.4": "patches/@pierre%2Ftrees@1.0.0-beta.4.patch",
     "@tanstack/virtual-core@3.17.8": "patches/@tanstack%2Fvirtual-core@3.17.8.patch",
   },
   "overrides": {
@@ -774,6 +789,8 @@
     "@npmcli/redact": ["@npmcli/redact@4.0.0", "", {}, "sha512-gOBg5YHMfZy+TfHArfVogwgfBeQnKbbGo3pSUyK/gSI0AVu+pEiDVcKlQb0D8Mg1LNRZILZ6XG8I5dJ4KuAd9Q=="],
 
     "@npmcli/run-script": ["@npmcli/run-script@10.0.4", "", { "dependencies": { "@npmcli/node-gyp": "^5.0.0", "@npmcli/package-json": "^7.0.0", "@npmcli/promise-spawn": "^9.0.0", "node-gyp": "^12.1.0", "proc-log": "^6.0.0" } }, "sha512-mGUWr1uMnf0le2TwfOZY4SFxZGXGfm4Jtay/nwAa2FLNAKXUoUwaGwBMNH36UHPtinWfTSJ3nqFQr0091CxVGg=="],
+
+    "@opencode-front/codearts-proxy-extension": ["@opencode-front/codearts-proxy-extension@workspace:packages/codearts-proxy-extension"],
 
     "@opencode/app": ["@opencode/app@workspace:packages/app"],
 
