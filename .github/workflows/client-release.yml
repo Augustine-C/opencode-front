@@ -53,14 +53,14 @@ jobs:
           fi
           node -e 'const pkg = require("./dist/desktop-app/package.json"); console.log("version=" + (process.platform === "win32" ? pkg.releaseVersion : pkg.version.split("+")[0]))' >> "$GITHUB_OUTPUT"
       - name: Package desktop app
-        if: runner.os != 'macOS' || github.ref_type != 'tag'
+        if: runner.os == 'Windows'
         run: >-
           bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
           --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
           --electron-version=44.4.5 --build-version=${{ steps.stage.outputs.version }}
           --out=dist/desktop --overwrite
       - name: Package and ad hoc sign macOS app
-        if: runner.os == 'macOS' && github.ref_type == 'tag'
+        if: runner.os == 'macOS'
         run: >-
           bunx @electron/packager@19.0.1 dist/desktop-app OpenCode-Front
           --platform=${{ matrix.platform }} --arch=${{ matrix.arch }}
@@ -70,7 +70,7 @@ jobs:
           --osx-sign.identityValidation=false
           --osx-sign.continueOnError=false
       - name: Verify ad hoc macOS signature
-        if: runner.os == 'macOS' && github.ref_type == 'tag'
+        if: runner.os == 'macOS'
         env:
           APP_PATH: dist/desktop/OpenCode-Front-darwin-arm64/OpenCode-Front.app
         run: |
