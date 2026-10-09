@@ -154,6 +154,17 @@
   ],
   "overlays": [
     {
+      "id": "port-localization",
+      "reason": "Merge port-owned project tab and frontend plugin translations into the shared language dictionary while retaining pristine upstream locale files.",
+      "files": [
+        "packages/app/src/runtime/i18n/language.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/project-tab-i18n.ts",
+        "packages/app/src/extensions/plugin-i18n.ts"
+      ]
+    },
+    {
       "id": "generated-icons",
       "reason": "Generated frontend icons are retained independently of upstream icon generation inputs.",
       "files": [

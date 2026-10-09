@@ -14,6 +14,8 @@ import {
 import { Persist, persisted } from "@/runtime/persistence/storage"
 import { Persistence } from "@/runtime/persistence/schema"
 import en from "@/runtime/i18n/en"
+import { projectTabTranslations } from "@/extensions/project-tab-i18n"
+import { pluginTranslations } from "@/extensions/plugin-i18n"
 import { dict } from "@opencode/ui/i18n/en"
 import {
   createDesktopNativeBundle,
@@ -177,9 +179,11 @@ function loadDict(locale: Locale) {
   const load = loaders[locale]
 
   return load().then((next: Dictionary) => {
-    dicts.set(locale, next)
+    const plugins = pluginTranslations[locale]
+    const localized = { ...next, ...projectTabTranslations[locale], ...plugins }
+    dicts.set(locale, localized)
 
-    return next
+    return localized
   })
 }
 

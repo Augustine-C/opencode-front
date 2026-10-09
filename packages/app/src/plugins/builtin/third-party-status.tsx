@@ -1,5 +1,6 @@
 import { define } from "@opencode/frontend-plugin"
 import { createStore } from "solid-js/store"
+import { createEffect, onCleanup, untrack } from "solid-js"
 import type { useLanguage } from "@/runtime/i18n/language"
 
 // An opt-in example: no requests run until the user supplies an endpoint.
@@ -7,7 +8,9 @@ import type { useLanguage } from "@/runtime/i18n/language"
 export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
   return define({
     id: "third-party-status",
-    name: language.t("plugins.thirdPartyStatus"),
+    get name() {
+      return language.t("plugins.thirdPartyStatus")
+    },
     apiVersion: 1,
     setup(context) {
       const [state, setState] = createStore({ label: "", value: "", error: "", loading: false })
@@ -73,13 +76,21 @@ export function thirdPartyStatus(language: ReturnType<typeof useLanguage>) {
             </div>
           ) : null,
       })
-      context.ui.command({ id: "refresh", title: language.t("plugins.statusRefresh"), run: refresh })
-      context.ui.command({
-        id: "panel",
-        title: language.t("plugins.statusPanel"),
-        run: () => {
-          context.ui.panel.open("third-party-status")
-        },
+      createEffect(() => {
+        const refreshTitle = language.t("plugins.statusRefresh")
+        const panelTitle = language.t("plugins.statusPanel")
+        onCleanup(untrack(() => context.ui.command({ id: "refresh", title: refreshTitle, run: refresh })))
+        onCleanup(
+          untrack(() =>
+            context.ui.command({
+              id: "panel",
+              title: panelTitle,
+              run: () => {
+                context.ui.panel.open("third-party-status")
+              },
+            }),
+          ),
+        )
       })
       void refresh()
       return () => clearTimeout(timer)

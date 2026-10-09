@@ -1,5 +1,5 @@
 import { define } from "@opencode/frontend-plugin"
-import { For } from "solid-js"
+import { createEffect, For, onCleanup, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Button } from "@opencode/ui/button"
 import { Checkbox } from "@opencode/ui/checkbox"
@@ -10,25 +10,32 @@ import "./panel-demo.css"
 export function panelDemo(language: ReturnType<typeof useLanguage>) {
   return define({
     id: "panel-demo",
-    name: language.t("plugins.demo.name"),
+    get name() {
+      return language.t("plugins.demo.name")
+    },
     apiVersion: 1,
     setup(context) {
       const [state, setState] = createStore({ completed: [true, false, false], note: "" })
-      const title =
+      const title = () =>
         typeof context.options.title === "string" && context.options.title.trim()
           ? context.options.title.trim()
           : language.t("plugins.demo.title")
       const presentation = context.options.presentation === "fullscreen" ? "fullscreen" : "panel"
       const open = () => {
-        context.ui.panel.open("panel-demo", { title, presentation })
+        context.ui.panel.open("panel-demo", { title: title(), presentation })
       }
       const tasks = ["plugins.demo.task.review", "plugins.demo.task.checks", "plugins.demo.task.release"] as const
       const completed = () => state.completed.filter(Boolean).length
 
-      context.ui.command({ id: "open", title: language.t("plugins.demo.open"), run: open })
-      if (context.options.showLauncher !== false) {
-        context.ui.panel.register({ name: "panel-demo", title, presentation })
-      }
+      createEffect(() => {
+        const label = language.t("plugins.demo.open")
+        onCleanup(untrack(() => context.ui.command({ id: "open", title: label, run: open })))
+      })
+      createEffect(() => {
+        if (context.options.showLauncher === false) return
+        const label = title()
+        onCleanup(untrack(() => context.ui.panel.register({ name: "panel-demo", title: label, presentation })))
+      })
       context.ui.slot({
         append: "session.panel",
         render: (input) =>

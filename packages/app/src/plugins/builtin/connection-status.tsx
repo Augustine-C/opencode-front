@@ -4,7 +4,9 @@ import type { useLanguage } from "@/runtime/i18n/language"
 export function connectionStatus(language: ReturnType<typeof useLanguage>) {
   return define({
     id: "connection-status",
-    name: language.t("plugins.connectionStatus"),
+    get name() {
+      return language.t("plugins.connectionStatus")
+    },
     apiVersion: 1,
     defaultEnabled: true,
     setup(context) {
