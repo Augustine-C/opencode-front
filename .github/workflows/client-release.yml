@@ -109,23 +109,3 @@ jobs:
             gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
           fi
           gh release upload "$RELEASE_TAG" artifacts/* --clobber
-
-  cleanup-broken-releases:
-    name: Remove superseded broken releases
-    if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      github.event.head_commit.message == 'chore(release): retire broken client releases'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Delete broken releases and their tags
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          for tag in 2.0.26.0 2.0.26.3 2.0.26.4; do
-            gh release delete "$tag" --cleanup-tag --yes
-          done
