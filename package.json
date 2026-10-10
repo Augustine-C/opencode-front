@@ -95,6 +95,7 @@
     "upstream:record": "bun run scripts/upstream/check.ts record"
   },
   "devDependencies": {
+    "@electron/packager": "19.0.1",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
