@@ -109,3 +109,51 @@ jobs:
             gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
           fi
           gh release upload "$RELEASE_TAG" artifacts/* --clobber
+
+  update-2-0-26-5-release-notes:
+    name: Update 2.0.26.5 release description
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.head_commit.message == 'chore(release): expand 2.0.26.5 release description'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Replace release description with complete notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cat > "$RUNNER_TEMP/release-2.0.26.5.md" <<'RELEASE_NOTES'
+          # OpenCode Front 2.0.26.5
+          
+          Port revision 5 for upstream OpenCode v2.0.26. The app uses version 2.0.26+5. It connects to an existing compatible OpenCode service; the desktop archive does not bundle a backend.
+          
+          ## Changes included
+          
+          - **Upstream v2.0.25 frontend updates:** read only Word, Excel, and PowerPoint previews; recently closed tabs; recent sessions in the command menu; improved mobile navigation and layout; clearer streaming and pending tool state; Markdown selection and math parsing fixes; and more consistent pairing and connection flows.
+          - **Upstream v2.0.26 updates:** faster snapshot and Git tree processing, refreshed model data and Google Cloud credential support for Vertex, less guessable remote access subdomains, and terminal link and summary improvements.
+          - **OpenCode Front features:** group session tabs by project, manage frontend plugins with the plugin SDK, use the separate example plugin source archive, and connect through the CodeArts Proxy extension.
+          - **macOS launch fix:** the prior signing command left hardened runtime enabled on the app, Electron helpers, and framework binaries. With ad hoc signatures this made macOS reject Electron Framework during launch. This release disables hardened runtime for each signed binary.
+          
+          ## Build verification
+          
+          The tagged GitHub Actions run completed successfully for macOS arm64, Windows x64, and release publishing. On the extracted macOS archive, CI verified all 13 Mach-O signatures, confirmed they are ad hoc signed without hardened runtime or library validation flags, and launched the app with a renderer helper. CI used macOS 15; macOS 27 was not directly available for testing.
+          
+          ## Downloads
+          
+          | File | Platform / contents | Size | SHA-256 |
+          | --- | --- | ---: | --- |
+          | [opencode-front-macos-arm64.tar.gz](https://github.com/Augustine-C/opencode-front/releases/download/2.0.26.5/opencode-front-macos-arm64.tar.gz) | macOS Apple Silicon | 173,990,479 bytes | `679f82720b329cbb87a178ca9f76f45c393cb17e4628b75529545f5dc720f51b` |
+          | [opencode-front-windows-x64.zip](https://github.com/Augustine-C/opencode-front/releases/download/2.0.26.5/opencode-front-windows-x64.zip) | Windows x64 | 207,001,592 bytes | `cb49c302500d7fd7a950130c6fcdcd8fee58ab14da192fd08b98b26373df1e3a` |
+          | [opencode-front-example-plugins-2.0.26.5.zip](https://github.com/Augustine-C/opencode-front/releases/download/2.0.26.5/opencode-front-example-plugins-2.0.26.5.zip) | Example plugin source modules | 7,541 bytes | `bd4bc1e8bb76787e1114e6619e3abaeba21253b068205daeb1ba7877632229b1` |
+          
+          The macOS app is ad hoc signed and not notarized. After verifying the download and extracting the archive, move `OpenCode-Front.app` to Applications and clear the quarantine attribute before opening:
+          
+          ```sh
+          xattr -dr com.apple.quarantine "/Applications/OpenCode-Front.app"
+          ```
+          
+          RELEASE_NOTES
+          gh release edit 2.0.26.5 --notes-file "$RUNNER_TEMP/release-2.0.26.5.md"
