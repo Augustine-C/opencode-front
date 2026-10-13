@@ -8,6 +8,8 @@ The port adds three strings that are absent from upstream locale dictionaries:
 
 English remains the unchanged semantic source in `runtime/i18n/en.ts`. The 62 non-English locales are covered by the typed `extensions/project-tab-i18n.ts` dictionary. `runtime/i18n/language.tsx` merges these translations after loading upstream app and UI dictionaries, before caching them. Initial language selection, later language changes, settings search, the switch's accessible label, and group headings therefore use the same existing translation API. Upstream locale files remain pristine; the language integration is a declared overlay.
 
+Collapsible project headings reuse the project identity and translated unassigned label as their accessible names. Native button semantics and `aria-expanded` expose the fold state to assistive technology in its language. The visual tab count is numeric and hidden from the accessible name; these controls add no hardcoded English copy.
+
 ## Terminology review
 
 The existing OpenCode dictionaries provide the project, session, tab, layout, grouping, and unassigned terminology. Translations retain each locale's existing project/session vocabulary; the descriptions refer to both supported tab layouts rather than only the current orientation.

@@ -125,6 +125,7 @@ const appearanceSchema = Persistence.struct({
   terminal: Schema.String,
   tabLayout: Schema.Literals(["horizontal", "vertical"]),
   groupTabsByProject: Persistence.fallback(Schema.Boolean, () => false),
+  collapsedTabGroups: Persistence.record(Persistence.optional(Schema.Boolean)),
 })
 
 const permissionsSchema = Persistence.struct({
@@ -273,7 +274,15 @@ export const defaultSettings: Settings = {
     terminalPlacement: "side",
     followUpBehavior: "steer",
   },
-  appearance: { fontSize: 14, mono: "", sans: "", terminal: "", tabLayout: "horizontal", groupTabsByProject: false },
+  appearance: {
+    fontSize: 14,
+    mono: "",
+    sans: "",
+    terminal: "",
+    tabLayout: "horizontal",
+    groupTabsByProject: false,
+    collapsedTabGroups: {},
+  },
   keybinds: {},
   permissions: { autoApprove: false },
   workspaces: { defaultDestination: "last-used", lastUsed: {} },
@@ -376,6 +385,20 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         groupTabsByProject: withFallback(() => store.appearance?.groupTabsByProject, false),
         setGroupTabsByProject(value: boolean) {
           setStore("appearance", "groupTabsByProject", value)
+        },
+        tabGroupCollapsed(key: string) {
+          return store.appearance?.collapsedTabGroups?.[key] === true
+        },
+        setTabGroupCollapsed(key: string, collapsed: boolean) {
+          if ((store.appearance?.collapsedTabGroups?.[key] === true) === collapsed) return
+          setStore(
+            "appearance",
+            "collapsedTabGroups",
+            produce((groups) => {
+              if (collapsed) groups[key] = true
+              else delete groups[key]
+            }),
+          )
         },
         tabLayout: withFallback(() => store.appearance?.tabLayout, defaultSettings.appearance.tabLayout),
         setTabLayout(value: TabLayout) {

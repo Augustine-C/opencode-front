@@ -56,7 +56,7 @@ bun run build
 | `src/extensions/plugin-panels.ts` | Native SDK panel/menu contributions, session lifetime, storage readiness, mobile selection | Upstream extension definition list |
 | `src/extensions/plugin-panel-host.tsx` | Attaches the SDK bridge and scopes plugin rendering | Shell |
 | `src/extensions/session-panels.tsx` | Selected plugin fullscreen toolbar | Native side region |
-| `src/extensions/project-tabs.tsx` | Project group resolution, display ordering, group headings | Titlebar tab strip |
+| `src/extensions/project-tabs.tsx` | Project group resolution, display ordering, collapsible headings, selection reveal | Titlebar tab strip; persisted collapse state in the settings overlay |
 | `src/extensions/project-tab-model.ts` | Pure project matching and grouping | Group adapter and tests |
 | `src/extensions/grouped-tab-status.tsx` | Grouped session progress/unread indicator | Session tab avatar fallback |
 | `src/extensions/project-tabs.css` | Grouped vertical/horizontal styles | Imported by the group adapter; upstream tab CSS stays pristine |
