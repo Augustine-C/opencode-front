@@ -62,6 +62,12 @@ The plugin SDK provides typed named slots, commands, session panels, the current
 
 TUI configuration can select explicitly installed browser adapters and reuse their options. Terminal JSX needs a browser renderer; arbitrary TUI packages cannot execute unchanged in the browser. Unsupported packages are reported. See the [plugin API and adapter guide](docs/plugin-system.md).
 
+## Search and browse conversation history
+
+Use **Search messages** in an existing conversation, or press **Ctrl/Cmd+F**. Matches in user and assistant text are highlighted; use the result buttons, Enter / Shift+Enter, or the arrow keys to switch matches. Escape closes search. Search covers loaded messages; **Load earlier messages** extends the searchable history without loading everything at once.
+
+The message-history rail previews sent prompts on hover and jumps to them when clicked or dragged, including touch dragging on narrow screens. When focused, it supports Up / Down, Home / End, and Page Up / Page Down. Its bottom button returns to the latest content, and the history toolbar button hides or shows the rail. Navigation uses the existing virtualized timeline and excludes reverted prompts.
+
 ## Validate and build
 
 ```sh

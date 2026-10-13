@@ -1,0 +1,186 @@
+[data-component="session-navigation-toolbar"] {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--v2-border-border-base);
+  color: var(--v2-text-text-muted);
+  font-size: 13px;
+  line-height: var(--line-height-compact, 16px);
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.session-navigation-search-trigger,
+.session-navigation-load,
+.session-history-latest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.session-navigation-search-trigger:hover,
+.session-navigation-load:hover,
+.session-history-latest:hover {
+  background: var(--v2-overlay-simple-overlay-hover);
+}
+
+.session-navigation-load:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.session-navigation-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+.session-navigation-search {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 240px;
+  padding-inline-start: 8px;
+  border: 1px solid var(--v2-border-border-base);
+  border-radius: 6px;
+  background: var(--v2-background-bg-base);
+}
+.session-navigation-search:focus-within {
+  border-color: var(--v2-border-border-focus);
+}
+.session-navigation-search input {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  height: 32px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--v2-text-text-base);
+  font: inherit;
+}
+.session-navigation-count {
+  font-size: 11px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.session-navigation-up {
+  display: flex;
+  transform: rotate(180deg);
+}
+.session-navigation-hint {
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: var(--line-height-compact, 16px);
+}
+
+[data-component="session-history-navigation"] {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  height: min(240px, 55%);
+  color: var(--v2-text-text-muted);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--v2-background-bg-base) 94%, transparent);
+  box-shadow: var(--v2-elevation-raised);
+  padding-block: 10px 0;
+}
+.session-history-rail {
+  position: relative;
+  flex: 1;
+  width: 28px;
+  min-height: 0;
+  touch-action: none;
+  cursor: ns-resize;
+}
+.session-history-marker {
+  position: absolute;
+  inset-inline-end: 8px;
+  width: 8px;
+  height: 2px;
+  background: var(--v2-border-border-base);
+  pointer-events: none;
+}
+.session-history-thumb {
+  position: absolute;
+  inset-inline-end: 5px;
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--v2-text-text-base);
+  pointer-events: none;
+}
+.session-history-latest {
+  width: 28px;
+  min-height: 32px;
+  padding: 0;
+  margin-top: 8px;
+}
+.session-history-preview {
+  position: absolute;
+  inset-inline-end: 36px;
+  top: 0;
+  width: min(320px, calc(100cqw - 64px));
+  max-width: calc(100vw - 80px);
+  border: 1px solid var(--v2-border-border-base);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--v2-background-bg-base);
+  box-shadow: var(--v2-elevation-raised);
+  pointer-events: none;
+  font-size: 13px;
+  line-height: var(--line-height-base, 20px);
+}
+.session-history-preview > span {
+  font-size: 11px;
+}
+.session-history-preview p {
+  margin: 6px 0 0;
+  color: var(--v2-text-text-base);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.session-history-rail:focus-visible,
+.session-history-latest:focus-visible,
+.session-navigation-search-trigger:focus-visible,
+.session-navigation-load:focus-visible {
+  outline: 2px solid var(--v2-border-border-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  [data-component="session-navigation-toolbar"] {
+    padding-inline: 8px;
+  }
+  [data-component="session-navigation-toolbar"] [data-component="icon-button-v2"] {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  [data-component="session-history-navigation"] {
+    inset-inline-end: 4px;
+    width: 32px;
+  }
+  .session-history-rail,
+  .session-history-latest {
+    width: 32px;
+  }
+}

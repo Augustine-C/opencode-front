@@ -38,6 +38,7 @@ function collectRanges(
 ) {
   const hits: Range[] = []
   const active: Range[] = []
+  if (!query) return { hits, active }
   const lower = query.toLowerCase()
   const bodies = root.querySelectorAll<HTMLElement>(TEXT_SELECTORS)
 
@@ -98,6 +99,12 @@ export function createTimelineSearchController(input: {
   const [state, setState] = createStore({ value: "", active: 0, visible: false })
   const [focusTick, setFocusTick] = createSignal(0)
   let inputEl: HTMLInputElement | undefined
+  let searchFrame: number | undefined
+  const cancelSearchScroll = () => {
+    if (searchFrame !== undefined) cancelAnimationFrame(searchFrame)
+    searchFrame = undefined
+  }
+  onCleanup(cancelSearchScroll)
 
   const query = createMemo(() => state.value.trim().toLowerCase())
 
@@ -228,11 +235,15 @@ export function createTimelineSearchController(input: {
   }
 
   function close() {
+    cancelSearchScroll()
     setState({ value: "", active: 0, visible: false })
     inputEl?.blur()
   }
 
+  createEffect(on(input.sessionID, close, { defer: true }))
+
   function setValue(value: string) {
+    cancelSearchScroll()
     setState("value", value)
     const list = matches()
     const match = list[0]
@@ -250,9 +261,11 @@ export function createTimelineSearchController(input: {
   }
 
   function scrollToMatch(match: TimelineSearchMatch) {
+    cancelSearchScroll()
     let attempts = 0
 
     const seek = () => {
+      searchFrame = undefined
       if (!state.visible) return
       const root = input.scrollRef()
 
@@ -260,8 +273,7 @@ export function createTimelineSearchController(input: {
       const { active } = collectRanges(root, query(), match.partID, match.occurrence)
 
       if (active.length === 0) {
-        if (attempts++ < 12) requestAnimationFrame(seek)
-
+        if (attempts++ < 12) searchFrame = requestAnimationFrame(seek)
         return
       }
 
@@ -272,8 +284,7 @@ export function createTimelineSearchController(input: {
       const top = rect.top - rootRect.top + root.scrollTop - inset - (rootRect.height - rect.height) / 2
       root.scrollTo({ top: Math.max(0, top), behavior: "auto" })
     }
-
-    requestAnimationFrame(seek)
+    searchFrame = requestAnimationFrame(seek)
   }
 
   function move(delta: number) {

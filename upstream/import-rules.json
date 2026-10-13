@@ -154,6 +154,19 @@
   ],
   "overlays": [
     {
+      "id": "session-navigation",
+      "reason": "Responsive search controls and message-history rail reuse native virtualized reveal operations; cancel stale search scrolling on query and session changes.",
+      "files": [
+        "packages/app/src/session/timeline/search-controller.ts"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/session-navigation.ts",
+        "packages/app/src/extensions/session-navigation-state.ts",
+        "packages/app/src/extensions/session-navigation-view.tsx",
+        "packages/app/src/extensions/session-navigation.css"
+      ]
+    },
+    {
       "id": "port-localization",
       "reason": "Merge port-owned project tab and frontend plugin translations into the shared language dictionary while retaining pristine upstream locale files.",
       "files": [
