@@ -28,6 +28,7 @@ function SessionTabSlot(props: {
   orientation: "horizontal" | "vertical"
   group?: string
   groupIndex?: number
+  collapsed?: boolean
   session: SessionInfo | undefined
   preparing: boolean
   fallbackTitle?: string
@@ -36,6 +37,9 @@ function SessionTabSlot(props: {
   onClose: () => void
 }) {
   const sortable = useSortable({
+    get disabled() {
+      return !!props.collapsed
+    },
     get id() {
       return props.id
     },
@@ -59,6 +63,7 @@ function SessionTabSlot(props: {
     <div
       ref={sortable.ref}
       data-titlebar-tab-slot
+      hidden={props.collapsed}
       data-tab-key={props.id}
       data-active={props.active}
       data-orientation={props.orientation}
@@ -97,6 +102,7 @@ function SessionTabEntry(props: {
   orientation: "horizontal" | "vertical"
   group?: string
   groupIndex?: number
+  collapsed?: boolean
   serverCtx: ServerCtx | undefined
   onVisibleChange: (visible: boolean) => void
   onNavigate: (element: HTMLDivElement) => void
@@ -201,6 +207,7 @@ function SessionTabEntry(props: {
         orientation={props.orientation}
         group={props.group}
         groupIndex={props.groupIndex}
+        collapsed={props.collapsed}
         session={session()}
         preparing={!!pending()}
         fallbackTitle={
@@ -224,11 +231,15 @@ function DraftTabSlot(props: {
   orientation: "horizontal" | "vertical"
   group?: string
   groupIndex?: number
+  collapsed?: boolean
   title: string
   onNavigate: (element: HTMLDivElement) => void
   onClose: () => void
 }) {
   const sortable = useSortable({
+    get disabled() {
+      return !!props.collapsed
+    },
     get id() {
       return props.id
     },
@@ -252,6 +263,7 @@ function DraftTabSlot(props: {
     <div
       ref={sortable.ref}
       data-titlebar-tab-slot
+      hidden={props.collapsed}
       data-tab-key={props.id}
       data-active={props.active}
       data-orientation={props.orientation}
@@ -291,10 +303,11 @@ export function TitlebarTabStrip(props: {
   const vertical = () => props.orientation === "vertical"
   let listRef!: HTMLDivElement
   const [visibility, setVisibility] = createStore<Record<string, boolean>>({})
-  const projectGroups = useProjectTabGroups({ tabs: () => props.tabs, current: () => props.currentTab, vertical })
+  const projectGroups = useProjectTabGroups({ tabs: () => props.tabs, current: () => props.currentTab })
   const grouped = projectGroups.enabled
   const groupKey = projectGroups.key
   const displayedTabs = projectGroups.ordered
+  // Folded tabs keep their metadata and shortcut positions; navigation reveals the destination group.
   const visibleTabs = createMemo(() => displayedTabs().filter((tab) => tab.type === "draft" || visibility[tabKey(tab)]))
   const visibleTabIds = () => visibleTabs().map(tabKey)
 
@@ -433,6 +446,7 @@ export function TitlebarTabStrip(props: {
                         orientation={vertical() ? "vertical" : "horizontal"}
                         group={grouped() ? groupKey(tab) : undefined}
                         groupIndex={groupIndex()}
+                        collapsed={projectGroups.collapsed(tab)}
                         serverCtx={serverCtx()}
                         onVisibleChange={(visible) => setVisibility(id, visible)}
                         onNavigate={(element) => {
@@ -456,6 +470,7 @@ export function TitlebarTabStrip(props: {
                       orientation={vertical() ? "vertical" : "horizontal"}
                       group={grouped() ? groupKey(tab) : undefined}
                       groupIndex={groupIndex()}
+                      collapsed={projectGroups.collapsed(tab)}
                       title={language.t("session.tab.session")}
                       onNavigate={(element) => {
                         ref = element

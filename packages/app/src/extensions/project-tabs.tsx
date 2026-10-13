@@ -1,4 +1,5 @@
-import { createMemo, Show, type Accessor } from "solid-js"
+import { createEffect, createMemo, on, Show, type Accessor } from "solid-js"
+import { Icon } from "@opencode/ui/icon"
 import { ProjectAvatar, type ProjectAvatarStyle } from "@opencode/ui/project-avatar"
 import { useSettings } from "@/settings/model"
 import { useGlobal } from "@/runtime/server/runtime"
@@ -10,11 +11,7 @@ import { pathKey } from "@/workspaces/path-key"
 import { groupTabs, tabProject } from "./project-tab-model"
 import "./project-tabs.css"
 
-export function useProjectTabGroups(input: {
-  tabs: Accessor<Tab[]>
-  current: Accessor<Tab | undefined>
-  vertical: Accessor<boolean>
-}) {
+export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Accessor<Tab | undefined> }) {
   const settings = useSettings()
   const global = useGlobal()
   const tabs = useTabs()
@@ -55,10 +52,36 @@ export function useProjectTabGroups(input: {
   })
   const key = (tab: Tab) => groups().get(tabKey(tab))?.key ?? JSON.stringify([tab.server, null])
   const ordered = createMemo(() => (enabled() ? groupTabs(input.tabs(), key) : input.tabs()))
+  const counts = createMemo(() => {
+    const result = new Map<string, number>()
+    if (!enabled()) return result
+    for (const tab of input.tabs()) {
+      const group = key(tab)
+      result.set(group, (result.get(group) ?? 0) + 1)
+    }
+    return result
+  })
+  const collapsed = (tab: Tab) => enabled() && settings.appearance.tabGroupCollapsed(key(tab))
+  const selection = createMemo(() => {
+    const tab = input.current()
+    if (!enabled() || !settings.ready() || !tab) return
+    return JSON.stringify([tabKey(tab), key(tab)])
+  })
+
+  // Reveal the selected session after navigation (including restored or newly resolved tabs).
+  // Collapse writes are deliberately outside this dependency, so users can fold the active group.
+  createEffect(
+    on(selection, (selected) => {
+      const tab = input.current()
+      if (selected && tab) settings.appearance.setTabGroupCollapsed(key(tab), false)
+    }),
+  )
+
   return {
     enabled,
     key,
     ordered,
+    collapsed,
     index(tab: Tab, visible: readonly Tab[]) {
       return enabled()
         ? visible.filter((item) => key(item) === key(tab)).findIndex((item) => tabKey(item) === tabKey(tab))
@@ -70,24 +93,33 @@ export function useProjectTabGroups(input: {
           <div
             data-slot="tab-project-group"
             data-active={!!input.current() && key(input.current()!) === key(tab)}
-            title={groups().get(tabKey(tab))?.title}
-            aria-label={groups().get(tabKey(tab))?.title}
-            role={input.vertical() ? "heading" : "img"}
-            aria-level={input.vertical() ? 3 : undefined}
+            data-collapsed={collapsed(tab)}
+            role="heading"
+            aria-level={3}
           >
-            <Show
-              when={input.vertical()}
-              fallback={
-                <ProjectAvatar
-                  fallback={groups().get(tabKey(tab))?.name ?? ""}
-                  src={groups().get(tabKey(tab))?.src}
-                  variant={groups().get(tabKey(tab))?.variant}
-                  aria-hidden="true"
-                />
-              }
+            <button
+              type="button"
+              data-slot="tab-project-group-toggle"
+              aria-expanded={!collapsed(tab)}
+              aria-label={groups().get(tabKey(tab))?.title}
+              title={groups().get(tabKey(tab))?.title}
+              disabled={!settings.ready()}
+              onClick={() => settings.appearance.setTabGroupCollapsed(key(tab), !collapsed(tab))}
             >
-              <span>{groups().get(tabKey(tab))?.label}</span>
-            </Show>
+              <span data-slot="tab-project-group-chevron" aria-hidden="true">
+                <Icon name="chevron-down" size="small" />
+              </span>
+              <ProjectAvatar
+                fallback={groups().get(tabKey(tab))?.name ?? ""}
+                src={groups().get(tabKey(tab))?.src}
+                variant={groups().get(tabKey(tab))?.variant}
+                aria-hidden="true"
+              />
+              <span data-slot="tab-project-group-title">{groups().get(tabKey(tab))?.label}</span>
+              <span data-slot="tab-project-group-count" aria-hidden="true">
+                {counts().get(key(tab))}
+              </span>
+            </button>
           </div>
         </Show>
       )
