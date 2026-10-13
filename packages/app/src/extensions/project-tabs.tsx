@@ -106,9 +106,6 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
               disabled={!settings.ready()}
               onClick={() => settings.appearance.setTabGroupCollapsed(key(tab), !collapsed(tab))}
             >
-              <span data-slot="tab-project-group-chevron" aria-hidden="true">
-                <Icon name="chevron-down" size="small" />
-              </span>
               <ProjectAvatar
                 fallback={groups().get(tabKey(tab))?.name ?? ""}
                 src={groups().get(tabKey(tab))?.src}
@@ -118,6 +115,9 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
               <span data-slot="tab-project-group-title">{groups().get(tabKey(tab))?.label}</span>
               <span data-slot="tab-project-group-count" aria-hidden="true">
                 {counts().get(key(tab))}
+              </span>
+              <span data-slot="tab-project-group-chevron" aria-hidden="true">
+                <Icon name="chevron-down" size="small" />
               </span>
             </button>
           </div>

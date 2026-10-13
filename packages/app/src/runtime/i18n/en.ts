@@ -602,6 +602,7 @@ export const dict = {
   "session.navigation.previousMatch": "Previous match",
   "session.navigation.nextMatch": "Next match",
   "session.navigation.history": "Message history",
+  "session.navigation.jumpToMessage": "Go to this message",
   "session.navigation.dragHint": "Drag to browse previous messages",
   "session.navigation.preview": "Sent message",
   "session.navigation.attachment": "Message with attachments",

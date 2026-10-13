@@ -1,6 +1,7 @@
-import { For, Show, createMemo, onCleanup } from "solid-js"
+import { For, Show, createEffect, createMemo, onCleanup } from "solid-js"
 import { Icon } from "@opencode/ui/icon"
 import { IconButton } from "@opencode/ui/icon-button"
+import { Button } from "@opencode/ui/button"
 import { useLanguage } from "@/runtime/i18n/language"
 import type { TimelineSearchController } from "@/session/timeline/search-controller"
 import type { MessageNavigation } from "./session-navigation"
@@ -13,25 +14,64 @@ type History = {
   load: () => void
 }
 
-export function SessionNavigationToolbar(props: {
-  search: TimelineSearchController
-  navigation: MessageNavigation
-  history: History
-  setRef?: (element: HTMLDivElement | undefined) => void
-}) {
+export function SessionNavigationActions(props: { search: TimelineSearchController; navigation: MessageNavigation }) {
+  const language = useLanguage()
+  return (
+    <div data-component="session-navigation-actions">
+      <IconButton
+        type="button"
+        variant="ghost-muted"
+        size="large"
+        icon={<Icon name="magnifying-glass" />}
+        aria-label={language.t("session.navigation.search")}
+        title={language.t("session.navigation.search")}
+        aria-expanded={props.search.visible()}
+        onClick={() => (props.search.visible() ? props.search.query.close() : props.search.query.open())}
+      />
+      <IconButton
+        type="button"
+        variant="ghost-muted"
+        size="large"
+        icon={<Icon name="bullet-list" />}
+        aria-label={language.t("session.navigation.history")}
+        title={language.t("session.navigation.history")}
+        aria-pressed={props.navigation.state.visible}
+        onClick={props.navigation.toggle}
+      />
+    </div>
+  )
+}
+
+export function SessionSearchPopover(props: { search: TimelineSearchController; history: History; mobile?: boolean }) {
   const language = useLanguage()
   const c = props.search
-  onCleanup(() => props.setRef?.(undefined))
+  let element: HTMLDivElement | undefined
+  const close = () => {
+    const trigger = element
+      ?.closest('[data-slot="session-chat-panel"]')
+      ?.querySelector<HTMLButtonElement>('[data-component="session-navigation-actions"] button[aria-expanded]')
+    c.query.close()
+    trigger?.focus()
+  }
+  createEffect(() => {
+    if (!c.visible()) return
+    const dismiss = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return
+      if (element?.contains(event.target) || event.target.closest('[data-component="session-navigation-actions"]'))
+        return
+      c.query.close()
+    }
+    document.addEventListener("pointerdown", dismiss)
+    onCleanup(() => document.removeEventListener("pointerdown", dismiss))
+  })
   return (
-    <div data-component="session-navigation-toolbar" ref={props.setRef}>
-      <Show
-        when={c.visible()}
-        fallback={
-          <button type="button" class="session-navigation-search-trigger" onClick={c.query.open}>
-            <Icon name="magnifying-glass" size="small" />
-            {language.t("session.navigation.search")}
-          </button>
-        }
+    <Show when={c.visible()}>
+      <div
+        ref={element}
+        data-component="session-search-popover"
+        data-mobile={props.mobile}
+        role="search"
+        aria-label={language.t("session.navigation.search")}
       >
         <div class="session-navigation-search">
           <Icon name="magnifying-glass" size="small" />
@@ -47,7 +87,7 @@ export function SessionNavigationToolbar(props: {
               if (event.key === "Escape") {
                 event.preventDefault()
                 event.stopPropagation()
-                c.query.close()
+                close()
                 return
               }
               if (event.altKey || event.metaKey || event.ctrlKey) return
@@ -92,55 +132,57 @@ export function SessionNavigationToolbar(props: {
             icon={<Icon name="xmark-small" />}
             aria-label={language.t("common.close")}
             title={language.t("common.close")}
-            onClick={c.query.close}
+            onClick={close}
           />
         </div>
-      </Show>
-      <div class="session-navigation-tools">
-        <Show when={props.history.more}>
-          <button
-            type="button"
-            class="session-navigation-load"
-            disabled={props.history.loading}
-            onClick={props.history.load}
-          >
-            {language.t(props.history.loading ? "session.navigation.loading" : "session.navigation.loadOlder")}
-          </button>
+        <Show when={(c.visible() && props.history.more) || props.history.error}>
+          <div class="session-navigation-hint" role={props.history.error ? "alert" : undefined}>
+            {language.t(props.history.error ? "session.navigation.loadFailed" : "session.navigation.loadedOnly")}
+          </div>
         </Show>
-        <IconButton
-          type="button"
-          variant="ghost-muted"
-          icon={<Icon name="bullet-list" />}
-          aria-label={language.t("session.navigation.history")}
-          title={language.t("session.navigation.history")}
-          aria-pressed={props.navigation.state.visible}
-          onClick={props.navigation.toggle}
-        />
-      </div>
-      <Show when={(c.visible() && props.history.more) || props.history.error}>
-        <div class="session-navigation-hint" role={props.history.error ? "alert" : undefined}>
-          {language.t(props.history.error ? "session.navigation.loadFailed" : "session.navigation.loadedOnly")}
+        <div class="session-navigation-tools">
+          <Show when={props.history.more}>
+            <Button
+              type="button"
+              variant="ghost-faint"
+              size="small"
+              class="session-navigation-load"
+              disabled={props.history.loading}
+              onClick={props.history.load}
+            >
+              {language.t(props.history.loading ? "session.navigation.loading" : "session.navigation.loadOlder")}
+            </Button>
+          </Show>
         </div>
-      </Show>
-    </div>
+      </div>
+    </Show>
   )
 }
 
 export function SessionHistoryNavigation(props: {
   navigation: MessageNavigation
   messages: readonly { id: string; text: string }[]
-  onLatest: () => void
+  response?: string
 }) {
   const language = useLanguage()
   const c = props.navigation
   // Keep the rail bounded even when thousands of prompts have been loaded.
-  const markers = createMemo(() => Array.from({ length: Math.min(60, props.messages.length) }, (_, index) => index))
+  const markers = createMemo(() => Array.from({ length: Math.min(24, props.messages.length) }, (_, index) => index))
+  const progress = (index: number) => index / Math.max(1, props.messages.length - 1)
+  const markerAt = (index: number) => Math.round(progress(index) * (markers().length - 1))
   const valueText = () =>
     language.t("session.navigation.position", {
       current: c.activeIndex() + 1,
       total: props.messages.length,
     })
   let pointerID: number | undefined
+  let leaveTimer: ReturnType<typeof setTimeout> | undefined
+  const keepPreview = () => clearTimeout(leaveTimer)
+  const leavePreview = () => {
+    keepPreview()
+    leaveTimer = setTimeout(c.leave, 140)
+  }
+  onCleanup(keepPreview)
   const release = (element: HTMLElement) => {
     if (pointerID !== undefined && element.hasPointerCapture(pointerID)) element.releasePointerCapture(pointerID)
     pointerID = undefined
@@ -148,13 +190,37 @@ export function SessionHistoryNavigation(props: {
   }
   return (
     <Show when={c.state.visible && props.messages.length > 1}>
-      <div data-component="session-history-navigation">
+      <div
+        data-component="session-history-navigation"
+        data-dragging={c.state.dragging}
+        data-previewing={!!c.preview()}
+        style={{ height: `min(${markers().length * 10 + 8}px, 55%)` }}
+        onPointerEnter={keepPreview}
+        onPointerLeave={leavePreview}
+        onFocusOut={(event) => {
+          if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return
+          c.leave()
+        }}
+      >
         <Show when={c.preview()}>
           {(message) => (
-            <div class="session-history-preview" role="status">
-              <span>{language.t("session.navigation.preview")}</span>
-              <p dir="auto">{message().text || language.t("session.navigation.attachment")}</p>
-            </div>
+            <button
+              type="button"
+              class="session-history-preview"
+              aria-label={language.t("session.navigation.jumpToMessage")}
+              onClick={() => c.select(c.previewIndex() ?? c.activeIndex())}
+              style={{
+                top: `${progress(c.previewIndex() ?? 0) * 100}%`,
+              }}
+            >
+              <div class="session-history-preview-heading">
+                <span dir="auto">{message().text || language.t("session.navigation.attachment")}</span>
+                <Icon name="arrow-up-right" size="small" />
+              </div>
+              <Show when={props.response}>
+                <p dir="auto">{props.response}</p>
+              </Show>
+            </button>
           )}
         </Show>
         <div
@@ -168,6 +234,7 @@ export function SessionHistoryNavigation(props: {
           aria-valuenow={c.activeIndex() + 1}
           aria-valuetext={valueText()}
           title={language.t("session.navigation.dragHint")}
+          onFocus={() => c.point(progress(c.activeIndex()), false)}
           onPointerDown={(event) => {
             if (!event.isPrimary || event.button !== 0) return
             event.preventDefault()
@@ -194,8 +261,6 @@ export function SessionHistoryNavigation(props: {
             pointerID = undefined
             c.finish()
           }}
-          onPointerLeave={c.leave}
-          onBlur={c.leave}
           onKeyDown={(event) => {
             const index = c.activeIndex()
             const target = {
@@ -216,24 +281,14 @@ export function SessionHistoryNavigation(props: {
             {(index) => (
               <span
                 class="session-history-marker"
+                data-major={index % 4 === 0}
+                data-preview={c.previewIndex() !== undefined && index === markerAt(c.previewIndex()!)}
                 style={{ top: `${(index / Math.max(1, markers().length - 1)) * 100}%` }}
               />
             )}
           </For>
-          <span
-            class="session-history-thumb"
-            style={{ top: `${(c.activeIndex() / Math.max(1, props.messages.length - 1)) * 100}%` }}
-          />
+          <span class="session-history-thumb" style={{ top: `${progress(c.activeIndex()) * 100}%` }} />
         </div>
-        <button
-          type="button"
-          class="session-history-latest"
-          aria-label={language.t("session.messages.jumpToLatest")}
-          title={language.t("session.messages.jumpToLatest")}
-          onClick={props.onLatest}
-        >
-          <Icon name="chevron-down" />
-        </button>
       </div>
     </Show>
   )

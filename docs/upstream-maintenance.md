@@ -61,9 +61,9 @@ bun run build
 | `src/extensions/grouped-tab-status.tsx` | Grouped session progress/unread indicator | Session tab avatar fallback |
 | `src/extensions/project-tabs.css` | Grouped vertical/horizontal styles | Imported by the group adapter; upstream tab CSS stays pristine |
 | `src/extensions/project-inventory.ts` | Project discovery and persisted open/closed ordering | Server registry/runtime |
-| `src/extensions/session-navigation-state.ts` | Session-scoped navigation, paginated history loading, and toolbar geometry | Session screen |
+| `src/extensions/session-navigation-state.ts` | Session-scoped navigation, paginated history loading, and on-demand response previews | Session screen |
 | `src/extensions/session-navigation.ts` | Batched prompt reveals, viewport tracking, and gesture lifetime | Navigation adapter |
-| `src/extensions/session-navigation-view.tsx`, `session-navigation.css` | Responsive search controls, prompt previews, and draggable history rail | Session toolbar and transcript region |
+| `src/extensions/session-navigation-view.tsx`, `session-navigation.css` | Header action icons, floating search, prompt/response previews, and left-margin history ticks | Native header search slot and transcript region |
 
 Rendering and data adapters are separate so session model/geometry code does not import the panel renderer. The existing plugin manager and named slot renderer stay in `src/plugins`; the standalone SDK stays in `packages/frontend-plugin`.
 

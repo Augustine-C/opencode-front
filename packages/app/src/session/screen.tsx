@@ -35,7 +35,7 @@ import { SideRegion } from "@/runtime/extension/side-region"
 import { createSessionTimelineInteraction } from "./timeline/interaction"
 import { createTimelineSearchController } from "./timeline/search-controller"
 import { createSessionNavigation } from "@/extensions/session-navigation-state"
-import { SessionNavigationToolbar, SessionHistoryNavigation } from "@/extensions/session-navigation-view"
+import { SessionNavigationActions, SessionSearchPopover, SessionHistoryNavigation } from "@/extensions/session-navigation-view"
 import { ActiveSessionComposerRegion, createActiveSessionRegion } from "./composer/region"
 import { SessionIdentityHeader } from "./session-identity-header"
 import { SessionReviewToggle } from "./header/session-header-actions"
@@ -97,7 +97,7 @@ function SessionScreenContent(props: {
     revealMessage: timeline.actions.revealMessage,
     pauseAutoScroll: timeline.view.unpin,
   })
-  const { messages: navigationMessages, navigation, history, toolbar } = createSessionNavigation(session, timeline)
+  const { messages: navigationMessages, navigation, history, previewResponse } = createSessionNavigation(session, timeline)
   const messagesReady = timeline.ready
 
   const [store, setStore] = createStore({
@@ -272,6 +272,11 @@ function SessionScreenContent(props: {
           setRevealMessage={timeline.view.setRevealMessage}
           reveal={timeline.view.reveal}
           setScrollToEnd={timeline.view.setScrollToEnd}
+          search={
+            <Show when={active()}>
+              <SessionNavigationActions search={timelineSearch} navigation={navigation} />
+            </Show>
+          }
         />
       )
     },
@@ -308,9 +313,6 @@ function SessionScreenContent(props: {
         {(error) => {
           throw error()
         }}
-      </Show>
-      <Show when={conversationVisible() && messagesReady() && session.identity.params.id}>
-        <SessionNavigationToolbar search={timelineSearch} navigation={navigation} history={history} setRef={toolbar.setRef} />
       </Show>
       <div class="relative flex-1 min-h-0 overflow-hidden">
         <Show when={!isDesktop() && store.mobileDockCached}>
@@ -356,19 +358,23 @@ function SessionScreenContent(props: {
             </Show>
             <Show when={messagesReady() && session.identity.params.id}>
               <div
-                class="h-full min-w-0"
-                style={{
-                  "padding-inline-end": navigation.state.visible && navigationMessages().length > 1 ? "36px" : undefined,
-                }}
+                class="h-full min-w-0 session-navigation-transcript"
+                data-history-enabled={navigation.state.visible && navigationMessages().length > 1}
               >
                 {timelineView()}
               </div>
+              <Show when={!isDesktop()}>
+                <div class="session-navigation-mobile-actions">
+                  <SessionNavigationActions search={timelineSearch} navigation={navigation} />
+                </div>
+              </Show>
+              <SessionSearchPopover search={timelineSearch} history={history} mobile={!isDesktop()} />
               <Show when={session.identity.sessionKey()} keyed>
                 {(_key) => (
                   <SessionHistoryNavigation
                     navigation={navigation}
                     messages={navigationMessages()}
-                    onLatest={timeline.actions.resume}
+                    response={previewResponse()}
                   />
                 )}
               </Show>
@@ -398,7 +404,6 @@ function SessionScreenContent(props: {
           <Show when={isDesktop() && messagesReady() && session.identity.params.id}>
             <div
               class="absolute end-3 top-0 z-30 flex items-center"
-              style={{ top: `${toolbar.height()}px` }}
               classList={{ "h-[51px]": sideDockVisible(), "h-12": !sideDockVisible() }}
               data-slot="session-review-toggle"
               onPointerDown={hideTimelineScrollbar}

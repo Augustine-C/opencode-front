@@ -1,6 +1,5 @@
 import { createEffect, createMemo, on } from "solid-js"
 import { createStore } from "solid-js/store"
-import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { readPromptPresentation } from "@/composer/comment-note"
 import type { SessionModel } from "@/session/model"
 import type { SessionTimelineInteraction } from "@/session/timeline/interaction"
@@ -20,15 +19,26 @@ export function createSessionNavigation(session: SessionModel, timeline: Session
     unpin: timeline.view.unpin,
     reveal: timeline.actions.revealMessage,
   })
-  const [state, setState] = createStore({
-    error: false,
-    toolbar: undefined as HTMLDivElement | undefined,
-    toolbarHeight: 0,
+  const previewResponse = createMemo(() => {
+    const id = navigation.preview()?.id
+    if (!id) return ""
+    const items = session.history.messages()
+    const start = items.findIndex((message) => message.id === id)
+    if (start === -1) return ""
+    let response = ""
+    for (let index = start + 1; index < items.length; index++) {
+      const message = items[index]
+      if (message.type === "user" || message.type === "shell") break
+      if (message.type !== "assistant") continue
+      const text = message.content
+        .flatMap((part) => (part.type === "text" ? [part.text] : []))
+        .join(" ")
+        .trim()
+      if (text) response = text
+    }
+    return response.slice(0, 600)
   })
-  createResizeObserver(
-    () => state.toolbar,
-    () => setState("toolbarHeight", state.toolbar?.getBoundingClientRect().height ?? 0),
-  )
+  const [state, setState] = createStore({ error: false })
   const history = {
     get more() {
       const id = session.identity.sessionID()
@@ -58,12 +68,6 @@ export function createSessionNavigation(session: SessionModel, timeline: Session
     messages,
     navigation,
     history,
-    toolbar: {
-      height: () => state.toolbarHeight,
-      setRef: (element: HTMLDivElement | undefined) => {
-        setState("toolbar", element)
-        setState("toolbarHeight", element?.getBoundingClientRect().height ?? 0)
-      },
-    },
+    previewResponse,
   }
 }

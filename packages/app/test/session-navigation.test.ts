@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMessageNavigation } from "../src/extensions/session-navigation"
+import { createSessionNavigation } from "../src/extensions/session-navigation-state"
 
 function fixture() {
   const originalRequest = globalThis.requestAnimationFrame
@@ -97,5 +98,49 @@ test("session switching and disposal cancel pending history navigation without r
     expect(f.frames.size).toBe(0)
   } finally {
     f.cleanup()
+  }
+})
+
+test("history previews show the selected prompt's text response without crossing a shell or later prompt", () => {
+  const root = createRoot((dispose) => {
+    const messages = [
+      { id: "a", type: "user", text: "First prompt" },
+      {
+        id: "a-reply",
+        type: "assistant",
+        content: [
+          { type: "reasoning", text: "Hidden reasoning" },
+          { type: "text", text: "First answer" },
+        ],
+      },
+      { id: "shell", type: "shell" },
+      { id: "shell-reply", type: "assistant", content: [{ type: "text", text: "Shell answer" }] },
+      { id: "b", type: "user", text: "Second prompt" },
+      { id: "b-reply", type: "assistant", content: [{ type: "text", text: "Second answer" }] },
+    ]
+    const session = {
+      identity: { sessionKey: () => "one" },
+      history: {
+        visibleUserMessages: () => messages.filter((message) => message.type === "user"),
+        messages: () => messages,
+      },
+    } as unknown as Parameters<typeof createSessionNavigation>[0]
+    const timeline = {
+      scroller: () => undefined,
+      view: { unpin: () => {} },
+      actions: { revealMessage: () => {} },
+    } as unknown as Parameters<typeof createSessionNavigation>[1]
+    return { ...createSessionNavigation(session, timeline), dispose }
+  })
+  try {
+    expect(root.previewResponse()).toBe("")
+    root.navigation.point(0, false)
+    expect(root.previewResponse()).toBe("First answer")
+    root.navigation.point(1, false)
+    expect(root.previewResponse()).toBe("Second answer")
+    root.navigation.leave()
+    expect(root.previewResponse()).toBe("")
+  } finally {
+    root.dispose()
   }
 })

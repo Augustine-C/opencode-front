@@ -13,8 +13,9 @@ export function createMessageNavigation(input: {
   const [state, setState] = createStore({ activeID: "", previewID: "", dragging: false, visible: true })
   const indexes = createMemo(() => new Map(input.messages().map((message, index) => [message.id, index])))
   const activeIndex = createMemo(() => indexes().get(state.activeID) ?? Math.max(0, input.messages().length - 1))
+  const previewIndex = createMemo(() => indexes().get(state.previewID))
   const preview = createMemo(() => {
-    const index = indexes().get(state.previewID)
+    const index = previewIndex()
     return index === undefined ? undefined : input.messages()[index]
   })
   let frame: number | undefined
@@ -87,6 +88,7 @@ export function createMessageNavigation(input: {
     state,
     activeIndex,
     preview,
+    previewIndex,
     point,
     select,
     toggle: () => setState("visible", !state.visible),

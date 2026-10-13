@@ -1,14 +1,11 @@
-/* Collapse hides tab slots while keeping session metadata and keyboard navigation mounted. */
+/* Match the native tab strip: project identity stays quiet until it is used. */
 [data-slot="tab-project-group"] {
+  position: relative;
   flex: 0 0 auto;
   min-width: 0;
-  color: var(--v2-text-text-base);
-  background: var(--v2-background-bg-layer-02);
-  border: 1px solid var(--v2-border-border-base);
-  border-inline-start-width: 3px;
-  border-radius: 7px;
+  color: var(--v2-text-text-muted);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 530;
   line-height: var(--line-height-compact);
 }
 
@@ -16,29 +13,39 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: 34px;
+  height: 30px;
   align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border-radius: 4px;
+  gap: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
 }
 
 [data-slot="tab-project-group-toggle"]:hover {
   background: var(--v2-overlay-simple-overlay-hover);
+  color: var(--v2-text-text-base);
+}
+
+[data-slot="tab-project-group-toggle"]:active {
+  background: var(--v2-overlay-simple-overlay-pressed);
 }
 
 [data-slot="tab-project-group-toggle"]:focus-visible {
-  outline: 2px solid var(--v2-text-text-accent);
+  outline: 2px solid var(--v2-border-border-focus);
   outline-offset: 2px;
 }
 
 [data-slot="tab-project-group-toggle"]:disabled {
   cursor: default;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 [data-slot="tab-project-group-title"] {
@@ -47,12 +54,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: -0.04px;
 }
 
 [data-slot="tab-project-group-chevron"] {
   display: flex;
   flex: 0 0 auto;
   color: var(--v2-icon-icon-muted);
+  opacity: 0.55;
+  transition:
+    transform 180ms ease,
+    opacity 140ms ease;
+}
+
+[data-slot="tab-project-group-toggle"]:is(:hover, :focus-visible) [data-slot="tab-project-group-chevron"] {
+  opacity: 1;
 }
 
 [data-slot="tab-project-group"][data-collapsed="true"] [data-slot="tab-project-group-chevron"] {
@@ -65,31 +81,40 @@
 
 [data-slot="tab-project-group"] [data-component="project-avatar-v2"] {
   flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 [data-slot="tab-project-group-count"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   flex: 0 0 auto;
-  min-width: 20px;
-  padding-inline: 4px;
-  border-radius: 5px;
-  background: var(--v2-overlay-simple-overlay-hover);
-  color: var(--v2-text-text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
+  min-width: 12px;
+  color: var(--v2-text-text-faint);
+  font-size: 11px;
+  font-weight: 440;
+  font-variant-numeric: tabular-nums;
 }
 
 [data-slot="tab-project-group"][data-active="true"] {
-  border-inline-start-color: var(--v2-text-text-accent);
-  background: color-mix(in srgb, var(--v2-background-bg-accent) 8%, var(--v2-background-bg-layer-02));
+  color: var(--v2-text-text-base);
+}
+
+[data-slot="tab-project-group"][data-active="true"] [data-slot="tab-project-group-count"]::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--v2-icon-icon-accent);
 }
 
 [data-grouped="true"][data-orientation="horizontal"] [data-slot="tab-project-group"] {
   box-sizing: border-box;
-  min-width: 110px;
-  max-width: 220px;
+  min-width: 100px;
+  max-width: 200px;
+  margin-inline-start: 6px;
 }
 
 [data-grouped="true"][data-orientation="horizontal"] [data-titlebar-tab-slot] {
@@ -101,11 +126,28 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  margin: 6px 6px 2px;
+  margin: 12px 4px 2px;
+  background: var(--v2-background-bg-deep);
+  border-radius: 6px;
+}
+
+[data-grouped="true"][data-orientation="vertical"] [data-slot="tab-project-group"]:first-child {
+  margin-block-start: 4px;
+}
+
+[data-grouped="true"][data-orientation="vertical"] [data-titlebar-tab-slot] {
+  padding-inline-start: 12px;
 }
 
 [data-slot="mobile-tabs-drawer"] [data-slot="tab-project-group-toggle"] {
-  min-height: 44px;
+  height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="tab-project-group-toggle"],
+  [data-slot="tab-project-group-chevron"] {
+    transition: none;
+  }
 }
 
 [data-grouped="true"] [data-titlebar-tab-slot][hidden] {

@@ -48,7 +48,7 @@ See the [2.0.27.2 release notes](docs/releases/2.0.27.2.md) and [OpenCode v2.0.2
 
 ## Organize session tabs
 
-In **Settings → General**, enable **Group tabs by project** beside the **Tabs** layout selector. The preference applies to both web and desktop and defaults to off. Both layouts show a project avatar, a prominent name, and the open-tab count; the current project has an accent border. Click a project heading or its arrow to collapse or expand its tabs. Each project's state is saved across reloads and layout changes. Selecting or opening a session, including through a keyboard shortcut, expands its project; you can also fold the current project while continuing to use the session. Vertical headings stay visible while scrolling, and horizontal headings truncate long names with full project details on hover.
+In **Settings → General**, enable **Group tabs by project** beside the **Tabs** layout selector. The preference applies to both web and desktop and defaults to off. Both layouts show a compact project avatar, name, and open-tab count; a small accent dot identifies the current project. Click a project heading or its arrow to collapse or expand its tabs. Each project's state is saved across reloads and layout changes. Selecting or opening a session, including through a keyboard shortcut, expands its project; you can also fold the current project while continuing to use the session. Vertical headings stay visible while scrolling, and horizontal headings truncate long names with full project details on hover.
 
 Grouped session tabs omit repeated project icons; running sessions retain their progress indicator, and unread activity or attention requests show a dot. Drafts and worktree sessions join their project, and different servers remain separate. Drag tabs within an expanded project to reorder them; keyboard cycling and numbered shortcuts retain the grouped order, including folded tabs.
 
@@ -64,9 +64,9 @@ TUI configuration can select explicitly installed browser adapters and reuse the
 
 ## Search and browse conversation history
 
-Use **Search messages** in an existing conversation, or press **Ctrl/Cmd+F**. Matches in user and assistant text are highlighted; use the result buttons, Enter / Shift+Enter, or the arrow keys to switch matches. Escape closes search. Search covers loaded messages; **Load earlier messages** extends the searchable history without loading everything at once.
+Click the search icon in an existing conversation, or press **Ctrl/Cmd+F**, to open a floating search box. On narrow screens the icon is in the floating controls above the composer. Matches in user and assistant text are highlighted; use the result buttons, Enter / Shift+Enter, or the arrow keys to switch matches. Escape, the close button, or a click outside dismisses search. Search covers loaded messages; **Load earlier messages** in the search box extends the searchable history without loading everything at once.
 
-The message-history rail previews sent prompts on hover and jumps to them when clicked or dragged, including touch dragging on narrow screens. When focused, it supports Up / Down, Home / End, and Page Up / Page Down. Its bottom button returns to the latest content, and the history toolbar button hides or shows the rail. Navigation uses the existing virtualized timeline and excludes reverted prompts.
+Short ticks in the conversation's left margin preview a sent prompt and its response on hover. Click the preview or click/drag the ticks to reveal that prompt; touch dragging works on narrow screens. When focused, the rail supports Up / Down, Home / End, and Page Up / Page Down. The history icon hides or shows the rail. The existing transcript control returns to the latest content. Navigation uses the virtualized timeline and excludes reverted prompts; toggling history or search keeps header controls in place.
 
 ## Validate and build
 
