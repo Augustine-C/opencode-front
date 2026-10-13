@@ -105,7 +105,32 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
+          NOTES_FILE="docs/releases/${RELEASE_TAG}.md"
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
+            if [[ -f "$NOTES_FILE" ]]; then
+              gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --notes-file "$NOTES_FILE"
+            else
+              gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
+            fi
           fi
           gh release upload "$RELEASE_TAG" artifacts/* --clobber
+          if [[ -f "$NOTES_FILE" ]]; then
+            {
+              cat "$NOTES_FILE"
+              printf '\n| File | Platform / contents | Size | SHA-256 |\n| --- | --- | ---: | --- |\n'
+              for artifact in artifacts/opencode-front-*; do
+                name="$(basename "$artifact")"
+                bytes="$(wc -c < "$artifact" | tr -d '[:space:]')"
+                digest="$(sha256sum "$artifact" | cut -d ' ' -f 1)"
+                url="https://github.com/${GH_REPO}/releases/download/${RELEASE_TAG}/${name}"
+                case "$name" in
+                  *macos-arm64*) platform="macOS Apple Silicon" ;;
+                  *windows-x64*) platform="Windows x64" ;;
+                  *example-plugins*) platform="Example plugin source modules" ;;
+                  *) platform="Release asset" ;;
+                esac
+                printf '| [%s](%s) | %s | %s bytes | `%s` |\n' "$name" "$url" "$platform" "$bytes" "$digest"
+              done
+            } > artifacts/RELEASE_NOTES.md
+            gh release edit "$RELEASE_TAG" --notes-file artifacts/RELEASE_NOTES.md
+          fi

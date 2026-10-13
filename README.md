@@ -2,7 +2,7 @@
 
 A frontend-only port of OpenCode v2 with a shared web/desktop UI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
 
-This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.26**, commit [`9b4ec57`](https://github.com/anomalyco/opencode/tree/9b4ec5714d481559990db0a816d5dec19541a814). The source was copied from the local `opencode-dev/opencode_v2` checkout. Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
+This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.27**, commit [`1f4d07a`](https://github.com/anomalyco/opencode/tree/1f4d07a4a519185955ae8ab2ea3607805509e386). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
 
 ## License and attribution
 
@@ -40,11 +40,11 @@ OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 
 Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
 
-The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.26.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.26+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives and a separate `opencode-front-example-plugins-<version>.zip` source module. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
+The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.27.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.27+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives and a separate `opencode-front-example-plugins-<version>.zip` source module. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
 
 Ad hoc macOS builds disable hardened runtime through the signing tool's per-file options so the app and its helpers can load the bundled Electron libraries without a Team ID. Before uploading, the workflow extracts the release archive, verifies every Mach-O signature, rejects hardened runtime and explicit library validation flags, and checks that the app starts a renderer helper.
 
-See [v2.0.25 and v2.0.26 changes and sync details](docs/upstream-v2.0.26.md) for this release.
+See [OpenCode v2.0.27 changes and sync details](docs/upstream-v2.0.27.md) for this release.
 
 ## Organize session tabs
 
@@ -83,6 +83,6 @@ The frontend and plugin SDK are type-checked. Focused tests cover lifecycle clea
 
 Upstream imports are declared in [import rules](upstream/import-rules.json) and pinned by a per-file [inventory](upstream/inventory.json). `bun run check` audits this boundary. Plugin panels and project grouping use the port-owned `packages/app/src/extensions` adapter layer. See the [maintenance workflow](docs/upstream-maintenance.md) for the read-only upgrade report and inventory recording commands.
 
-The original `opencode-dev` checkout is unchanged. Future upstream ports should preserve `@opencode/client` generated files and update the app/UI/protocol snapshot together. The frontend plugin API has its own version independent of the service version.
+The imported source is pinned to the upstream Git commit in `docs/upstream.json`. Future upstream ports should preserve `@opencode/client` generated files and update the app/UI/protocol snapshot together. The frontend plugin API has its own version independent of the service version.
 
 The [CodeArts Proxy example](packages/codearts-proxy-extension/README.md) is a standard OpenCode v2 GUI renderer extension. Configure it under **Settings → CodeArts Proxy**; its panels and commands use the upstream extension SDK directly.
