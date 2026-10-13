@@ -124,3 +124,9 @@ A production-bundled component fixture uses the actual navigation adapter, toolb
 The required frozen production tab-reducer baseline recorded before session edits ran seven samples of 20,000 file-tab cycles: median 14.019449 ms before and 13.191064 ms afterward, with checksum 720000 throughout. The reducer source is unchanged. This benchmark measures that workload only; it does not measure search, transcript rendering, backend latency, or prove a performance improvement.
 
 Live backend history pagination, the connected full session screen, physical devices, and Electron interactions remain unverified. No user application or backend was started, stopped, restarted, or mutated; browser checks used temporary local static previews and test data.
+
+### Release integration on latest main (2.0.27.2)
+
+Before publishing, the feature commit was rebased onto `e4c27bb` (OpenCode Front 2.0.27.1). Conflict resolution retains the newer mounted-session cache inputs, routed tool-call reveal contract, mobile tab positioning, collapsible project groups, native CodeArts extension, localization overlay, and all prior validation notes. The feature's independent toolbar and rail remain outside the cached timeline's header.
+
+On the integrated source, `bun run check` passes the boundary audit, all type checks, and 45 tests with 227 assertions. The native extension's local HTTP fixture requires permission to listen on loopback; it passed when run with that permission. The production/PWA build passes, and desktop staging validates SemVer `2.0.27+2` and release version `2.0.27.2`. The latest-main frozen tab-reducer baseline measured 13.936619 ms versus 14.569401 ms after integration (seven samples, 20,000 cycles each, checksum 720000 throughout). The reducer is unchanged and the timing difference does not measure search or transcript rendering. Browser component and full production entry-point checks were repeated after integration.
