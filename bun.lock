@@ -15,7 +15,7 @@
     },
     "packages/app": {
       "name": "@opencode/app",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@corvu/drawer": "catalog:",
         "@dnd-kit/abstract": "0.5.0",
@@ -74,7 +74,7 @@
     },
     "packages/client": {
       "name": "@opencode/client",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@opencode/protocol": "workspace:*",
         "@opencode/schema": "workspace:*",
@@ -125,7 +125,7 @@
     },
     "packages/gui-extensions": {
       "name": "@opencode/gui-extensions",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@betteroffice/docx": "0.4.3",
         "@betteroffice/fonts": "0.4.0",
@@ -174,7 +174,7 @@
     },
     "packages/plugin-browser": {
       "name": "@opencode/plugin-browser",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -182,7 +182,7 @@
     },
     "packages/protocol": {
       "name": "@opencode/protocol",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -197,7 +197,7 @@
     },
     "packages/schema": {
       "name": "@opencode/schema",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@standard-schema/spec": "catalog:",
         "effect": "catalog:",
@@ -211,7 +211,7 @@
     },
     "packages/session-ui": {
       "name": "@opencode/session-ui",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@kobalte/core": "catalog:",
         "@opencode/client": "workspace:*",
@@ -246,7 +246,7 @@
     },
     "packages/ui": {
       "name": "@opencode/ui",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@kitlangton/solid-motion": "0.2.2",
         "@kobalte/core": "catalog:",
@@ -282,7 +282,7 @@
     },
     "packages/util": {
       "name": "@opencode/util",
-      "version": "2.0.27",
+      "version": "2.0.28",
       "dependencies": {
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
@@ -348,7 +348,6 @@
     "@lydell/node-pty": "1.2.0-beta.12",
     "@npmcli/arborist": "9.4.0",
     "@octokit/rest": "22.0.0",
-    "@openauthjs/openauth": "0.0.0-20250322224806",
     "@opentui/core": "0.5.17",
     "@opentui/keymap": "0.5.17",
     "@opentui/solid": "0.5.17",
