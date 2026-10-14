@@ -215,7 +215,7 @@
     },
     {
       "id": "project-tabs",
-      "reason": "Optional instance/project grouping, persistent group ordering and compact session indicators in both tab orientations.",
+      "reason": "Optional instance/project grouping with drag ordering, quiet sidebar headings and compact horizontal conversation navigation.",
       "files": [
         "packages/app/src/settings/general/general.tsx",
         "packages/app/src/settings/model.tsx",
@@ -227,6 +227,7 @@
         "packages/app/src/extensions/project-tabs.tsx",
         "packages/app/src/extensions/project-tab-model.ts",
         "packages/app/src/extensions/tab-group-heading.tsx",
+        "packages/app/src/extensions/tab-group-navigator.tsx",
         "packages/app/src/extensions/project-tabs.css",
         "packages/app/src/extensions/grouped-tab-status.tsx"
       ]

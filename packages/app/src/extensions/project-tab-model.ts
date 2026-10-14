@@ -71,13 +71,19 @@ export function groupInstanceTabs<T>(
 }
 
 // Keep temporarily closed groups in the preference, so reopening them restores their position.
-export function moveTabGroup(stored: readonly string[], visible: readonly string[], source: string, target: string) {
+export function moveTabGroup(
+  stored: readonly string[],
+  visible: readonly string[],
+  source: string,
+  target: string,
+  placement?: "before" | "after",
+) {
   const from = visible.indexOf(source)
   const to = visible.indexOf(target)
   if (from < 0 || to < 0 || from === to) return [...stored]
   const moved = [...visible]
   moved.splice(from, 1)
-  moved.splice(to, 0, source)
+  moved.splice(placement ? moved.indexOf(target) + (placement === "after" ? 1 : 0) : to, 0, source)
   const available = new Set(visible)
   let index = 0
   return [...new Set([...stored, ...visible])].map((key) => (available.has(key) ? moved[index++] : key))

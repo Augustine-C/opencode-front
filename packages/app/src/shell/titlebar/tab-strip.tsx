@@ -17,6 +17,7 @@ import { createTabComposerState } from "@/composer/persistence"
 import { base64Encode } from "@opencode/util/encode"
 import { showToast } from "@/shell/notifications/toast"
 import { adjacentTabKey, mergeVisibleTabOrder } from "./tab-order"
+import { TabGroupNavigator } from "@/extensions/tab-group-navigator"
 import { useProjectTabGroups } from "@/extensions/project-tabs"
 import type { SessionInfo } from "@opencode/client/promise"
 
@@ -29,6 +30,8 @@ function SessionTabSlot(props: {
   group?: string
   groupIndex?: number
   collapsed?: boolean
+  boundary?: "instance" | "project"
+  contextTitle?: string
   session: SessionInfo | undefined
   preparing: boolean
   fallbackTitle?: string
@@ -63,6 +66,8 @@ function SessionTabSlot(props: {
     <div
       ref={sortable.ref}
       data-titlebar-tab-slot
+      data-group-boundary={props.boundary}
+      title={props.contextTitle}
       hidden={props.collapsed}
       data-tab-key={props.id}
       data-active={props.active}
@@ -103,6 +108,8 @@ function SessionTabEntry(props: {
   group?: string
   groupIndex?: number
   collapsed?: boolean
+  boundary?: "instance" | "project"
+  contextTitle?: string
   serverCtx: ServerCtx | undefined
   onVisibleChange: (visible: boolean) => void
   onNavigate: (element: HTMLDivElement) => void
@@ -208,6 +215,8 @@ function SessionTabEntry(props: {
         group={props.group}
         groupIndex={props.groupIndex}
         collapsed={props.collapsed}
+        boundary={props.boundary}
+        contextTitle={props.contextTitle}
         session={session()}
         preparing={!!pending()}
         fallbackTitle={
@@ -232,6 +241,8 @@ function DraftTabSlot(props: {
   group?: string
   groupIndex?: number
   collapsed?: boolean
+  boundary?: "instance" | "project"
+  contextTitle?: string
   title: string
   onNavigate: (element: HTMLDivElement) => void
   onClose: () => void
@@ -263,6 +274,8 @@ function DraftTabSlot(props: {
     <div
       ref={sortable.ref}
       data-titlebar-tab-slot
+      data-group-boundary={props.boundary}
+      title={props.contextTitle}
       hidden={props.collapsed}
       data-tab-key={props.id}
       data-active={props.active}
@@ -335,7 +348,17 @@ export function TitlebarTabStrip(props: {
     const key = adjacentTabKey(visibleTabIds(), current ? tabKey(current) : undefined, offset)
     const next = props.tabs.find((tab) => tabKey(tab) === key)
 
-    if (next) props.onNavigate(next)
+    if (next) navigateTab(next)
+  }
+
+  function navigateTab(tab: Tab, element?: HTMLDivElement) {
+    const slot = [...(listRef?.querySelectorAll<HTMLDivElement>("[data-titlebar-tab-slot]") ?? [])].find(
+      (item) => item.dataset.tabKey === tabKey(tab),
+    )
+    const target = element ?? slot?.querySelector<HTMLDivElement>("[data-titlebar-tab]") ?? undefined
+    props.onNavigate(tab, target)
+    // Browse/cycle actions can select a tab outside the horizontal viewport.
+    if (grouped() && !vertical()) target?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" })
   }
 
   return (
@@ -346,6 +369,14 @@ export function TitlebarTabStrip(props: {
       class="relative min-w-0"
       classList={{ "min-h-0 overflow-hidden": vertical() }}
     >
+      <Show when={grouped() && !vertical() && visibleTabs().length > 0}>
+        <TabGroupNavigator
+          groups={projectGroups}
+          tabs={visibleTabs}
+          current={props.currentTab}
+          onNavigate={(tab) => navigateTab(tab)}
+        />
+      </Show>
       <div
         data-slot={vertical() ? "vertical-tabs-scroll" : "titlebar-tabs-scroll"}
         class="flex min-w-0 no-scrollbar [app-region:no-drag]"
@@ -424,7 +455,7 @@ export function TitlebarTabStrip(props: {
                 let ref!: HTMLDivElement
                 const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
                 const groupIndex = () => projectGroups.index(tab, visibleTabs())
-                useTabShortcut(visibleIndex, () => props.onNavigate(tab, ref))
+                useTabShortcut(visibleIndex, () => navigateTab(tab, ref))
 
                 const serverCtx = useServerCtx(() => {
                   if (tab.type !== "session") return
@@ -432,7 +463,7 @@ export function TitlebarTabStrip(props: {
                   return global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
                 })
 
-                const GroupHeader = () => projectGroups.heading(tab, visibleTabs)
+                const GroupHeader = () => <Show when={vertical()}>{projectGroups.heading(tab, visibleTabs)}</Show>
 
                 if (tab.type === "session") {
                   return (
@@ -446,7 +477,9 @@ export function TitlebarTabStrip(props: {
                         orientation={vertical() ? "vertical" : "horizontal"}
                         group={grouped() ? groupKey(tab) : undefined}
                         groupIndex={groupIndex()}
-                        collapsed={projectGroups.collapsed(tab)}
+                        collapsed={vertical() && projectGroups.collapsed(tab)}
+                        boundary={projectGroups.boundary(tab, visibleTabs())}
+                        contextTitle={grouped() && !vertical() ? projectGroups.tooltip(tab) : undefined}
                         serverCtx={serverCtx()}
                         onVisibleChange={(visible) => setVisibility(id, visible)}
                         onNavigate={(element) => {
@@ -470,7 +503,9 @@ export function TitlebarTabStrip(props: {
                       orientation={vertical() ? "vertical" : "horizontal"}
                       group={grouped() ? groupKey(tab) : undefined}
                       groupIndex={groupIndex()}
-                      collapsed={projectGroups.collapsed(tab)}
+                      collapsed={vertical() && projectGroups.collapsed(tab)}
+                      boundary={projectGroups.boundary(tab, visibleTabs())}
+                      contextTitle={grouped() && !vertical() ? projectGroups.tooltip(tab) : undefined}
                       title={language.t("session.tab.session")}
                       onNavigate={(element) => {
                         ref = element

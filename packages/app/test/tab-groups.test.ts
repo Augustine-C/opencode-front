@@ -51,6 +51,9 @@ describe("project tab groups", () => {
     expect(orderedGroupKeys(["a", "b", "c", "closed", "new"], moved)).toEqual(["c", "closed", "a", "b", "new"])
     expect(moveTabGroup(stored, ["a", "b"], "a", "outside")).toEqual(stored)
     expect(moveTabGroup(stored, ["a", "b"], "outside", "b")).toEqual(stored)
+    expect(moveTabGroup(stored, ["a", "b", "c"], "c", "a", "after")).toEqual(["a", "closed", "c", "b"])
+    expect(moveTabGroup(stored, ["a", "b", "c"], "a", "c", "before")).toEqual(["b", "closed", "a", "c"])
+    expect(moveTabGroup(stored, ["a", "b", "c"], "a", "b", "before")).toEqual(stored)
     expect(stored).toEqual(["a", "closed", "b", "c"])
   })
 

@@ -57,7 +57,8 @@ bun run build
 | `src/extensions/plugin-panel-host.tsx` | Attaches the SDK bridge and scopes plugin rendering | Shell |
 | `src/extensions/session-panels.tsx` | Selected plugin fullscreen toolbar | Native side region |
 | `src/extensions/project-tabs.tsx` | Instance/project group resolution, persistent ordering, collapsible headings, selection reveal | Titlebar tab strip; persisted collapse and order state in the settings overlay |
-| `src/extensions/tab-group-heading.tsx` | Shared instance/project headings with drag, menu, keyboard and mobile order controls | Port-owned group adapter |
+| `src/extensions/tab-group-heading.tsx` | Quiet instance/project headings with hover collapse hints and mouse drag ordering | Port-owned group adapter |
+| `src/extensions/tab-group-navigator.tsx` | Compact horizontal context entry and on-demand grouped conversation browser | Native tab-strip mount; no permanent inline group headings |
 | `src/extensions/project-tab-model.ts` | Pure project matching and grouping | Group adapter and tests |
 | `src/extensions/grouped-tab-status.tsx` | Grouped session progress/unread indicator | Session tab avatar fallback |
 | `src/extensions/project-tabs.css` | Grouped vertical/horizontal styles | Imported by the group adapter; upstream tab CSS stays pristine |
