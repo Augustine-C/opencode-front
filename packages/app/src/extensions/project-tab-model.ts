@@ -33,7 +33,12 @@ export function tabProject(
     .sort((a, b) => b.worktree.length - a.worktree.length)[0]
 }
 
-export function groupTabs<T>(tabs: readonly T[], key: (tab: T) => string): T[] {
+export function orderedGroupKeys(keys: readonly string[], preferred: readonly string[] = []) {
+  const available = new Set(keys)
+  return [...new Set([...preferred.filter((key) => available.has(key)), ...keys])]
+}
+
+export function groupTabs<T>(tabs: readonly T[], key: (tab: T) => string, order: readonly string[] = []): T[] {
   const groups = new Map<string, T[]>()
   for (const tab of tabs) {
     const project = key(tab)
@@ -41,5 +46,39 @@ export function groupTabs<T>(tabs: readonly T[], key: (tab: T) => string): T[] {
     if (group) group.push(tab)
     else groups.set(project, [tab])
   }
-  return [...groups.values()].flat()
+  return orderedGroupKeys([...groups.keys()], order).flatMap((key) => groups.get(key) ?? [])
+}
+
+export function groupInstanceTabs<T>(
+  tabs: readonly T[],
+  input: {
+    instance: (tab: T) => string
+    project: (tab: T) => string
+    instances: readonly string[]
+    projects: (instance: string) => readonly string[]
+  },
+) {
+  const instances = new Map<string, T[]>()
+  for (const tab of tabs) {
+    const key = input.instance(tab)
+    const items = instances.get(key)
+    if (items) items.push(tab)
+    else instances.set(key, [tab])
+  }
+  return orderedGroupKeys([...instances.keys()], input.instances).flatMap((instance) =>
+    groupTabs(instances.get(instance) ?? [], input.project, input.projects(instance)),
+  )
+}
+
+// Keep temporarily closed groups in the preference, so reopening them restores their position.
+export function moveTabGroup(stored: readonly string[], visible: readonly string[], source: string, target: string) {
+  const from = visible.indexOf(source)
+  const to = visible.indexOf(target)
+  if (from < 0 || to < 0 || from === to) return [...stored]
+  const moved = [...visible]
+  moved.splice(from, 1)
+  moved.splice(to, 0, source)
+  const available = new Set(visible)
+  let index = 0
+  return [...new Set([...stored, ...visible])].map((key) => (available.has(key) ? moved[index++] : key))
 }

@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test"
-import { groupTabs, tabProject } from "../src/extensions/project-tab-model"
+import {
+  groupInstanceTabs,
+  groupTabs,
+  moveTabGroup,
+  orderedGroupKeys,
+  tabProject,
+} from "../src/extensions/project-tab-model"
 import { adjacentTabKey, mergeVisibleTabOrder } from "../src/shell/titlebar/tab-order"
 
 const projects = [
@@ -10,6 +16,48 @@ const projects = [
 ]
 
 describe("project tab groups", () => {
+  test("keeps each instance contiguous and honors independent instance and project preferences", () => {
+    const input = [
+      { id: "local-a1", server: "local", project: "a" },
+      { id: "remote-a1", server: "remote", project: "a" },
+      { id: "local-b", server: "local", project: "b" },
+      { id: "remote-b", server: "remote", project: "b" },
+      { id: "local-a2", server: "local", project: "a" },
+    ]
+    const ordered = (instances: string[], projects: (instance: string) => string[]) =>
+      groupInstanceTabs(input, {
+        instance: (tab) => tab.server,
+        project: (tab) => tab.project,
+        instances,
+        projects,
+      })
+    expect(ordered([], () => []).map((tab) => tab.id)).toEqual([
+      "local-a1",
+      "local-a2",
+      "local-b",
+      "remote-a1",
+      "remote-b",
+    ])
+    const result = ordered(["remote", "local"], (server) => (server === "local" ? ["b", "a"] : ["a", "b"]))
+    expect(result.map((tab) => tab.id)).toEqual(["remote-a1", "remote-b", "local-b", "local-a1", "local-a2"])
+    expect(result[0]).toBe(input[1])
+    expect(input.map((tab) => tab.id)).toEqual(["local-a1", "remote-a1", "local-b", "remote-b", "local-a2"])
+  })
+
+  test("retains temporarily closed group positions when moving visible groups", () => {
+    const stored = ["a", "closed", "b", "c"]
+    const moved = moveTabGroup(stored, ["a", "b", "c"], "c", "a")
+    expect(moved).toEqual(["c", "closed", "a", "b"])
+    expect(orderedGroupKeys(["a", "b", "c", "closed", "new"], moved)).toEqual(["c", "closed", "a", "b", "new"])
+    expect(moveTabGroup(stored, ["a", "b"], "a", "outside")).toEqual(stored)
+    expect(moveTabGroup(stored, ["a", "b"], "outside", "b")).toEqual(stored)
+    expect(stored).toEqual(["a", "closed", "b", "c"])
+  })
+
+  test("ignores stale and duplicate preferences and appends newly opened groups once", () => {
+    expect(orderedGroupKeys(["a", "b", "a", "new"], ["missing", "b", "b"])).toEqual(["b", "a", "new"])
+  })
+
   test("groups interleaved tabs with stable project and session order", () => {
     const input = [
       { id: "a1", server: "local", project: "a" },

@@ -131,6 +131,8 @@ const appearanceSchema = Persistence.struct({
   tabLayout: Schema.Literals(["horizontal", "vertical"]),
   groupTabsByProject: Persistence.fallback(Schema.Boolean, () => false),
   collapsedTabGroups: Persistence.record(Persistence.optional(Schema.Boolean)),
+  tabInstanceOrder: Persistence.array(Schema.String),
+  tabProjectOrder: Persistence.record(Persistence.array(Schema.String)),
 })
 
 const permissionsSchema = Persistence.struct({
@@ -292,6 +294,8 @@ export const defaultSettings: Settings = {
     tabLayout: "horizontal",
     groupTabsByProject: false,
     collapsedTabGroups: {},
+    tabInstanceOrder: [],
+    tabProjectOrder: {},
   },
   keybinds: {},
   permissions: { autoApprove: false, autoApproveProjects: {} },
@@ -407,6 +411,14 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         },
         tabGroupCollapsed(key: string) {
           return store.appearance?.collapsedTabGroups?.[key] === true
+        },
+        tabInstanceOrder: () => store.appearance?.tabInstanceOrder ?? [],
+        setTabInstanceOrder(order: readonly string[]) {
+          setStore("appearance", "tabInstanceOrder", [...new Set(order)])
+        },
+        tabProjectOrder: (instance: string) => store.appearance?.tabProjectOrder?.[instance] ?? [],
+        setTabProjectOrder(instance: string, order: readonly string[]) {
+          setStore("appearance", "tabProjectOrder", instance, [...new Set(order)])
         },
         setTabGroupCollapsed(key: string, collapsed: boolean) {
           if ((store.appearance?.collapsedTabGroups?.[key] === true) === collapsed) return
