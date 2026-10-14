@@ -74,6 +74,10 @@ Click the search icon in an existing conversation, or press **Ctrl/Cmd+F**, to o
 
 Short ticks in the conversation's left margin preview a sent prompt and its response on hover. Click the preview or click/drag the ticks to reveal that prompt; touch dragging works on narrow screens. When focused, the rail supports Up / Down, Home / End, and Page Up / Page Down. The history icon hides or shows the rail. The existing transcript control returns to the latest content. Navigation uses the virtualized timeline and excludes reverted prompts; toggling history or search keeps header controls in place.
 
+## UX improvement roadmap
+
+See the [user experience optimization plan](docs/plans/README.md) for priorities, implementation tasks, acceptance criteria, and validation requirements. Planned work is tracked separately from released features.
+
 ## Validate and build
 
 ```sh
