@@ -1,6 +1,6 @@
 # OpenCode v2.0.28 sync
 
-OpenCode Front follows upstream Git tag **v2.0.28**, commit [`026b106`](https://github.com/anomalyco/opencode/tree/026b106bc5d41b679ffc413264229c340871e4d3), dated 2026-10-13 UTC. The previous imported baseline was v2.0.27, commit `1f4d07a4a519185955ae8ab2ea3607805509e386`. The root package version is `2.0.28+0`; this source sync does not publish a desktop release.
+OpenCode Front follows upstream Git tag **v2.0.28**, commit [`026b106`](https://github.com/anomalyco/opencode/tree/026b106bc5d41b679ffc413264229c340871e4d3), dated 2026-10-13 UTC. The previous imported baseline was v2.0.27, commit `1f4d07a4a519185955ae8ab2ea3607805509e386`. The root package version is `2.0.28+0`. This sync is included in [OpenCode Front 2.0.28.0](releases/2.0.28.0.md), together with instance/project grouping and saved ordering.
 
 The v2 version was checked against upstream Git tags. The GitHub Releases feed also contains the separate v1 release line, so it is not used to select this port's baseline.
 
