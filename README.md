@@ -2,7 +2,7 @@
 
 A frontend-only port of OpenCode v2 with a shared web/desktop UI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
 
-This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.28**, commit [`026b106`](https://github.com/anomalyco/opencode/tree/026b106bc5d41b679ffc413264229c340871e4d3). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
+This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.29**, commit [`042d083`](https://github.com/anomalyco/opencode/tree/042d0832f5f3a73eaa039a58a7d565776f6d4290). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
 
 ## License and attribution
 
@@ -44,7 +44,7 @@ The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Wind
 
 Ad hoc macOS builds disable hardened runtime through the signing tool's per-file options so the app and its helpers can load the bundled Electron libraries without a Team ID. Before uploading, the workflow extracts the release archive, verifies every Mach-O signature, rejects hardened runtime and explicit library validation flags, and checks that the app starts a renderer helper.
 
-See the [2.0.28.0 release notes](docs/releases/2.0.28.0.md) and [OpenCode v2.0.28 sync details](docs/upstream-v2.0.28.md).
+See the [2.0.28.0 release notes](docs/releases/2.0.28.0.md) and [OpenCode v2.0.29 sync details](docs/upstream-v2.0.29.md).
 
 ## Organize session tabs
 
