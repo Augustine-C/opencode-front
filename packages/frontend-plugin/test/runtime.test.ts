@@ -51,17 +51,26 @@ test("disable disposes slot claims, commands, event listeners and setup cleanup"
   expect(host.state.statuses[0].state).toBe("disabled")
 })
 
-test("failed setup rolls back registrations and records the error", async () => {
+test("failed setup rolls back registrations and retry does not duplicate contributions", async () => {
   const host = createPluginHost({ context })
   host.register(
     plugin("broken", (ctx) => {
       ctx.ui.slot({ append: "app", render: () => "partial" })
-      throw new Error("Invalid credential")
+      ctx.ui.command({ id: "retry", title: "Retry", run: () => {} })
+      ctx.ui.panel.register({ name: "retry", title: "Retry" })
+      if (ctx.options.fail !== false) throw new Error("Invalid credential")
     }),
   )
   await host.enable("broken")
   expect(host.state.claims).toHaveLength(0)
   expect(host.state.statuses[0]).toMatchObject({ state: "error", error: "Invalid credential" })
+  await host.enable("broken", { fail: false })
+  await host.enable("broken", { fail: false })
+  expect(host.state.statuses[0].state).toBe("enabled")
+  expect(host.state.claims).toHaveLength(1)
+  expect(host.state.commands).toHaveLength(1)
+  expect(host.state.availablePanels).toHaveLength(1)
+  await host.dispose()
 })
 
 test("disabled asynchronous setup cannot register stale contributions", async () => {
@@ -358,4 +367,17 @@ test("panel registrations isolate owners and roll back duplicate or failed setup
     await host.dispose()
   }
   expect(host.state.availablePanels).toHaveLength(0)
+})
+
+test("import preview describes replacement and ignored adapters without applying runtime changes", async () => {
+  const { previewConfig } = await import("../src/config")
+  const available = [plugin("old"), plugin("new")]
+  const current = [{ id: "old", package: "old", enabled: true, options: {} }]
+  const preview = previewConfig({ plugins: ["new", "uninstalled"] }, available, current)
+  expect(preview.changes.map(({ id, action }) => [id, action])).toEqual([
+    ["old", "disable"],
+    ["new", "enable"],
+  ])
+  expect(preview.unsupported).toEqual(["uninstalled"])
+  expect(current).toEqual([{ id: "old", package: "old", enabled: true, options: {} }])
 })

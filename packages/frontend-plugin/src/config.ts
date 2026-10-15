@@ -56,3 +56,23 @@ export function adaptConfig(value: unknown, available: readonly Definition[]): C
   }
   return { plugins: [...plugins.values()], unsupported }
 }
+
+export function previewConfig(value: unknown, available: readonly Definition[], current: readonly ResolvedPlugin[]) {
+  const result = adaptConfig(value, available)
+  const changes = available.map((plugin) => {
+    const before = current.find((entry) => entry.id === plugin.id)
+    const after = result.plugins.find((entry) => entry.id === plugin.id)
+    const enabled = after?.enabled ?? false
+    const previous = before?.enabled ?? false
+    const action =
+      enabled !== previous
+        ? enabled
+          ? ("enable" as const)
+          : ("disable" as const)
+        : JSON.stringify(before?.options ?? {}) !== JSON.stringify(after?.options ?? {})
+          ? ("change" as const)
+          : ("unchanged" as const)
+    return { id: plugin.id, name: plugin.name, action }
+  })
+  return { ...result, changes }
+}

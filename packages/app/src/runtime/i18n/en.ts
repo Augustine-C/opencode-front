@@ -1,6 +1,22 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "plugins.preview.title": "Review configuration import",
+  "plugins.preview.replacement": "This replaces the current plugin selection. Built-in defaults still apply. Enabled plugins restart when you apply it.",
+  "plugins.preview.code": "Importing configuration does not install or download plugin code. Only installed browser adapters can run.",
+  "plugins.preview.enable": "Enable",
+  "plugins.preview.disable": "Disable",
+  "plugins.preview.change": "Update options",
+  "plugins.preview.unchanged": "Keep current settings",
+  "plugins.preview.ignored": "These entries will be ignored because no installed browser adapter matches them:",
+  "plugins.preview.apply": "Apply configuration",
+  "plugins.preview.back": "Back without applying",
+  "plugins.preview.recovery": "If initialization fails, the imported settings remain saved. Disable the failed plugin or choose a corrected configuration and retry. This operation does not restore plugin side effects automatically.",
+  "plugins.error.parse": "Could not read this JSON or JSONC file. Correct its syntax and choose the file again.",
+  "plugins.error.configuration": "This configuration is not supported. Check the plugin entries and options, then choose the file again.",
+  "plugins.error.apply": "Some plugin changes could not be applied. Check the failed plugin, correct its configuration and retry.",
+  "plugins.error.initialization": "This plugin failed. Disable it or correct its configuration, then enable it again.",
+  "plugins.error.details": "Diagnostic details (sensitive values hidden)",
   "session.navigation.noLoadedResults": "No matches in loaded messages",
   "session.navigation.noHistoryResults": "No matches in this session history",
   "session.navigation.searchMore": "Search earlier pages",

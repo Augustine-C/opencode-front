@@ -3,7 +3,7 @@ import { createContext, createEffect, createMemo, onCleanup, onMount, useContext
 import { createStore } from "solid-js/store"
 import { useLocation } from "@solidjs/router"
 import { createPluginHost } from "@opencode/frontend-plugin/host"
-import { adaptConfig, type ResolvedPlugin } from "@opencode/frontend-plugin/config"
+import { adaptConfig, previewConfig, type ResolvedPlugin } from "@opencode/frontend-plugin/config"
 import { useGlobal } from "@/runtime/server/runtime"
 import { ServerConnection } from "@/runtime/server/registry"
 import { useCommand } from "@/shell/commands/command"
@@ -92,7 +92,7 @@ function createPlugins() {
       }),
     )
     setState("config", entries)
-    pending = pending.then(() => apply(entries))
+    pending = pending.catch(() => {}).then(() => apply(entries))
     return pending
   }
   command.register("frontend-plugins", () => [
@@ -153,6 +153,9 @@ function createPlugins() {
           ? state.config.map((entry) => (entry.id === id ? { ...entry, enabled } : entry))
           : [...state.config, { id, package: id, options: {}, enabled }],
       )
+    },
+    previewConfig(value: unknown) {
+      return previewConfig(value, available, state.config)
     },
     importConfig(value: unknown) {
       const result = adaptConfig(value, available)
