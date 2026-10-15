@@ -453,7 +453,7 @@ export function TitlebarTabStrip(props: {
               {(tab) => {
                 const id = tabKey(tab)
                 let ref!: HTMLDivElement
-                const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
+                const visibleIndex = () => projectGroups.visibleIndex(tab, visibleTabs())
                 const groupIndex = () => projectGroups.index(tab, visibleTabs())
                 useTabShortcut(visibleIndex, () => navigateTab(tab, ref))
 

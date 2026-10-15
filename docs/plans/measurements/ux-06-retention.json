@@ -1,0 +1,58 @@
+{
+  "browser": "151.0.7922.173",
+  "sessions": 500,
+  "samples": [
+    {
+      "cycles": 20,
+      "metrics": [
+        {
+          "name": "JSEventListeners",
+          "value": 262
+        },
+        {
+          "name": "Nodes",
+          "value": 5220
+        },
+        {
+          "name": "JSHeapUsedSize",
+          "value": 3904368
+        }
+      ]
+    },
+    {
+      "cycles": 40,
+      "metrics": [
+        {
+          "name": "JSEventListeners",
+          "value": 267
+        },
+        {
+          "name": "Nodes",
+          "value": 5239
+        },
+        {
+          "name": "JSHeapUsedSize",
+          "value": 4003708
+        }
+      ]
+    },
+    {
+      "cycles": 60,
+      "metrics": [
+        {
+          "name": "JSEventListeners",
+          "value": 262
+        },
+        {
+          "name": "Nodes",
+          "value": 5220
+        },
+        {
+          "name": "JSHeapUsedSize",
+          "value": 4051540
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

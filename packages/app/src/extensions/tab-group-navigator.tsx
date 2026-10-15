@@ -27,11 +27,7 @@ export function TabGroupNavigator(props: {
   const index = createMemo(() =>
     props.tabs().map((tab) => ({
       tab,
-      text: [
-        props.groups.project(tab)?.conversation,
-        props.groups.project(tab)?.label,
-        props.groups.instanceLabel(props.groups.instanceKey(tab)),
-      ].map((text) => text?.toLowerCase() ?? ""),
+      text: props.groups.project(tab)?.search ?? [],
     })),
   )
   const results = createMemo(() =>

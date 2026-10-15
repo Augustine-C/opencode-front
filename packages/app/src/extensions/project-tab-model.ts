@@ -103,3 +103,26 @@ export function aggregateTabGroupStatus(entries: readonly { groups: readonly str
   }
   return result
 }
+
+export function indexTabGroups<T>(
+  tabs: readonly T[],
+  input: { id: (tab: T) => string; instance: (tab: T) => string; project: (tab: T) => string },
+) {
+  const instanceFirst = new Map<string, string>()
+  const projectFirst = new Map<string, string>()
+  const position = new Map<string, number>()
+  const groupIndex = new Map<string, number>()
+  const sizes = new Map<string, number>()
+  tabs.forEach((tab, index) => {
+    const id = input.id(tab)
+    const instance = input.instance(tab)
+    const project = input.project(tab)
+    if (!instanceFirst.has(instance)) instanceFirst.set(instance, id)
+    if (!projectFirst.has(project)) projectFirst.set(project, id)
+    const offset = sizes.get(project) ?? 0
+    groupIndex.set(id, offset)
+    sizes.set(project, offset + 1)
+    position.set(id, index)
+  })
+  return { instanceFirst, projectFirst, position, groupIndex }
+}

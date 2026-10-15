@@ -10,7 +10,7 @@ import { displayName, getProjectAvatarSource, getProjectAvatarVariant } from "@o
 import { pathKey } from "@/workspaces/path-key"
 import { groupInstanceTabs, moveTabGroup, orderedGroupKeys, tabProject } from "./project-tab-model"
 import { useSessionTabAvatarState } from "@/shell/layout/project-avatar-state"
-import { aggregateTabGroupStatus } from "./project-tab-model"
+import { aggregateTabGroupStatus, indexTabGroups } from "./project-tab-model"
 import { sessionTabTitle } from "@/shell/titlebar/tab-title"
 import { TabGroupHeading } from "./tab-group-heading"
 import "./project-tabs.css"
@@ -21,6 +21,7 @@ type ProjectGroup = {
   label: string
   title: string
   conversation: string
+  search: readonly string[]
   src?: string
   variant?: ProjectAvatarStyle
 }
@@ -49,15 +50,21 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
         const label = root
           ? displayName({ name: project?.name, worktree: root })
           : language.t("session.tab.group.unassigned")
+        const conversation = sessionTabTitle(
+          session?.title ?? tabs.info[tabKey(tab)]?.title,
+          language.t("session.tab.session"),
+        )
         return [
           tabKey(tab),
           {
             key: JSON.stringify([tab.server, root ? pathKey(root) : null]),
             label,
-            conversation: sessionTabTitle(
-              session?.title ?? tabs.info[tabKey(tab)]?.title,
-              language.t("session.tab.session"),
-            ),
+            conversation,
+            search: [
+              conversation,
+              label,
+              conn ? serverName(conn) : language.t("session.tab.group.unknownInstance"),
+            ].map((text) => text.toLowerCase()),
             title: [label, root, conn ? serverName(conn) : undefined].filter(Boolean).join(" · "),
             src: getProjectAvatarSource(project?.id, project?.icon),
             variant: getProjectAvatarVariant(project?.icon?.color),
@@ -66,7 +73,26 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
       }),
     )
   })
-  const key = (tab: Tab) => groups().get(tabKey(tab))?.key ?? JSON.stringify([tab.server, null])
+  // Keep membership stable through title/status updates so ordering and geometry indexes remain reusable.
+  const memberships = createMemo((previous: Map<string, string>) => {
+    const next = new Map([...groups()].map(([id, group]) => [id, group.key]))
+    return previous.size === next.size && [...next].every(([id, key]) => previous.get(id) === key) ? previous : next
+  }, new Map<string, string>())
+  const key = (tab: Tab) => memberships().get(tabKey(tab)) ?? JSON.stringify([tab.server, null])
+  let membership = memberships()
+  let indexes = new WeakMap<readonly Tab[], ReturnType<typeof indexTabGroups<Tab>>>()
+  const indexFor = (visible: readonly Tab[]) => {
+    if (membership !== memberships()) {
+      membership = memberships()
+      indexes = new WeakMap()
+    }
+    let index = indexes.get(visible)
+    if (!index) {
+      index = indexTabGroups(visible, { id: tabKey, instance: instanceKey, project: key })
+      indexes.set(visible, index)
+    }
+    return index
+  }
   const sessionStates = mapArray(input.tabs, (tab) => {
     const avatar = useSessionTabAvatarState(
       () => tab.server,
@@ -224,24 +250,27 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
     project: (tab: Tab) => groups().get(tabKey(tab)),
     boundary(tab: Tab, visible: readonly Tab[]) {
       if (!enabled()) return
-      if (visible.find((item) => instanceKey(item) === instanceKey(tab)) === tab) return "instance"
-      if (visible.find((item) => key(item) === key(tab)) === tab) return "project"
+      if (indexFor(visible).instanceFirst.get(instanceKey(tab)) === tabKey(tab)) return "instance"
+      if (indexFor(visible).projectFirst.get(key(tab)) === tabKey(tab)) return "project"
     },
     ordered,
     collapsed,
     cancelDrag: clearDrag,
+    visibleIndex: (tab: Tab, visible: readonly Tab[]) => indexFor(visible).position.get(tabKey(tab)) ?? -1,
     index(tab: Tab, visible: readonly Tab[]) {
-      return enabled()
-        ? visible.filter((item) => key(item) === key(tab)).findIndex((item) => tabKey(item) === tabKey(tab))
-        : undefined
+      return enabled() ? indexFor(visible).groupIndex.get(tabKey(tab)) : undefined
     },
     heading(tab: Tab, visible: Accessor<readonly Tab[]>) {
       return (
         <>
-          <Show when={enabled() && visible().find((item) => instanceKey(item) === instanceKey(tab)) === tab}>
+          <Show when={enabled() && indexFor(visible()).instanceFirst.get(instanceKey(tab)) === tabKey(tab)}>
             {heading({ kind: "instance", key: instanceKey(tab), instance: instanceKey(tab) }, tab, visible)}
           </Show>
-          <Show when={enabled() && !instanceCollapsed(tab) && visible().find((item) => key(item) === key(tab)) === tab}>
+          <Show
+            when={
+              enabled() && !instanceCollapsed(tab) && indexFor(visible()).projectFirst.get(key(tab)) === tabKey(tab)
+            }
+          >
             {heading({ kind: "project", key: key(tab), instance: instanceKey(tab) }, tab, visible)}
           </Show>
         </>

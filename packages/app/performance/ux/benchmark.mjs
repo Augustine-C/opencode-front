@@ -21,6 +21,7 @@ for (const size of [20, 100, 500]) {
   await trigger.waitFor()
   const cdp = await page.context().newCDPSession(page)
   await cdp.send("Performance.enable")
+  await cdp.send("HeapProfiler.collectGarbage")
   const before = await cdp.send("Performance.getMetrics")
   await trigger.click()
   await page.locator('[data-slot="tab-group-navigator"]').waitFor()
@@ -55,6 +56,7 @@ for (const size of [20, 100, 500]) {
     })
     samples.push(sample)
   }
+  await cdp.send("HeapProfiler.collectGarbage")
   const after = await cdp.send("Performance.getMetrics")
   report.results.push({
     size,

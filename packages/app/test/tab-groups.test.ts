@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import {
   aggregateTabGroupStatus,
   groupInstanceTabs,
+  indexTabGroups,
   groupTabs,
   moveTabGroup,
   orderedGroupKeys,
@@ -17,6 +18,41 @@ const projects = [
 ]
 
 describe("project tab groups", () => {
+  test("one-pass group indexes preserve visible ordering, positions and independent instance boundaries", () => {
+    const tabs = [
+      { id: "a1", server: "local", project: "a" },
+      { id: "a2", server: "local", project: "a" },
+      { id: "b1", server: "local", project: "b" },
+      { id: "remote-a", server: "remote", project: "a" },
+    ]
+    const index = (items: typeof tabs) =>
+      indexTabGroups(items, {
+        id: (tab) => tab.id,
+        instance: (tab) => tab.server,
+        project: (tab) => `${tab.server}/${tab.project}`,
+      })
+    expect([...index(tabs).instanceFirst]).toEqual([
+      ["local", "a1"],
+      ["remote", "remote-a"],
+    ])
+    expect([...index(tabs).projectFirst]).toEqual([
+      ["local/a", "a1"],
+      ["local/b", "b1"],
+      ["remote/a", "remote-a"],
+    ])
+    expect([...index(tabs).groupIndex]).toEqual([
+      ["a1", 0],
+      ["a2", 1],
+      ["b1", 0],
+      ["remote-a", 0],
+    ])
+    expect([...index([tabs[1], tabs[3]]).position]).toEqual([
+      ["a2", 0],
+      ["remote-a", 1],
+    ])
+    expect(index([tabs[1], tabs[3]]).projectFirst.get("local/a")).toBe("a2")
+    expect(index([]).position.size).toBe(0)
+  })
   test("folded status prioritizes action over connection, running and unread within its own instance", () => {
     const entries = [
       { groups: ["local", "local/project"], status: "unread" as const },
