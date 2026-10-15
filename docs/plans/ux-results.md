@@ -21,7 +21,7 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 - [x] Navigator filter, same-name ownership, IME, Escape, keyboard selection and preserved collapse preferences.
 - [x] Historical search scope, pagination failure/cancellation and ownership isolation.
 - [x] Plugin configuration preview, cancel, invalid configuration and retry.
-- [ ] Version provenance and current-service changes.
+- [x] Version provenance and current-service changes.
 - [ ] Live service: connect, send, stream, switch, permissions, Review and terminal. Requires an already running authorized service.
 - [ ] Native macOS/Windows: normal/maximized restore, monitor removal, scaling, external links. Requires those platforms.
 - [ ] Full-session long-history reading during streaming, return-to-latest and side-panel/layout continuity. Adapter fixtures alone cannot verify these.
@@ -73,3 +73,13 @@ Parsing and adapter resolution now produce a read-only preview before any config
 `bun run check`: 56 tests passed (286 assertions); production/PWA build passed. The production plugin-manager browser keeper passed invalid JSONC, unsupported configuration shape, no-write preview/cancel, ignored adapters, replacement, sensitive-value hiding, re-enable/retry and a 390px viewport without page errors. The existing failed-setup lifecycle test now also verifies repeated retries produce one command, one panel and one slot, preserving cleanup/error isolation. No real third-party account or credential was used.
 
 UX-07 focus follow-up: preview entry now focuses its review heading instead of the Apply button, keeping the summary at the start of the scrollable dialog. The production import keeper passed again, including cancellation and mobile application.
+
+## UX-08 — independent version provenance implemented
+
+The native About page now mounts a port-owned version adapter while retaining the original credits, copyright and license. Web and desktop share metadata embedded into the renderer at build time: independent root package version, Git commit/local changes, upstream GUI version and source commit. A clean HEAD must have the exact matching four-component client release tag to be called released; source archives, ordinary commits and dirty builds remain explicitly unreleased. No version number was bumped and no Release was created.
+
+The instance selector defaults to the session that opened settings (or an unambiguous single service). Its version comes from current native health results, with unavailable versions shown as unknown and old values hidden. The page links to client release/build history, version-specific GUI sync notes and service tag history. The upstream v2.0.29 Release API returned HTTP 404 despite the Git tag existing, so dead v2 Release URLs are deliberately avoided. External links use the existing anchor/desktop safe-open path. No update download or backend operation is added.
+
+This also completes UX-01's compact connection footer: it uses the instance alias or host, with the full URL on demand in its tooltip. The plugin SDK's optional `connection.name` is additive for existing plugins.
+
+`bun run check`: 57 tests / 291 assertions passed. Production/PWA and adapter fixture builds passed. Build-info tests verify clean exact tags, mismatched tags, untagged source, dirty builds and independent GUI versions. The real version adapter/browser keeper passed unreleased provenance, GUI baseline, switching services, unknown values after disconnect, external-link attributes, compact footer and 390px layout without page errors. Desktop staging reuses the same built renderer and includes window persistence; actual packaged macOS/Windows execution remains pending.

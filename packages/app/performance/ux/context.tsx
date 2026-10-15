@@ -12,6 +12,7 @@ export const [state, setState] = createStore({
   status: "idle",
   unread: false,
   attention: false,
+  offline: false,
 })
 const connections = Array.from({ length: 4 }, (_, i) => ({
   type: "http",
@@ -47,7 +48,11 @@ const data = {
 export const useGlobal = () => ({
   servers: {
     list: () => connections,
-    health: Object.fromEntries(connections.map((c) => [c.http.url, { healthy: true, version: "fixture" }])),
+    get health() {
+      return Object.fromEntries(
+        connections.map((c, i) => [c.http.url, { healthy: !state.offline, version: `2.0.${20 + i}` }]),
+      )
+    },
   },
   ensureServerCtx: () => ({
     data,
@@ -86,3 +91,5 @@ export const useLanguage = () => ({
 })
 
 export { useData, useCommand } from "./history-data"
+
+export const useSettingsSurface = () => ({ route: () => ({ type: "session", server: state.current.server }) })

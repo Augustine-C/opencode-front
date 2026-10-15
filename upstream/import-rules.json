@@ -289,6 +289,18 @@
         "packages/client/package.json",
         "packages/plugin-browser/package.json"
       ]
+    },
+    {
+      "id": "version-information",
+      "reason": "Show independently versioned frontend builds, upstream GUI provenance and selected existing-service health without managing updates.",
+      "files": [
+        "packages/app/src/settings/about/about.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/build-info.ts",
+        "packages/app/src/extensions/version-info.tsx",
+        "packages/app/src/extensions/version-info.css"
+      ]
     }
   ],
   "local": [

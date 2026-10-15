@@ -4,6 +4,7 @@ import { useProjectTabGroups } from "../../src/extensions/project-tabs"
 import { TabGroupNavigator } from "../../src/extensions/tab-group-navigator"
 import { items, state, setState } from "./context"
 import "../../src/index.css"
+const VersionFixture = lazy(() => import("./version.tsx"))
 const HistoryFixture = lazy(() => import("./history.tsx"))
 function App() {
   const groups = useProjectTabGroups({ tabs: () => items, current: () => state.current })
@@ -11,6 +12,9 @@ function App() {
     <main style={{ padding: "24px" }}>
       <Show when={new URLSearchParams(location.search).has("history")}>
         <HistoryFixture />
+      </Show>
+      <Show when={new URLSearchParams(location.search).has("version")}>
+        <VersionFixture />
       </Show>
       <TabGroupNavigator
         groups={groups}

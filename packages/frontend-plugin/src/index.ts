@@ -39,7 +39,7 @@ export type Context = {
   // Accessors always resolve against the active server. Plugins must not retain a client across switches.
   client: Accessor<OpenCodeClient | undefined>
   sessionID: Accessor<string | undefined>
-  connection: Accessor<{ key: string; url: string; healthy: boolean } | undefined>
+  connection: Accessor<{ key: string; url: string; name?: string; healthy: boolean } | undefined>
   data: { listen: (handler: (event: OpenCodeEvent) => void) => Cleanup }
   storage: { get<T>(key: string): T | undefined; set(key: string, value: unknown): void }
   ui: {

@@ -1,3 +1,4 @@
+import { readBuildInfo } from "../../../../scripts/build-info"
 import { defineConfig } from "vite"
 import { fileURLToPath } from "node:url"
 import desktopPlugin from "../../vite.js"
@@ -5,6 +6,7 @@ const root = fileURLToPath(new URL(".", import.meta.url))
 const source = fileURLToPath(new URL("../../src/", import.meta.url))
 const overrides = [
   "runtime/server/current",
+  "settings/surface",
   "shell/commands/command",
   "runtime/server/runtime",
   "runtime/server/registry",
@@ -15,6 +17,9 @@ const overrides = [
 ]
 export default defineConfig({
   root,
+  define: {
+    __OPENCODE_FRONT_BUILD__: JSON.stringify(readBuildInfo(fileURLToPath(new URL("../../../../", import.meta.url)))),
+  },
   plugins: [
     {
       name: "fixture-context",

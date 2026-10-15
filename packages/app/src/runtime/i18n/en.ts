@@ -1,6 +1,23 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "plugins.connectionSummary": "{{name}} · {{status}}",
+  "settings.about.front.title": "Version information",
+  "settings.about.front.build": "OpenCode Front",
+  "settings.about.front.gui": "Upstream GUI",
+  "settings.about.front.instance": "Instance",
+  "settings.about.front.service": "Service version",
+  "settings.about.front.released": "{{version}}",
+  "settings.about.front.unreleased": "{{version}} — unreleased build ({{commit}})",
+  "settings.about.front.unreleasedDirty": "{{version}} — unreleased build ({{commit}}, local changes)",
+  "settings.about.front.guiVersion": "{{version}} ({{commit}})",
+  "settings.about.front.noInstance": "No instance selected",
+  "settings.about.front.serviceUnknown": "Unknown — service unavailable or not checked",
+  "settings.about.front.releaseNotes": "Client release notes",
+  "settings.about.front.buildChanges": "Build history",
+  "settings.about.front.guiNotes": "GUI sync notes",
+  "settings.about.front.serviceHistory": "Service tag history",
+  "settings.about.front.manualUpdates": "Updates are installed manually. V2 tag history and GUI sync notes are provided separately from client release notes.",
   "plugins.preview.title": "Review configuration import",
   "plugins.preview.replacement": "This replaces the current plugin selection. Built-in defaults still apply. Enabled plugins restart when you apply it.",
   "plugins.preview.code": "Importing configuration does not install or download plugin code. Only installed browser adapters can run.",

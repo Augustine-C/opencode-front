@@ -51,7 +51,12 @@ function createPlugins() {
         const conn = server()
         if (!conn) return
         const key = ServerConnection.key(conn)
-        return { key, url: conn.http.url, healthy: global.servers.health[key]?.healthy ?? false }
+        return {
+          key,
+          url: conn.http.url,
+          name: conn.displayName || URL.parse(conn.http.url)?.host || conn.http.url,
+          healthy: global.servers.health[key]?.healthy ?? false,
+        }
       },
       data: {
         listen(handler) {
