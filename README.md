@@ -74,6 +74,10 @@ Click the search icon in an existing conversation, or press **Ctrl/Cmd+F**, to o
 
 Short ticks in the conversation's left margin preview a sent prompt and its response on hover. Click the preview or click/drag the ticks to reveal that prompt; touch dragging works on narrow screens. When focused, the rail supports Up / Down, Home / End, and Page Up / Page Down. The history icon hides or shows the rail. The existing transcript control returns to the latest content. Navigation uses the virtualized timeline and excludes reverted prompts; toggling history or search keeps header controls in place.
 
+## Independent plugin modules roadmap
+
+The [independent plugin module plan](docs/plans/independent-plugins.md) describes installing separately built frontend plugins without rebuilding the host. This is planned functionality; current configuration imports still select already installed adapters.
+
 ## UX improvement roadmap
 
 The [user experience optimization plan](docs/plans/README.md) has been implemented in focused source commits. See the [implementation and validation record](docs/plans/ux-results.md) for per-task evidence, reproducible measurements and pending live-service/macOS/Windows acceptance. These source changes are unreleased.
