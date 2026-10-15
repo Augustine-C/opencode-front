@@ -2,7 +2,7 @@
 
 A frontend-only port of OpenCode v2 with a shared web/desktop UI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
 
-This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.28**, commit [`026b106`](https://github.com/anomalyco/opencode/tree/026b106bc5d41b679ffc413264229c340871e4d3). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
+This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.0.29**, commit [`042d083`](https://github.com/anomalyco/opencode/tree/042d0832f5f3a73eaa039a58a7d565776f6d4290). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
 
 ## License and attribution
 
@@ -40,11 +40,11 @@ OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 
 Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
 
-The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.28.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.28+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives and a separate `opencode-front-example-plugins-<version>.zip` source module. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
+The **Build client** GitHub Action packages macOS Apple Silicon (arm64) and Windows (x64) apps. Pull requests, pushes to `main`, and manual runs upload downloadable build artifacts. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.0.29.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.0.29+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives and a separate `opencode-front-example-plugins-<version>.zip` source module. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
 
 Ad hoc macOS builds disable hardened runtime through the signing tool's per-file options so the app and its helpers can load the bundled Electron libraries without a Team ID. Before uploading, the workflow extracts the release archive, verifies every Mach-O signature, rejects hardened runtime and explicit library validation flags, and checks that the app starts a renderer helper.
 
-See the [2.0.28.0 release notes](docs/releases/2.0.28.0.md) and [OpenCode v2.0.28 sync details](docs/upstream-v2.0.28.md).
+See the [2.0.29.0 release notes](docs/releases/2.0.29.0.md) and [OpenCode v2.0.29 sync details](docs/upstream-v2.0.29.md).
 
 ## Organize session tabs
 
@@ -76,7 +76,7 @@ Short ticks in the conversation's left margin preview a sent prompt and its resp
 
 ## UX improvement roadmap
 
-See the [user experience optimization plan](docs/plans/README.md) for priorities, implementation tasks, acceptance criteria, and validation requirements. Planned work is tracked separately from released features.
+The [user experience optimization plan](docs/plans/README.md) has been implemented in focused source commits. See the [implementation and validation record](docs/plans/ux-results.md) for per-task evidence, reproducible measurements and pending live-service/macOS/Windows acceptance. These source changes are unreleased.
 
 ## Validate and build
 

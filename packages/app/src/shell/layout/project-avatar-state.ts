@@ -74,5 +74,5 @@ export function useSessionTabAvatarState(
     return busy(sessionId())
   })
 
-  return { unread, loading }
+  return { unread, loading, needsAttention }
 }

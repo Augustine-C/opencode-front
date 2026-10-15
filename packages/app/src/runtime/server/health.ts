@@ -143,7 +143,10 @@ export function useCheckServerHealth() {
   const platform = usePlatform()
   const fetcher = platform.fetch ?? globalThis.fetch
 
-  return (http: ServerConnection.HttpBase) => {
+  return (http: ServerConnection.HttpBase, opts?: CheckServerHealthOptions) => {
+    // Interactive probes own cancellation and must not share a cached in-flight poll.
+    if (opts) return checkServerHealth(http, fetcher, opts)
+
     const key = cacheKey(http)
     const hit = healthCache.get(key)
     const now = Date.now()

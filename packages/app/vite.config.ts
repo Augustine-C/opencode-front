@@ -1,6 +1,7 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { fileURLToPath } from "node:url"
 import { defineConfig } from "vite"
+import { readBuildInfo } from "../../scripts/build-info"
 import desktopPlugin, { channel } from "./vite.js"
 import { icons } from "./vite.icons.ts"
 import { serviceWorker } from "./vite.pwa.ts"
@@ -23,6 +24,7 @@ const sentry =
     : false
 
 export default defineConfig({
+  define: { __OPENCODE_FRONT_BUILD__: JSON.stringify(readBuildInfo(fileURLToPath(new URL("../..", import.meta.url)))) },
   plugins: [
     desktopPlugin,
     icons(channel),

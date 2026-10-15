@@ -4,7 +4,7 @@ import type { DesktopNativeLocale } from "@/runtime/i18n/desktop-native"
 type Key = Extract<keyof typeof en, `plugins.${string}`>
 type Translation = Pick<typeof en, Key>
 
-export const pluginTranslations: Partial<Record<Exclude<DesktopNativeLocale, "en">, Translation>> = {
+export const pluginTranslations: Partial<Record<Exclude<DesktopNativeLocale, "en">, Partial<Translation>>> = {
   zh: {
     "plugins.connectionStatus": "连接状态",
     "plugins.panel.maximize": "最大化面板",

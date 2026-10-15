@@ -221,7 +221,8 @@
         "packages/app/src/settings/model.tsx",
         "packages/app/src/shell/titlebar/tab-nav.tsx",
         "packages/app/src/shell/titlebar/tab-strip.tsx",
-        "packages/app/src/shell/titlebar/titlebar.tsx"
+        "packages/app/src/shell/titlebar/titlebar.tsx",
+        "packages/app/src/shell/layout/project-avatar-state.ts"
       ],
       "adapters": [
         "packages/app/src/extensions/project-tabs.tsx",
@@ -254,7 +255,8 @@
         "packages/app/src/runtime/server/registry.tsx",
         "packages/app/src/runtime/server/runtime.tsx",
         "packages/app/src/servers/connect/screen.css",
-        "packages/app/src/servers/connect/screen.tsx"
+        "packages/app/src/servers/connect/screen.tsx",
+        "packages/app/src/runtime/server/health.ts"
       ],
       "adapters": [
         "packages/app/src/extensions/project-inventory.ts"
@@ -286,6 +288,18 @@
         "packages/app/vite.icons.ts",
         "packages/client/package.json",
         "packages/plugin-browser/package.json"
+      ]
+    },
+    {
+      "id": "version-information",
+      "reason": "Show independently versioned frontend builds, upstream GUI provenance and selected existing-service health without managing updates.",
+      "files": [
+        "packages/app/src/settings/about/about.tsx"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/build-info.ts",
+        "packages/app/src/extensions/version-info.tsx",
+        "packages/app/src/extensions/version-info.css"
       ]
     }
   ],

@@ -144,3 +144,83 @@ test("history previews show the selected prompt's text response without crossing
     root.dispose()
   }
 })
+
+test("continued history search stops on matches or its page limit and ignores errors after ownership changes", async () => {
+  const root = createRoot((dispose) => {
+    const [state, setState] = createStore({ key: "local:one", loading: false, pages: 0, matches: 0 })
+    let wait: (() => Promise<void>) | undefined
+    const session = {
+      identity: { sessionKey: () => state.key, sessionID: () => "one" },
+      ownership: {
+        capture: () => {
+          const key = state.key
+          return { current: () => state.key === key }
+        },
+      },
+      history: { visibleUserMessages: () => [], messages: () => [] },
+      shared: {
+        data: {
+          session: {
+            message: {
+              more: () => true,
+              loading: () => state.loading,
+              loadMore: async () => {
+                setState({ loading: true, pages: state.pages + 1 })
+                try {
+                  await wait?.()
+                } finally {
+                  setState("loading", false)
+                }
+              },
+            },
+          },
+        },
+      },
+    } as unknown as Parameters<typeof createSessionNavigation>[0]
+    const timeline = {
+      scroller: () => undefined,
+      view: { unpin: () => {} },
+      actions: { revealMessage: () => {} },
+    } as unknown as Parameters<typeof createSessionNavigation>[1]
+    return {
+      ...createSessionNavigation(session, timeline),
+      dispose,
+      state,
+      setState,
+      setWait: (value: typeof wait) => {
+        wait = value
+      },
+    }
+  })
+  try {
+    await root.history.searchMore(() => root.state.matches)
+    expect(root.state.pages).toBe(5)
+    root.setWait(async () => {
+      root.setState("matches", 1)
+    })
+    await root.history.searchMore(() => root.state.matches)
+    expect(root.state.pages).toBe(6)
+    let reject!: (error: Error) => void
+    root.setWait(
+      () =>
+        new Promise((_, fail) => {
+          reject = fail
+        }),
+    )
+    const pending = root.history.searchMore(() => root.state.matches)
+    root.history.cancel()
+    reject(new Error("current request failed"))
+    await pending
+    expect(root.state.pages).toBe(7)
+    expect(root.history.continuing).toBe(false)
+    expect(root.history.error).toBe(true)
+    const stale = root.history.searchMore(() => root.state.matches)
+    root.setState("key", "remote:one")
+    reject(new Error("previous server failed"))
+    await stale
+    expect(root.history.error).toBe(false)
+    expect(root.history.continuing).toBe(false)
+  } finally {
+    root.dispose()
+  }
+})

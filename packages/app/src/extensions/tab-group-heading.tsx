@@ -1,6 +1,8 @@
 import { type JSX, Show } from "solid-js"
 import { Icon } from "@opencode/ui/icon"
 import { ProjectAvatar, type ProjectAvatarStyle } from "@opencode/ui/project-avatar"
+import type { TabGroupStatus } from "./project-tab-model"
+import { SessionProgressIndicatorV2 } from "@opencode/session-ui/v2/session-progress-indicator-v2"
 import { useLanguage } from "@/runtime/i18n/language"
 
 export function TabGroupHeading(props: {
@@ -10,6 +12,7 @@ export function TabGroupHeading(props: {
   title: string
   src?: string
   variant?: ProjectAvatarStyle
+  status?: TabGroupStatus
   active: boolean
   collapsed: boolean
   ready: boolean
@@ -24,6 +27,11 @@ export function TabGroupHeading(props: {
   }
 }) {
   const language = useLanguage()
+  const statusLabel = () => (props.status ? language.t(`session.tab.group.status.${props.status}`) : "")
+  const title = () =>
+    props.status
+      ? language.t("session.tab.group.statusLabel", { group: props.title, status: statusLabel() })
+      : props.title
   return (
     <div
       data-slot={props.kind === "instance" ? "tab-instance-group" : "tab-project-group"}
@@ -41,8 +49,8 @@ export function TabGroupHeading(props: {
         type="button"
         data-slot={props.kind === "instance" ? "tab-instance-group-toggle" : "tab-project-group-toggle"}
         aria-expanded={!props.collapsed}
-        aria-label={props.title}
-        title={`${props.title}\n${language.t(props.collapsed ? "session.tab.group.expand" : "session.tab.group.collapse")}`}
+        aria-label={title()}
+        title={`${title()}\n${language.t(props.collapsed ? "session.tab.group.expand" : "session.tab.group.collapse")}`}
         disabled={!props.ready}
         draggable={props.ready}
         onDragStart={props.drag.start}
@@ -60,6 +68,29 @@ export function TabGroupHeading(props: {
           <ProjectAvatar fallback={props.label} src={props.src} variant={props.variant} aria-hidden="true" />
         </Show>
         <span data-slot="tab-project-group-title">{props.label}</span>
+        <Show when={props.status}>
+          <span
+            data-slot="tab-group-status"
+            data-status={props.status}
+            role="img"
+            aria-label={statusLabel()}
+            title={statusLabel()}
+          >
+            <Show
+              when={props.status === "running"}
+              fallback={
+                <Icon
+                  name={
+                    props.status === "attention" || props.status === "offline" ? "circle-exclamation" : "bullet-list"
+                  }
+                  size="small"
+                />
+              }
+            >
+              <SessionProgressIndicatorV2 />
+            </Show>
+          </span>
+        </Show>
         <span data-slot="tab-project-group-chevron" aria-hidden="true">
           <Icon name="chevron-down" size="small" />
         </span>

@@ -1,4 +1,5 @@
-const { app, BrowserWindow, protocol, net, shell } = require("electron")
+const { app, BrowserWindow, protocol, net, shell, screen } = require("electron")
+const { readWindowState, trackWindowState } = require("./desktop-window-state.cjs")
 const path = require("node:path")
 const { pathToFileURL } = require("node:url")
 const fs = require("node:fs")
@@ -27,14 +28,23 @@ app.whenReady().then(() => {
     return net.fetch(pathToFileURL(target).toString())
   })
   function open() {
+    const file = path.join(app.getPath("userData"), "window-state.json")
+    const primary = screen.getPrimaryDisplay()
+    const saved = readWindowState(
+      file,
+      [primary, ...screen.getAllDisplays().filter((display) => display.id !== primary.id)].map(
+        (display) => display.workArea,
+      ),
+    )
     const window = new BrowserWindow({
-      width: 1320,
-      height: 900,
+      ...saved.bounds,
       minWidth: 640,
       minHeight: 480,
       title: "OpenCode Front",
       webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
     })
+    if (saved.maximized) window.maximize()
+    trackWindowState(window, file)
     const dev = process.env.OPENCODE_FRONT_DEV_URL
     const start = dev || "oc://renderer/"
     if (dev && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(dev))

@@ -1,3 +1,4 @@
+import { FrontVersionInfo } from "@/extensions/version-info"
 import { createResource } from "solid-js"
 import { useDialog } from "@opencode/ui/context/dialog"
 import { useLanguage } from "@/runtime/i18n/language"
@@ -72,11 +73,7 @@ export function SettingsAbout(props: { active: boolean }) {
   return (
     <div class="settings-about-content">
       <div class="settings-about-intro">
-        <p>
-          {language.t("settings.about.version", {
-            version: platform.version ?? language.t("settings.about.devVersion"),
-          })}
-        </p>
+        <FrontVersionInfo />
         <p>{language.t("settings.about.license")}</p>
       </div>
 

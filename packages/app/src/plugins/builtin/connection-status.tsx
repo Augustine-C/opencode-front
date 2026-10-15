@@ -12,9 +12,16 @@ export function connectionStatus(language: ReturnType<typeof useLanguage>) {
     setup(context) {
       const status = () => context.connection()
       const content = () => (
-        <span class="text-xs px-3 py-1" style={{ color: "var(--v2-text-weaker)" }}>
+        <span
+          title={status()?.url}
+          class="text-xs px-3 py-1 max-w-full truncate"
+          style={{ color: "var(--v2-text-weaker)" }}
+        >
           {status()
-            ? `${status()!.url} · ${language.t(status()!.healthy ? "plugins.connected" : "plugins.offline")}`
+            ? language.t("plugins.connectionSummary", {
+                name: status()!.name ?? URL.parse(status()!.url)?.host ?? status()!.url,
+                status: language.t(status()!.healthy ? "plugins.connected" : "plugins.offline"),
+              })
             : language.t("plugins.noServer")}
         </span>
       )

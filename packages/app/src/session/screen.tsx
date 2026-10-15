@@ -93,6 +93,7 @@ function SessionScreenContent(props: {
 
   const timelineSearch = createTimelineSearchController({
     sessionID: session.identity.sessionID,
+    sessionKey: session.identity.sessionKey,
     scrollRef: timeline.scroller,
     revealMessage: timeline.actions.revealMessage,
     pauseAutoScroll: timeline.view.unpin,

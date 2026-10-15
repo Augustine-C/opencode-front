@@ -88,3 +88,41 @@ export function moveTabGroup(
   let index = 0
   return [...new Set([...stored, ...visible])].map((key) => (available.has(key) ? moved[index++] : key))
 }
+
+export type TabGroupStatus = "attention" | "offline" | "running" | "unread"
+
+export function aggregateTabGroupStatus(entries: readonly { groups: readonly string[]; status?: TabGroupStatus }[]) {
+  const priority: Record<TabGroupStatus, number> = { attention: 0, offline: 1, running: 2, unread: 3 }
+  const result = new Map<string, TabGroupStatus>()
+  for (const entry of entries) {
+    if (!entry.status) continue
+    for (const key of entry.groups) {
+      const previous = result.get(key)
+      if (!previous || priority[entry.status] < priority[previous]) result.set(key, entry.status)
+    }
+  }
+  return result
+}
+
+export function indexTabGroups<T>(
+  tabs: readonly T[],
+  input: { id: (tab: T) => string; instance: (tab: T) => string; project: (tab: T) => string },
+) {
+  const instanceFirst = new Map<string, string>()
+  const projectFirst = new Map<string, string>()
+  const position = new Map<string, number>()
+  const groupIndex = new Map<string, number>()
+  const sizes = new Map<string, number>()
+  tabs.forEach((tab, index) => {
+    const id = input.id(tab)
+    const instance = input.instance(tab)
+    const project = input.project(tab)
+    if (!instanceFirst.has(instance)) instanceFirst.set(instance, id)
+    if (!projectFirst.has(project)) projectFirst.set(project, id)
+    const offset = sizes.get(project) ?? 0
+    groupIndex.set(id, offset)
+    sizes.set(project, offset + 1)
+    position.set(id, index)
+  })
+  return { instanceFirst, projectFirst, position, groupIndex }
+}

@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, onCleanup } from "solid-js"
+import { For, Show, createEffect, createMemo, on, onCleanup } from "solid-js"
 import { Icon } from "@opencode/ui/icon"
 import { IconButton } from "@opencode/ui/icon-button"
 import { Button } from "@opencode/ui/button"
@@ -11,7 +11,10 @@ type History = {
   more: boolean
   loading: boolean
   error: boolean
-  load: () => void
+  continuing: boolean
+  load: () => unknown
+  searchMore: (matches: () => number) => unknown
+  cancel: () => void
 }
 
 export function SessionNavigationActions(props: { search: TimelineSearchController; navigation: MessageNavigation }) {
@@ -45,7 +48,15 @@ export function SessionNavigationActions(props: { search: TimelineSearchControll
 export function SessionSearchPopover(props: { search: TimelineSearchController; history: History; mobile?: boolean }) {
   const language = useLanguage()
   const c = props.search
+  createEffect(on(c.query.value, () => props.history.cancel()))
+  onCleanup(() => props.history.cancel())
   let element: HTMLDivElement | undefined
+  const run = async (action: () => unknown) => {
+    await action()
+    // The final page removes its load button; keep keyboard users inside the search.
+    if (c.visible() && document.activeElement === document.body)
+      element?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true })
+  }
   const close = () => {
     const trigger = element
       ?.closest('[data-slot="session-chat-panel"]')
@@ -71,6 +82,12 @@ export function SessionSearchPopover(props: { search: TimelineSearchController; 
         data-component="session-search-popover"
         data-mobile={props.mobile}
         role="search"
+        onKeyDown={(event) => {
+          if (event.key !== "Escape" || event.isComposing) return
+          event.preventDefault()
+          event.stopPropagation()
+          close()
+        }}
         aria-label={language.t("session.navigation.search")}
       >
         <div class="session-navigation-search">
@@ -135,9 +152,22 @@ export function SessionSearchPopover(props: { search: TimelineSearchController; 
             onClick={close}
           />
         </div>
-        <Show when={(c.visible() && props.history.more) || props.history.error}>
-          <div class="session-navigation-hint" role={props.history.error ? "alert" : undefined}>
-            {language.t(props.history.error ? "session.navigation.loadFailed" : "session.navigation.loadedOnly")}
+        <Show
+          when={
+            (c.visible() && (props.history.more || (c.query.value().trim() && !c.result.count()))) ||
+            props.history.error
+          }
+        >
+          <div class="session-navigation-hint" role={props.history.error ? "alert" : "status"}>
+            {language.t(
+              props.history.error
+                ? "session.navigation.loadFailed"
+                : c.query.value().trim() && !c.result.count()
+                  ? props.history.more
+                    ? "session.navigation.noLoadedResults"
+                    : "session.navigation.noHistoryResults"
+                  : "session.navigation.loadedOnly",
+            )}
           </div>
         </Show>
         <div class="session-navigation-tools">
@@ -147,13 +177,35 @@ export function SessionSearchPopover(props: { search: TimelineSearchController; 
               variant="ghost-faint"
               size="small"
               class="session-navigation-load"
-              disabled={props.history.loading}
-              onClick={props.history.load}
+              disabled={props.history.loading || props.history.continuing}
+              onClick={() => void run(props.history.load)}
             >
               {language.t(props.history.loading ? "session.navigation.loading" : "session.navigation.loadOlder")}
             </Button>
           </Show>
+          <Show when={props.history.more && c.query.value().trim()}>
+            <Button
+              type="button"
+              variant="ghost-faint"
+              size="small"
+              disabled={props.history.loading && !props.history.continuing}
+              onClick={() =>
+                props.history.continuing
+                  ? props.history.cancel()
+                  : void run(() => props.history.searchMore(c.result.count))
+              }
+            >
+              {language.t(
+                props.history.continuing ? "session.navigation.stopSearching" : "session.navigation.searchMore",
+              )}
+            </Button>
+          </Show>
         </div>
+        <Show when={props.history.continuing}>
+          <p class="session-navigation-hint" role="status">
+            {language.t("session.navigation.searchLimit")}
+          </p>
+        </Show>
       </div>
     </Show>
   )
