@@ -28,6 +28,11 @@ import {
   type PluginInstallationInfo,
 } from "./independent/repository"
 import {
+  capturePluginData as captureDataSnapshot,
+  prepareIndependentActivationData as prepareActivationData,
+  settleIndependentActivation as settleActivation,
+} from "./independent/activation"
+import {
   createIndependentPluginDefinition,
   exposeSharedPluginRuntime,
 } from "./independent/loader"
@@ -126,86 +131,21 @@ function createPlugins() {
   let openSettings: (() => void) | undefined
   let disposed = false
   function capturePluginData(id: string, digest: string, version: number) {
-    const prefix = `opencode-front.plugin.${id}.`
-    const values: Array<[string, string]> = []
-    for (let index = 0; index < localStorage.length; index++) {
-      const key = localStorage.key(index)
-      if (!key?.startsWith(prefix)) continue
-      const value = localStorage.getItem(key)
-      if (value !== null) values.push([key, value])
-    }
-    const size = new TextEncoder().encode(JSON.stringify(values)).byteLength
-    if (size > 4 * 1024 * 1024)
-      throw new Error(
-        "Plugin data is too large for a safe update snapshot; export or reduce it before updating",
-      )
-    return {
-      digest,
-      storageVersion: version,
-      values,
-      capturedAt: Date.now(),
-    }
-  }
-  function restorePluginData(
-    id: string,
-    snapshot: { values: Array<[string, string]> },
-  ) {
-    const prefix = `opencode-front.plugin.${id}.`
-    for (let index = localStorage.length - 1; index >= 0; index--) {
-      const key = localStorage.key(index)
-      if (key?.startsWith(prefix)) localStorage.removeItem(key)
-    }
-    for (const [key, value] of snapshot.values) {
-      if (!key.startsWith(prefix))
-        throw new Error(
-          "Plugin data rollback snapshot contains another plugin key",
-        )
-      localStorage.setItem(key, value)
-    }
+    return captureDataSnapshot(localStorage, id, digest, version)
   }
   async function prepareIndependentActivationData(id: string) {
     if (!repository) return
-    const installation = (await repository.list()).find(
-      (entry) => entry.id === id,
-    )
-    if (!installation?.activationPending) return
-    const snapshot = await repository.dataSnapshot(
-      id,
-      installation.activationDataDigest ?? installation.activeDigest,
-    )
-    if (!snapshot)
-      throw new Error(
-        `Plugin ${id} cannot start safely because its activation data snapshot is missing`,
-      )
-    restorePluginData(id, snapshot)
+    await prepareActivationData(repository, localStorage, id)
   }
   async function settleIndependentActivation(id: string) {
     if (!repository) return
-    const installation = (await repository.list()).find(
-      (entry) => entry.id === id,
-    )
-    if (!installation?.activationPending) return
-    const status = host.state.statuses.find((entry) => entry.id === id)
-    if (status?.state === "enabled") {
-      await repository.markActivationHealthy(id)
-      return
-    }
-    if (status?.state !== "error" || !installation.previousDigest) return
-
-    const snapshot = await repository.dataSnapshot(
+    const result = await settleActivation({
+      repository,
+      storage: localStorage,
+      host,
       id,
-      installation.previousDigest,
-    )
-    await host.disable(id)
-    if (!snapshot)
-      throw new Error(
-        `Plugin ${id} cannot restore data safely because its previous snapshot is missing`,
-      )
-    restorePluginData(id, snapshot)
-    await repository.rollbackActivation(
-      id,
-      "Plugin setup failed; the previous package and saved data were restored",
-    )
+    })
+    if (result !== "rolled-back") return
     await refreshIndependent()
     const restored = independent.installations.find((entry) => entry.id === id)
     const config = state.config.find((entry) => entry.id === id)

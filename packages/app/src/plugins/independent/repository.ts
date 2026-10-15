@@ -11,7 +11,7 @@ export const PLUGIN_DATABASE_VERSION = 1;
 const MODULES = "modules";
 const INSTALLATIONS = "installations";
 const CHANNEL = "opencode-front:independent-plugins:v1";
-const MAX_SNAPSHOT_BYTES = 4 * 1024 * 1024;
+export const PLUGIN_DATA_SNAPSHOT_LIMIT = 4 * 1024 * 1024;
 
 export type StoredPluginModule = {
   digest: string;
@@ -234,7 +234,7 @@ function validateDataSnapshot(
   }
   if (
     new TextEncoder().encode(JSON.stringify(snapshot.values)).byteLength >
-    MAX_SNAPSHOT_BYTES
+    PLUGIN_DATA_SNAPSHOT_LIMIT
   )
     throw new Error("Plugin data snapshot exceeds the safe size limit");
 }
