@@ -89,6 +89,17 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 - 限制：IP-02 提供存储 API，但 UI 尚未接入；IP-03/IP-04 完成前用户不能从设置安装或管理独立模块。卸载暂不处理插件业务数据，留在 IP-04。
 - 回退：`git revert 2703041`。
 
+### IP-03 动态注册与资源生命周期
+
+- 实现提交：`101bf43` (`feat(plugins): load independent modules at runtime`)
+- 验证：`bun run check`（76 项、383 次断言通过；包含 upstream 边界检查与全部类型检查）；`bun run build` 通过。定向加载器、资源与 SDK 生命周期测试 22 项、97 次断言通过。
+- 运行时：启动时从 IndexedDB 恢复安装定义；模板产物经 Blob ESM 加载并通过 `Symbol.for("opencode-front.plugin-runtime.v1")` 复用宿主 Solid runtime。动态定义列表可响应新增／移除，停用时清理命令、面板、slot、Solid owner、CSS link 与资源 URL。
+- 资源：样式使用 CSS AST 做插件 ID 作用域，拒绝 `@import`、未知全局 at-rule 和远程 CSS 资源；插件只能用清单声明的资源路径，所有对象 URL 由实例统一释放。数字开头的合法 ID 也会被正确引用。
+- 示例：模板插件现展示命令、面板、slot、CSS、图片和持久化数据，独立构建仍不会被宿主打包。
+- 宿主构建产物文件树摘要：`a1bc9ddf22e7ef520e1d28e0cf82d47dc4dbfec6c6cd84b453e683318a985951`。生产构建含现有 `::highlight()` CSS 优化警告和 chunk 体积提示；构建成功。实际打包的 macOS／Windows 验收仍列入 IP-05。
+- 限制：管理界面尚未提供安装 ZIP、启停与卸载交互；这在 IP-04 完成前仍不可由用户直接安装。Blob ESM 以信任的同页面代码运行，不提供权限沙箱。
+- 回退：`git revert 101bf43`。
+
 ## 实施记录模板
 
 每项完成后追加：任务编号、实现提交、测试命令与结果、插件 ZIP 摘要、宿主构建摘要、平台与版本、已知限制、回退步骤。计划文档当前不包含任何完成验收声明。
