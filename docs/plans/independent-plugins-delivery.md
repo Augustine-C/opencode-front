@@ -118,6 +118,14 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 - 固定宿主产物文件树 SHA-256：`93995dc1c773b05e4bc9dbd62cdd0da4f225d28b666a83a83f8e03fa1d457ff3`；模板 ZIP 构建前后摘要一致。每次完整重建会受 build provenance 影响，所以应比较同一次验收的前后摘要。
 - 范围限制：该夹具使用真实包解析器、IndexedDB 仓库、运行时加载器与资源所有者，但不驱动产品设置 UI。当前环境没有图形显示服务器或 Xvfb，因此 Linux Electron E2E 未运行；实体 macOS／Windows Electron 安装包验收也未覆盖，IP-05 保持未勾选。
 
+### IP-06 自动回退与数据迁移
+
+- 实现提交：`61e37c4` (`feat(plugins): add versioned data rollback for updates`)、`21a7dcc` (`test(plugins): cover version activation recovery flow`)
+- 契约：SDK 暴露 `context.storage.version`，对应包清单的 `storageVersion`（默认 1）；插件负责按该版本迁移自己的稳定命名空间。切换版本前，宿主把插件 namespaced localStorage 快照（最多 4 MiB）与 IndexedDB 活动指针一起保存。候选首次运行前恢复旧版本数据供迁移；已有目标摘要快照时恢复目标数据。缺少或损坏必需快照时拒绝执行／自动回退，并向插件状态报告原因。
+- 失败恢复：候选 setup 成功后清除激活标记；失败时先恢复上一版本数据，再原子回退包指针，记录失败版本与恢复详情，清理候选模块并重新启用旧定义。激活检查未完成期间禁止再安装或切换版本；手动恢复也要求目标包的数据快照。
+- 验证：`bun run check`（81 项、418 次断言通过，含快照捕获／恢复顺序、失败 setup 协调、跨插件 key 隔离与仓库指针回退）；`bun run build` 通过；Chromium 151.0.7922.173 独立包验收通过，页面错误为零，宿主构建后文件树摘要 `00f82e7437cbd6c6041adf082864b1787dfce9d56f5cdd369127ada71a4fe8e0` 在模板 ZIP 构建后不变。
+- 限制：回滚只恢复宿主管理的本插件 localStorage 命名空间；服务端写入、网络请求、插件直接使用的 IndexedDB、文件和其他外部副作用不能由宿主撤销。实际 Electron 平台覆盖仍按 IP-05 记录。
+
 ## 实施记录模板
 
 每项完成后追加：任务编号、实现提交、测试命令与结果、插件 ZIP 摘要、宿主构建摘要、平台与版本、已知限制、回退步骤。计划文档当前不包含任何完成验收声明。

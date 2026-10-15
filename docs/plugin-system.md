@@ -51,6 +51,14 @@ Independent plugin packages can now be installed from the Frontend plugins manag
 
 Independent modules run as trusted code in the host page. Their declared capabilities explain API needs but do not sandbox or restrict JavaScript access. Package preview does not execute code; after installation, enabling a module loads it in the host page. The package builder embeds Solid imports as references to the host's shared runtime; it rejects emitted ESM imports and chunks. Package contents must use a new SemVer version whenever any file changes. Startup recovery can restart once with independent plugins skipped; they remain installed and can be enabled again from settings.
 
+### Independent package storage migration and recovery
+
+The optional manifest `storageVersion` defaults to `1` and is exposed as `context.storage.version`. It describes the data schema expected by that package; it does not run a migration automatically. Keep the plugin's storage namespace stable and store a schema marker in that namespace. On setup, compare the saved schema marker with `context.storage.version`, migrate the plugin's own keys, and update the marker only after the migration succeeds. Make migrations safe to retry because the host may restart while a package is being activated.
+
+Before switching an installed package, the host saves up to 4 MiB of that plugin's namespaced localStorage values in IndexedDB, keyed by package digest and schema version. When activating a package with a saved snapshot, the host restores that package's data first. Otherwise it restores the current package's snapshot before the new setup runs, so the new package can migrate from the previous schema. A setup failure restores the previous package pointer and its snapshot automatically; the manager records the failed version and recovery result. Manual restore follows the same snapshot rules. If the required snapshot is missing or invalid, activation or automatic rollback is refused rather than silently discarding data.
+
+These guarantees cover only the host-managed plugin localStorage namespace. They cannot reverse writes to the connected OpenCode service, other network APIs, files, IndexedDB used directly by plugin code, or other external systems. Plugins must make those operations idempotent or provide their own compensating recovery. Staging an update still does not execute it.
+
 ## Slot contract
 
 | Slot                   | Input                                                         | Host position                              |
