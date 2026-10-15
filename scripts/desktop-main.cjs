@@ -1,32 +1,14 @@
 const { app, BrowserWindow, protocol, net, shell, screen } = require("electron")
 const { readWindowState, trackWindowState } = require("./desktop-window-state.cjs")
+const { createRendererHandler, registerRendererScheme } = require("./desktop-protocol.cjs")
 const path = require("node:path")
-const { pathToFileURL } = require("node:url")
-const fs = require("node:fs")
 
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: "oc",
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-    },
-  },
-])
+registerRendererScheme(protocol)
 const root = path.resolve(__dirname, "../packages/app/dist")
 app.setName("OpenCode Front")
 app.setPath("userData", path.join(app.getPath("appData"), "opencode-front"))
 app.whenReady().then(() => {
-  protocol.handle("oc", (request) => {
-    const url = new URL(request.url)
-    if (url.hostname !== "renderer") return new Response("Forbidden", { status: 403 })
-    const file = path.resolve(root, `.${decodeURIComponent(url.pathname)}`)
-    if (file !== root && !file.startsWith(root + path.sep)) return new Response("Forbidden", { status: 403 })
-    const target = fs.existsSync(file) && fs.statSync(file).isFile() ? file : path.join(root, "index.html")
-    return net.fetch(pathToFileURL(target).toString())
-  })
+  protocol.handle("oc", createRendererHandler(root, net))
   function open() {
     const file = path.join(app.getPath("userData"), "window-state.json")
     const primary = screen.getPrimaryDisplay()
