@@ -65,6 +65,21 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 6. 按安装仓库、加载器、管理界面和 SDK 分成可回退的 Conventional Commits。
 7. 提交／推送与宿主发布分开处理；实现后首次分发加载器需升级宿主一次，之后兼容插件模块可独立分发。
 
+## 已完成任务记录
+
+### IP-00 加载与共享运行时可行性验证
+
+见[运行时决策记录](independent-plugins-runtime.md)；实现提交 `e884497`。Chromium 151 与 Linux Electron 44.4.5 的 `oc://renderer` 夹具验证通过。macOS／Windows 实际打包验证列入 IP-05。
+
+### IP-01 清单校验与独立构建模板
+
+- 实现提交：`e2bd382` (`feat(plugins): add independent plugin package tooling`)
+- 验证：`bun test --conditions=browser packages/app/test/independent-plugin-package.test.ts`（5 项、29 次断言通过）；模板 `typecheck` 与 `build` 通过；`bun run check`（64 项、327 次断言通过）；`bun run build` 通过；`bun run upstream:check` 无边界错误。
+- 独立包：`example.hello@1.0.0`，1,882 字节；ZIP SHA-256 `04b93c969a96c833eb04104266ff99f753f6e5aca55d59112235fc6711074e78`；宿主内容摘要 `1f566dd05641f374be51d8cad1792ceca104b34aaaf5c5e2e55542bdf0090a8b`。包由宿主解析器读取，含 `main.js`、`styles/main.css`、`assets/hello.svg`。
+- 宿主构建：Linux x86_64，Bun 1.4.3；产物文件树 SHA-256 `c6d32bfa2ef5f44122a7e843a5f52810005fb17a17deb8e05e858d226cf7d08a`。正式构建通过；现有 CSS `::highlight()` 规则产生优化警告。
+- 结果：v1 清单、静态预览解析、ZIP 边界检查、内容寻址摘要和独立模板已交付。安装仓库、加载器与管理界面仍在 IP-02～IP-04；当前宿主还不能导入 ZIP。模块是受信任的同页面代码，不具备权限隔离。macOS／Windows 留待 IP-05。
+- 回退：`git revert e2bd382`。
+
 ## 实施记录模板
 
 每项完成后追加：任务编号、实现提交、测试命令与结果、插件 ZIP 摘要、宿主构建摘要、平台与版本、已知限制、回退步骤。计划文档当前不包含任何完成验收声明。
