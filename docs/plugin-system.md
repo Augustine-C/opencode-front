@@ -47,9 +47,9 @@ Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `cre
 
 ## Independent ZIP packages
 
-The independent package plan is being implemented in stages. IP-01 adds the v1 manifest/type contract and a standalone build template at [`examples/independent-plugin-template`](../examples/independent-plugin-template/README.md); it produces a self-contained ZIP without including the plugin in the host build. The host does not yet expose installation until the storage, loader, and manager stages land. See the [package format and compatibility plan](plans/independent-plugins-design.md).
+Independent plugin packages can now be installed from the Frontend plugins manager. The manager statically validates a ZIP, previews its manifest without running its code, and stores it in IndexedDB. New packages can be enabled immediately; updates stay staged until explicitly activated. The previous package can be restored manually, and uninstall can optionally remove the plugin's local data. The standalone template at [`examples/independent-plugin-template`](../examples/independent-plugin-template/README.md) produces a self-contained ZIP that is not included in the host build. See the [package format and compatibility plan](plans/independent-plugins-design.md).
 
-Independent modules run as trusted code in the host page. Their declared capabilities explain API needs but do not sandbox or restrict JavaScript access. The package builder embeds Solid imports as references to the host's shared runtime; it rejects emitted ESM imports and chunks. Package contents must use a new SemVer version whenever any file changes.
+Independent modules run as trusted code in the host page. Their declared capabilities explain API needs but do not sandbox or restrict JavaScript access. Package preview does not execute code; after installation, enabling a module loads it in the host page. The package builder embeds Solid imports as references to the host's shared runtime; it rejects emitted ESM imports and chunks. Package contents must use a new SemVer version whenever any file changes. Startup recovery can restart once with independent plugins skipped; they remain installed and can be enabled again from settings.
 
 ## Slot contract
 
