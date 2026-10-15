@@ -51,45 +51,47 @@ export function attachPluginPanels(input: {
       if (registrations.has(key)) continue
       const tabs = new Map<string, PanelTab>()
       const available = () => input.host.state.availablePanels.find((panel) => id(panel) === key)
-      const removePanel = input.context.add(Panel, {
-        id: key,
-        region: "side",
-        transient: true,
-        get mobile() {
-          return { title: available()?.title ?? definition.title, order: 50, kind: "menu" as const }
-        },
-        list(props) {
-          const view = props.session
-          const panel = find(key, view)
-          if (!panel) {
-            tabs.delete(view.key)
-            return []
-          }
-          let tab = tabs.get(view.key)
-          if (!tab) {
-            tab = {
-              id: key,
-              get title() {
-                return find(key, view)?.title ?? definition.title
-              },
+      // Both contributions must outlive this reconciliation effect's next run: the host withdraws
+      // whatever was registered under the effect's owner whenever it re-runs, and opening a panel
+      // re-runs it through the host's panels store.
+      const remove = createRoot((dispose) => {
+        const removePanel = input.context.add(Panel, {
+          id: key,
+          region: "side",
+          transient: true,
+          get mobile() {
+            return { title: available()?.title ?? definition.title, order: 50, kind: "menu" as const }
+          },
+          list(props) {
+            const view = props.session
+            const panel = find(key, view)
+            if (!panel) {
+              tabs.delete(view.key)
+              return []
             }
-            tabs.set(view.key, tab)
-          }
-          return [tab]
-        },
-        render: (props) => input.render(() => find(key, props.session)),
-        close: (props) => {
-          const panel = find(key, props.session)
-          if (panel) input.host.dismissPanel(panel)
-        },
-        focus: (props) => {
-          const panel = find(key, props.session)
-          if (panel) input.host.selectPanel(panel)
-        },
-      })
-      // Its reactive contribution must outlive this reconciliation effect's next run.
-      const removeMenu = createRoot((dispose) => {
-        const remove = input.context.add(MenuItem, () => {
+            let tab = tabs.get(view.key)
+            if (!tab) {
+              tab = {
+                id: key,
+                get title() {
+                  return find(key, view)?.title ?? definition.title
+                },
+              }
+              tabs.set(view.key, tab)
+            }
+            return [tab]
+          },
+          render: (props) => input.render(() => find(key, props.session)),
+          close: (props) => {
+            const panel = find(key, props.session)
+            if (panel) input.host.dismissPanel(panel)
+          },
+          focus: (props) => {
+            const panel = find(key, props.session)
+            if (panel) input.host.selectPanel(panel)
+          },
+        })
+        const removeMenu = input.context.add(MenuItem, () => {
           const panel = available()
           if (!panel) return undefined
           return {
@@ -102,14 +104,12 @@ export function attachPluginPanels(input: {
           }
         })
         return () => {
-          void remove()
+          void removePanel()
+          void removeMenu()
           dispose()
         }
       })
-      registrations.set(key, () => {
-        void removePanel()
-        void removeMenu()
-      })
+      registrations.set(key, remove)
     }
   })
   // Hold requests while desktop storage or a re-authenticated session location is unresolved.
