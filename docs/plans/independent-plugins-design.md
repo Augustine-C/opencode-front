@@ -68,6 +68,8 @@ service-dashboard.zip
 
 稳定 SDK 提供宿主已有 `context.ui.command`、`context.ui.panel.register/open`、插槽、存储、连接与会话 accessors。对外导出的类型也需要可独立获取，避免模板依赖 monorepo 私有路径。第一阶段仅提供明确受支持的 UI 原语；不暴露整个上游 UI 内部模块。
 
+自定义面板的产品落点为现有 Side Panel：ZIP 的 setup 注册面板入口，`session.panel` 提供内容，现有 `plugin-panels.ts` 桥接层将其接入原生 `Panel(region: "side")`、菜单与布局。面板复用已有标签和会话生命周期；独立打包不改变面板所属的容器。固定定位的页面卡片不能替代此接入方式的产品验收。
+
 ## 模块与资源加载
 
 首选通过保存的入口字节创建模块 Blob URL 后 `import()`，再调用工厂注册定义。必须先在实际 Web CSP 与 Electron `oc://renderer` 上验证，不以关闭 sandbox、启用 Node integration、`unsafe-eval` 或禁用浏览器安全机制作为解决方案。若该路径不可用，应记录原因并评审受控资源路由方案，再冻结格式。
