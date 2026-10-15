@@ -49,6 +49,8 @@ Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `cre
 
 Independent plugin packages can now be installed from the Frontend plugins manager. The manager statically validates a ZIP, previews its manifest without running its code, and stores it in IndexedDB. New packages can be enabled immediately; updates stay staged until explicitly activated. The previous package can be restored manually, and uninstall can optionally remove the plugin's local data. The standalone template at [`examples/independent-plugin-template`](../examples/independent-plugin-template/README.md) produces a self-contained ZIP that is not included in the host build. See the [package format and compatibility plan](plans/independent-plugins-design.md).
 
+Vite development builds also expose **Reload local plugin ZIP** for enabled packages. Rebuild the plugin ZIP, select it in the manager, and the host activates a fresh module instance without rebuilding itself. Production builds hide and reject this development path.
+
 Independent modules run as trusted code in the host page. Their declared capabilities explain API needs but do not sandbox or restrict JavaScript access. Package preview does not execute code; after installation, enabling a module loads it in the host page. The package builder embeds Solid imports as references to the host's shared runtime; it rejects emitted ESM imports and chunks. Package contents must use a new SemVer version whenever any file changes. Startup recovery can restart once with independent plugins skipped; they remain installed and can be enabled again from settings.
 
 ### Independent package storage migration and recovery

@@ -126,6 +126,15 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 - 验证：`bun run check`（81 项、418 次断言通过，含快照捕获／恢复顺序、失败 setup 协调、跨插件 key 隔离与仓库指针回退）；`bun run build` 通过；Chromium 151.0.7922.173 独立包验收通过，页面错误为零，宿主构建后文件树摘要 `00f82e7437cbd6c6041adf082864b1787dfce9d56f5cdd369127ada71a4fe8e0` 在模板 ZIP 构建后不变。
 - 限制：回滚只恢复宿主管理的本插件 localStorage 命名空间；服务端写入、网络请求、插件直接使用的 IndexedDB、文件和其他外部副作用不能由宿主撤销。实际 Electron 平台覆盖仍按 IP-05 记录。
 
+### IP-07 开发重载与开发者文档
+
+- 实现提交：`c4ecd65` (`feat(plugins): add development-only package reload`)
+- 开发流程：Vite 开发构建的已启用插件行提供 **Reload local plugin ZIP**。开发者重新构建独立模板 ZIP 并选择文件即可；宿主用包内容摘要和单调递增的本地构建标识生成内部 SemVer build metadata，不必修改模板版本。连续选择会替换待激活包，然后走 IP-06 快照、启用和失败恢复流程；生产构建隐藏入口，仓库 API 也拒绝开发重载。
+- 生命周期验收：测试使用真实 ZIP 解析、fake IndexedDB、Blob 模块加载器和插件 host，连续重载两个同 manifest 版本的构建。每轮只保留一个命令、面板和插槽，标题和持久化值更新为新模块，旧实例 cleanup 各运行一次；同一候选尚未激活时再次导入会回收旧候选。错误仍沿用安装插件的 setup 状态与诊断展示。
+- 验证：`bun run check`（83 项、440 次断言通过）；`bun run build` 通过；Chromium 151.0.7922.173 独立包验收通过且无页面错误，宿主文件树摘要 `8be862ace0f870c4c2801d4b010b675c2b041c330c9f9471039df99f9ac10ca4` 在插件 ZIP 构建后不变。
+- 文档：[独立模板 README](../../examples/independent-plugin-template/README.md) 记录 monorepo 下的本地打包和热重载流程；[插件系统说明](../plugin-system.md) 说明开发入口仅用于 Vite 开发构建。
+- 限制：重载是重新选择已生成的 ZIP，不监控文件系统或自动重建插件。Electron 实机和 macOS／Windows 覆盖仍未完成，IP-05 保持未勾选。
+
 ## 实施记录模板
 
 每项完成后追加：任务编号、实现提交、测试命令与结果、插件 ZIP 摘要、宿主构建摘要、平台与版本、已知限制、回退步骤。计划文档当前不包含任何完成验收声明。

@@ -74,6 +74,6 @@
 - [x] IP-04 插件管理界面与启动恢复（`b10200c`；完整验证见[交付记录](independent-plugins-delivery.md)）
 - [ ] IP-05 独立模块端到端验收（`eef551e`；Chromium 通过，桌面验收待完成；见[交付记录](independent-plugins-delivery.md)）
 - [x] IP-06 更新回退与数据迁移（`61e37c4`、`21a7dcc`；完整验证与限制见[交付记录](independent-plugins-delivery.md)）
-- [ ] IP-07 开发重载与开发者文档
+- [x] IP-07 开发重载与开发者文档（`c4ecd65`；完整验证见[交付记录](independent-plugins-delivery.md)）
 
 代码按 IP 阶段分别提交到开发分支；本计划不要求变更版本号或创建 Release。
