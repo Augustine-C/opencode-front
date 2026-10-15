@@ -23,6 +23,15 @@ export function createCatalog(_language: ReturnType<typeof useLanguage>): Defini
 
 Both adapters use `@opencode/frontend-plugin` and the host's `solid-js` runtime. Keep Solid as a host peer; do not bundle a second runtime. Importing an adapter makes it available in **Settings → Frontend plugins**; the user still chooses whether to enable it.
 
+## Independent packages
+
+Both examples are also available as independently installable plugin packages, built from the same sources and installable through **Settings → Frontend plugins** without rebuilding the host:
+
+- `examples/independent-plugin-panel-demo` builds `example.panel-demo`
+- `examples/independent-plugin-third-party-status` builds `example.third-party-status`
+
+See each package's README for build instructions and option syntax.
+
 ## Third-party status options
 
 Enable the adapter with a JSON or JSONC plugin configuration:

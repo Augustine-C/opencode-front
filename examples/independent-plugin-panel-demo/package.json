@@ -1,0 +1,16 @@
+{
+  "name": "panel-demo-independent-plugin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "typecheck": "tsgo --noEmit"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20251207.1",
+    "acorn": "8.18.0",
+    "solid-js": "1.9.15",
+    "vite": "8.2.2",
+    "vite-plugin-solid": "2.11.14"
+  }
+}

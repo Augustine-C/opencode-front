@@ -8,11 +8,9 @@ export function setup(context: Context) {
   )
   const removeCommand = context.ui.command({
     id: "hello",
-    title: "Say hello",
+    title: "Open Hello panel",
     run() {
-      const next = greetings() + 1
-      setGreetings(next)
-      context.storage.set("greetings", next)
+      context.ui.panel.open("hello")
     },
   })
   const removePanel = context.ui.panel.register({
