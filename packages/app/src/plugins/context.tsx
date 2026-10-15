@@ -212,6 +212,64 @@ function createPlugins() {
     }
     return [...result.values()]
   }
+  function persistConfig(entries: ResolvedPlugin[]) {
+    localStorage.setItem(
+      configKey,
+      JSON.stringify({
+        plugins: entries.map((entry) => ({
+          package: `${entry.enabled ? "" : "-"}${entry.id}`,
+          options: entry.options,
+        })),
+      }),
+    )
+  }
+  const independentSyncs = new Map<string, Promise<void>>()
+  function syncIndependent(id: string) {
+    const existing = independentSyncs.get(id)
+    if (existing) return existing
+    const operation = (async () => {
+      const installation = independent.installations.find(
+        (entry) => entry.id === id,
+      )
+      if (!installation) {
+        if (builtins.some((plugin) => plugin.id === id)) return
+        const entries = state.config.filter((entry) => entry.id !== id)
+        if (entries.length !== state.config.length) {
+          setState("config", entries)
+          persistConfig(entries)
+        }
+        return
+      }
+      if (!installation?.healthy) return
+      const current = state.config.find((entry) => entry.id === id)
+      const entry = current
+        ? { ...current, enabled: installation.enabled }
+        : {
+            id,
+            package: id,
+            options: {},
+            enabled: installation.enabled,
+          }
+      const entries = current
+        ? state.config.map((value) => (value.id === id ? entry : value))
+        : [...state.config, entry]
+      if (!current || current.enabled !== installation.enabled) {
+        setState("config", entries)
+        persistConfig(entries)
+      }
+      const status = host.state.statuses.find((value) => value.id === id)?.state
+      if (installation.enabled) {
+        if (status === "disabled") await host.enable(id, entry.options)
+      } else if (status !== "disabled") {
+        await host.disable(id)
+      }
+    })()
+    const tracked = operation.finally(() => {
+      if (independentSyncs.get(id) === tracked) independentSyncs.delete(id)
+    })
+    independentSyncs.set(id, tracked)
+    return tracked
+  }
   // Serialize changes so an earlier asynchronous setup cannot overwrite the latest configuration.
   let pending = Promise.resolve()
   function save(entries: ResolvedPlugin[]) {
@@ -224,20 +282,13 @@ function createPlugins() {
             const configured = entries.find(
               (entry) => entry.id === installed.id,
             )
-            if (configured && configured.enabled !== installed.enabled) {
-              await repository.setEnabled(installed.id, configured.enabled)
+            const enabled = configured?.enabled ?? false
+            if (enabled !== installed.enabled) {
+              await repository.setEnabled(installed.id, enabled)
             }
           }
         }
-        localStorage.setItem(
-          configKey,
-          JSON.stringify({
-            plugins: entries.map((entry) => ({
-              package: `${entry.enabled ? "" : "-"}${entry.id}`,
-              options: entry.options,
-            })),
-          }),
-        )
+        persistConfig(entries)
         setState("config", entries)
         await apply(entries)
       })
@@ -270,10 +321,13 @@ function createPlugins() {
       try {
         repository = createIndependentPluginRepository()
         exposeSharedPluginRuntime()
-        unsubscribeRepository = repository.subscribe(() => {
-          void refreshIndependent().catch((error) =>
-            setIndependent("storageError", String(error)),
-          )
+        unsubscribeRepository = repository.subscribe((id) => {
+          void refreshIndependent()
+            .then(async () => {
+              await pending
+              await syncIndependent(id)
+            })
+            .catch((error) => setIndependent("storageError", String(error)))
         })
         await refreshIndependent()
       } catch (error) {
@@ -348,6 +402,59 @@ function createPlugins() {
       const result = adaptConfig(value, available())
       setState("unsupported", result.unsupported)
       return save(result.plugins)
+    },
+    async installIndependent(file: Blob) {
+      if (!repository) throw new Error("Plugin storage is unavailable")
+      const preview = await repository.preview(file)
+      if (preview.conflict) throw new Error(preview.conflict)
+      if (builtins.some((plugin) => plugin.id === preview.manifest.id))
+        throw new Error("An installed frontend plugin already uses this ID")
+      const installed = await repository.install(file)
+      await refreshIndependent()
+      return installed
+    },
+    async activateIndependent(id: string) {
+      if (!repository) throw new Error("Plugin storage is unavailable")
+      await pending.catch(() => {})
+      await host.disable(id)
+      await repository.activateCandidate(id)
+      await refreshIndependent()
+      await syncIndependent(id)
+    },
+    async restoreIndependent(id: string) {
+      if (!repository) throw new Error("Plugin storage is unavailable")
+      await pending.catch(() => {})
+      await host.disable(id)
+      await repository.restorePrevious(id)
+      await refreshIndependent()
+      await syncIndependent(id)
+    },
+    async discardIndependentUpdate(id: string) {
+      if (!repository) throw new Error("Plugin storage is unavailable")
+      return repository.discardCandidate(id)
+    },
+    async removeIndependent(id: string, removeData: boolean) {
+      if (!repository) throw new Error("Plugin storage is unavailable")
+      await pending.catch(() => {})
+      await host.disable(id)
+      await host.unregister(id)
+      if (!(await repository.remove(id))) return false
+      const entries = state.config.filter((entry) => entry.id !== id)
+      setState("config", entries)
+      persistConfig(entries)
+      if (removeData) {
+        const prefix = `opencode-front.plugin.${id}.`
+        for (let index = localStorage.length - 1; index >= 0; index--) {
+          const key = localStorage.key(index)
+          if (key?.startsWith(prefix)) localStorage.removeItem(key)
+        }
+      }
+      await refreshIndependent()
+      return true
+    },
+    async resumeIndependent() {
+      setIndependent("skippedForRecovery", false)
+      await apply(state.config)
     },
     attachSettings(open: () => void) {
       openSettings = open

@@ -426,6 +426,66 @@ test("plugin installation is atomic, idempotent, and preserves the active packag
   }
 });
 
+test("plugin versions can be promoted, restored, and discarded without losing the active module", async () => {
+  const setup = repository();
+  const store = setup.create();
+  try {
+    const first = await store.install(zip(packageEntries()));
+    await store.setEnabled(first.id, true);
+    const second = await store.install(
+      zip(
+        packageEntries("export const setup = () => 'v2'", {
+          version: "2.0.0",
+        }),
+      ),
+    );
+    await store.activateCandidate(first.id);
+    expect((await store.active(first.id))?.module.manifest.version).toBe(
+      "2.0.0",
+    );
+    expect(
+      (await store.list()).find((entry) => entry.id === first.id),
+    ).toMatchObject({
+      activeDigest: second.candidateDigest,
+      previousDigest: first.activeDigest,
+      enabled: true,
+      healthy: true,
+    });
+
+    const third = await store.install(
+      zip(
+        packageEntries("export const setup = () => 'v3'", {
+          version: "3.0.0",
+        }),
+      ),
+    );
+    await store.restorePrevious(first.id);
+    expect((await store.active(first.id))?.module.manifest.version).toBe(
+      "1.2.3",
+    );
+    const restored = (await store.list()).find(
+      (entry) => entry.id === first.id,
+    );
+    expect(restored).toMatchObject({
+      activeDigest: first.activeDigest,
+      previousDigest: second.candidateDigest,
+      candidateDigest: third.candidateDigest,
+      enabled: true,
+    });
+
+    expect(await store.discardCandidate(first.id)).toBe(true);
+    expect(
+      (await store.list()).find((entry) => entry.id === first.id)
+        ?.candidateDigest,
+    ).toBeUndefined();
+    await expect(store.module(third.candidateDigest!)).rejects.toThrow(
+      "missing or corrupt",
+    );
+  } finally {
+    await store.close();
+  }
+});
+
 test("plugin repository serializes concurrent writers and broadcasts committed changes", async () => {
   const setup = repository(new IDBFactory(), true);
   const first = setup.create();

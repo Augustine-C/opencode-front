@@ -30,6 +30,7 @@ export type PluginInstallation = {
 };
 
 export type PluginInstallationInfo = PluginInstallation & {
+  name?: string;
   version?: string;
   candidateVersion?: string;
   previousVersion?: string;
@@ -284,6 +285,7 @@ export function createIndependentPluginRepository(
                   : undefined;
       return {
         ...record,
+        name: active?.manifest.name,
         version: active?.manifest.version,
         candidateVersion: candidate?.manifest.version,
         previousVersion: previous?.manifest.version,
@@ -311,7 +313,8 @@ export function createIndependentPluginRepository(
     if (!record) return;
     const module = await readModule(record.activeDigest);
     if (
-      !(await verifyModule(module!, record.activeDigest)) ||
+      !module ||
+      !(await verifyModule(module, record.activeDigest)) ||
       module?.manifest.id !== id
     ) {
       throw new Error(`Installed plugin ${id} is missing or corrupt`);
@@ -608,6 +611,154 @@ export function createIndependentPluginRepository(
     });
   }
 
+  function collectUnreferenced(transaction: IDBTransaction) {
+    const installations = transaction.objectStore(INSTALLATIONS);
+    const modules = transaction.objectStore(MODULES);
+    const records = installations.getAll() as IDBRequest<PluginInstallation[]>;
+    records.addEventListener(
+      "success",
+      () => {
+        const referenced = new Set(
+          records.result.flatMap((record) =>
+            [
+              record.activeDigest,
+              record.candidateDigest,
+              record.previousDigest,
+            ].filter((digest): digest is string => !!digest),
+          ),
+        );
+        const all = modules.getAll() as IDBRequest<StoredPluginModule[]>;
+        all.addEventListener(
+          "success",
+          () => {
+            for (const module of all.result) {
+              if (!referenced.has(module.digest)) modules.delete(module.digest);
+            }
+          },
+          { once: true },
+        );
+      },
+      { once: true },
+    );
+  }
+
+  async function switchVersion(
+    id: string,
+    direction: "candidate" | "previous",
+  ) {
+    const before = await loadRecord(id);
+    if (!before) throw new Error(`Plugin installation was not found: ${id}`);
+    const activeModule = await readModule(before.activeDigest);
+    if (
+      !activeModule ||
+      !(await verifyModule(activeModule, before.activeDigest)) ||
+      activeModule.manifest.id !== id
+    ) {
+      throw new Error(`Plugin ${id} active version is missing or corrupt`);
+    }
+    const targetDigest =
+      direction === "candidate"
+        ? before.candidateDigest
+        : before.previousDigest;
+    if (!targetDigest)
+      throw new Error(
+        direction === "candidate"
+          ? `Plugin ${id} has no staged update`
+          : `Plugin ${id} has no previous version to restore`,
+      );
+    const target = await readModule(targetDigest);
+    if (
+      !target ||
+      !(await verifyModule(target, targetDigest)) ||
+      target.manifest.id !== id
+    ) {
+      throw new Error(`Plugin ${id} version is missing or corrupt`);
+    }
+
+    const execute = async () => {
+      const db = await database;
+      return new Promise<PluginInstallation>((resolve, reject) => {
+        const transaction = db.transaction(
+          [MODULES, INSTALLATIONS],
+          "readwrite",
+        );
+        let result: PluginInstallation | undefined;
+        let failure: Error | undefined;
+        transaction.addEventListener(
+          "complete",
+          () => {
+            if (!result)
+              reject(
+                failure ?? new Error(`Plugin version switch failed: ${id}`),
+              );
+            else {
+              notify(id);
+              resolve(result);
+            }
+          },
+          { once: true },
+        );
+        transaction.addEventListener(
+          "abort",
+          () => reject(storageFailure(failure ?? transaction.error)),
+          { once: true },
+        );
+        transaction.addEventListener(
+          "error",
+          () => reject(storageFailure(failure ?? transaction.error)),
+          { once: true },
+        );
+        const store = transaction.objectStore(INSTALLATIONS);
+        const request = store.get(id) as IDBRequest<
+          PluginInstallation | undefined
+        >;
+        request.addEventListener(
+          "success",
+          () => {
+            const current = request.result;
+            const currentTarget =
+              direction === "candidate"
+                ? current?.candidateDigest
+                : current?.previousDigest;
+            if (
+              !current ||
+              current.activeDigest !== before.activeDigest ||
+              currentTarget !== targetDigest
+            ) {
+              failure = new Error(
+                `Plugin ${id} changed in another window; refresh and retry`,
+              );
+              transaction.abort();
+              return;
+            }
+            result = {
+              ...current,
+              activeDigest: targetDigest,
+              previousDigest: current.activeDigest,
+              ...(direction === "candidate"
+                ? { candidateDigest: undefined }
+                : {}),
+              updatedAt: now(),
+            };
+            try {
+              store.put(result);
+              collectUnreferenced(transaction);
+            } catch (error) {
+              failure =
+                error instanceof Error ? error : new Error(String(error));
+              transaction.abort();
+            }
+          },
+          { once: true },
+        );
+      });
+    };
+    const locks =
+      typeof navigator === "undefined" ? undefined : navigator.locks;
+    if (!locks) return execute();
+    return locks.request(`opencode-front:plugin-install:${id}`, execute);
+  }
+
   return {
     async preview(file: Blob) {
       const pkg = await inspectPluginPackage(file);
@@ -647,6 +798,65 @@ export function createIndependentPluginRepository(
     },
     list,
     active,
+    activateCandidate(id: string) {
+      return switchVersion(id, "candidate");
+    },
+    restorePrevious(id: string) {
+      return switchVersion(id, "previous");
+    },
+    async discardCandidate(id: string) {
+      const db = await database;
+      return new Promise<boolean>((resolve, reject) => {
+        const transaction = db.transaction(
+          [MODULES, INSTALLATIONS],
+          "readwrite",
+        );
+        let changed = false;
+        let failure: Error | undefined;
+        transaction.addEventListener(
+          "complete",
+          () => {
+            if (changed) notify(id);
+            resolve(changed);
+          },
+          { once: true },
+        );
+        transaction.addEventListener(
+          "abort",
+          () => reject(storageFailure(failure ?? transaction.error)),
+          { once: true },
+        );
+        transaction.addEventListener(
+          "error",
+          () => reject(storageFailure(failure ?? transaction.error)),
+          { once: true },
+        );
+        const store = transaction.objectStore(INSTALLATIONS);
+        const request = store.get(id) as IDBRequest<
+          PluginInstallation | undefined
+        >;
+        request.addEventListener(
+          "success",
+          () => {
+            if (!request.result?.candidateDigest) return;
+            changed = true;
+            try {
+              store.put({
+                ...request.result,
+                candidateDigest: undefined,
+                updatedAt: now(),
+              });
+              collectUnreferenced(transaction);
+            } catch (error) {
+              failure =
+                error instanceof Error ? error : new Error(String(error));
+              transaction.abort();
+            }
+          },
+          { once: true },
+        );
+      });
+    },
     setEnabled,
     async module(digest: string) {
       const stored = await readModule(digest);
