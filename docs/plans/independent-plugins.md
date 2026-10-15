@@ -2,7 +2,7 @@
 
 - 建立日期：2026-10-15
 - 基线：`4b1c2e8` / OpenCode Front 2.0.29.0
-- 状态：实施中；IP-00～IP-04 已完成，正在推进 IP-05；管理界面已支持安装与恢复，桌面实机和端到端验收仍待完成。
+- 状态：实施中；IP-00～IP-04 已完成，IP-05 的 Chromium 端到端验收通过；Linux Electron 与 macOS／Windows 实机验收待执行。
 - 目标：宿主完成一次加载器升级后，用户可以导入独立构建的插件包并启用，无需为每个插件重新构建或分发宿主。
 
 ## 文档导航
@@ -72,7 +72,7 @@
 - [x] IP-02 包存储与安装事务（`2703041`；完整验证见[交付记录](independent-plugins-delivery.md)）
 - [x] IP-03 动态注册与资源生命周期（`101bf43`；完整验证见[交付记录](independent-plugins-delivery.md)）
 - [x] IP-04 插件管理界面与启动恢复（`b10200c`；完整验证见[交付记录](independent-plugins-delivery.md)）
-- [ ] IP-05 独立模块端到端验收
+- [ ] IP-05 独立模块端到端验收（`eef551e`；Chromium 通过，桌面验收待完成；见[交付记录](independent-plugins-delivery.md)）
 - [ ] IP-06 更新回退与数据迁移
 - [ ] IP-07 开发重载与开发者文档
 

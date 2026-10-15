@@ -110,6 +110,14 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 - 交付限制：本阶段未标记 IP-05 完成；实际 macOS／Windows Electron 安装、重开、窗口恢复与 `oc://renderer` 验收仍待执行。宿主构建文件树摘要：`9c567ecc48c4c5c08f1eb7c113f0b3933e30a28ec9dc2e3e2a4d5dd716a06f63`。
 - 回退：`git revert b10200c`。
 
+### IP-05 独立模块端到端验收
+
+- 验收代码提交：`eef551e` (`test(plugins): verify independent package end to end`)
+- 自动化：`node packages/app/performance/independent-plugin-runtime/acceptance.mjs` 按顺序构建生产宿主、独立模板 ZIP 与浏览器夹具，然后在 Chromium 151.0.7922.173 运行完整流；通过。ZIP 是在本次宿主构建完成后生成的 `example.hello@1.0.0`，2,401 字节，SHA-256 `18850b255d8de1d3f462ee2cf8550748938979dccbe40bd61bee74b652ef4c11`。
+- 结果：静态预览时命令和安装记录均为零；确认后无需重建宿主即出现命令、面板、slot、CSS 与图片；命令更新插件存储；页面重载后由 IndexedDB 离线恢复且显示先前数据；禁用清空命令、面板、slot、样式与对象 URL；卸载按选择删除本地插件数据。浏览器无 page errors。
+- 固定宿主产物文件树 SHA-256：`93995dc1c773b05e4bc9dbd62cdd0da4f225d28b666a83a83f8e03fa1d457ff3`；模板 ZIP 构建前后摘要一致。每次完整重建会受 build provenance 影响，所以应比较同一次验收的前后摘要。
+- 范围限制：该夹具使用真实包解析器、IndexedDB 仓库、运行时加载器与资源所有者，但不驱动产品设置 UI。当前环境没有图形显示服务器或 Xvfb，因此 Linux Electron E2E 未运行；实体 macOS／Windows Electron 安装包验收也未覆盖，IP-05 保持未勾选。
+
 ## 实施记录模板
 
 每项完成后追加：任务编号、实现提交、测试命令与结果、插件 ZIP 摘要、宿主构建摘要、平台与版本、已知限制、回退步骤。计划文档当前不包含任何完成验收声明。
