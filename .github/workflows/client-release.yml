@@ -127,7 +127,7 @@ jobs:
             {
               cat "$NOTES_FILE"
               printf '\n| File | Platform / contents | Size | SHA-256 |\n| --- | --- | ---: | --- |\n'
-              for artifact in artifacts/opencode-front-*; do
+              for artifact in artifacts/*; do
                 name="$(basename "$artifact")"
                 bytes="$(wc -c < "$artifact" | tr -d '[:space:]')"
                 digest="$(sha256sum "$artifact" | cut -d ' ' -f 1)"
