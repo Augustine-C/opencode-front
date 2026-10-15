@@ -16,7 +16,7 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 
 - [x] Production connection screen and plugin manager render without page errors.
 - [x] Fixture 20/100/500 open/select cycles, stable instance/project ownership, raw samples retained.
-- [ ] Production connection recovery: invalid address, wrong credentials, network failure, cancel/retry and success with simulated HTTP boundaries.
+- [x] Production connection recovery: invalid address, wrong credentials, network failure, cancel/retry and success with simulated HTTP boundaries.
 - [ ] Folded group attention/running/unread indicators and keyboard descriptions.
 - [ ] Navigator filter, same-name ownership, IME, Escape, keyboard selection and preserved collapse preferences.
 - [ ] Historical search scope, pagination failure/cancellation and ownership isolation.
@@ -25,3 +25,9 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 - [ ] Live service: connect, send, stream, switch, permissions, Review and terminal. Requires an already running authorized service.
 - [ ] Native macOS/Windows: normal/maximized restore, monitor removal, scaling, external links. Requires those platforms.
 - [ ] Full-session long-history reading during streaming, return-to-latest and side-panel/layout continuity. Adapter fixtures alone cannot verify these.
+
+## UX-01 — connection recovery implemented
+
+Interactive checks bypass shared health-cache promises and own a 30-second deadline, cancellation and immutable input snapshot. Cancelling or leaving the screen invalidates all late health/pairing results; it never saves a connection. Pairing redemption itself may finish in the background (its existing native five-second probes are unchanged). Authentication, invalid address, mixed content, network and timeout feedback are distinct. Retry reuses the form; edit focuses credentials/address; diagnostic help lists possible causes without dumping raw errors, passwords or tokens. Existing duplicate-URL registration and pairing/QR paths remain.
+
+The health hook is an explicitly declared service-attachment overlay. No health polling cadence or backend lifecycle changed. `bun run check`: 49 tests passed; production/PWA build passed. `node packages/app/performance/ux/connection.mjs` drives the production connection screen through invalid address, HTTP 401, credential focus, network failure, cancellation followed by late success, timeout (browser clock), successful registry insertion and HTTPS mixed-content rejection. All eight checks passed without page errors. HTTP responses are simulated; this is not a real backend test. Pairing and QR scanning retain native behavior but were not exercised against a live service.

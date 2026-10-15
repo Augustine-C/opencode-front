@@ -1,6 +1,14 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "server.connect.recovery.unauthorized": "The server rejected these credentials. Check the password or use a new pairing link.",
+  "server.connect.recovery.network": "Could not reach the server. Check the address and connection, then retry.",
+  "server.connect.recovery.timeout": "The connection check timed out. Check the address and retry.",
+  "server.connect.recovery.credentials": "Edit credentials",
+  "server.connect.recovery.edit": "Edit connection details",
+  "server.connect.recovery.retry": "Retry connection",
+  "server.connect.recovery.diagnostics": "Connection help",
+  "server.connect.recovery.steps": "Check that the address is reachable from this device and the service is already running. A proxy, DNS, browser cross-origin policy or network restriction may block the request. This browser cannot reliably distinguish these causes. Passwords and pairing tokens are not included in diagnostics.",
   "plugins.connectionStatus": "Connection status",
   "plugins.panel.maximize": "Maximize panel",
   "plugins.panel.restore": "Restore panel",

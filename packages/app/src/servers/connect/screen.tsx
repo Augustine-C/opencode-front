@@ -1,7 +1,6 @@
 import { usePlugins } from "@/plugins/context"
-import { lazy, Show, Suspense } from "solid-js"
+import { lazy, onCleanup, Show, Suspense } from "solid-js"
 import { createStore } from "solid-js/store"
-import { useMutation } from "@tanstack/solid-query"
 import { IconButton } from "@opencode/ui/icon-button"
 import { Icon } from "@opencode/ui/icon"
 import { Button } from "@opencode/ui/button"
@@ -36,6 +35,8 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
     password: string
     error: string
     scanning: boolean
+    pending: boolean
+    unauthorized: boolean
   }>({
     method: "link",
     link: "",
@@ -43,76 +44,98 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
     password: "",
     error: "",
     scanning: false,
+    pending: false,
+    unauthorized: false,
   })
 
-  // A pairing token works on every address of its server. Signing in again to the server that signed out keeps its
-  // address (e.g. localhost) even when the link names another one (e.g. 127.0.0.1 from opencode pair).
-  const target = async (pairing: Pairing) => {
-    if (!props.url || props.url === pairing.url) return pairing
-    const http = { url: props.url, password: pairing.password }
-
-    return (await check(http)).healthy ? http : pairing
+  let controller: AbortController | undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const cancel = (error = "") => {
+    controller?.abort()
+    controller = undefined
+    clearTimeout(timer)
+    setState({ pending: false, error, unauthorized: false })
   }
-
-  const connect = async (http: ServerConnection.HttpBase) => {
-    const result = await check(http)
-
-    if (!result.healthy) {
-      setState("error", connectionError(http.url))
-
-      return
-    }
-
-    // Signing in again keeps the name the user gave this server.
-    const existing = servers.list.find(
-      (server): server is ServerConnection.Http => server.type === "http" && server.http.url === http.url,
-    )
-
-    servers.add(existing ? { ...existing, http } : { type: "http", http })
-  }
+  onCleanup(() => cancel())
 
   const connectionError = (url: string) =>
     language.t(
       platform.platform === "web" && isMixedContent(location.href, url)
         ? "server.connect.mixedContent"
-        : "server.connect.failed",
+        : "server.connect.recovery.network",
     )
 
-  const request = useMutation(() => ({
-    mutationFn: async () => {
-      if (state.method === "link") {
-        const redeemed = await redeem(state.link)
-
-        if (redeemed && "error" in redeemed) return void setState("error", redeemed.error)
-
-        if (redeemed) return connect(await target(redeemed.pairing))
-        // A server address typed here belongs to the password form.
-        const address = bareServerAddress(state.link)
-
+  const submit = async () => {
+    if (state.pending) return
+    const snapshot = { method: state.method, link: state.link, url: state.url, password: state.password }
+    const attempt = new AbortController()
+    controller = attempt
+    const current = () => controller === attempt && !attempt.signal.aborted
+    setState({ pending: true, error: "", unauthorized: false })
+    timer = setTimeout(() => cancel(language.t("server.connect.recovery.timeout")), 30_000)
+    const target = async (pairing: Pairing) => {
+      if (!props.url || props.url === pairing.url) return pairing
+      const http = { url: props.url, password: pairing.password }
+      return (await check(http, { signal: attempt.signal })).healthy ? http : pairing
+    }
+    const connect = async (http: ServerConnection.HttpBase) => {
+      if (!current()) return
+      const result = await check(http, { signal: attempt.signal })
+      if (!current()) return
+      if (!result.healthy) {
+        setState({
+          unauthorized: !!result.unauthorized,
+          error: result.unauthorized ? language.t("server.connect.recovery.unauthorized") : connectionError(http.url),
+        })
+        return
+      }
+      const existing = servers.list.find(
+        (server): server is ServerConnection.Http => server.type === "http" && server.http.url === http.url,
+      )
+      servers.add(existing ? { ...existing, http } : { type: "http", http })
+    }
+    try {
+      const value = snapshot.method === "link" ? snapshot.link : snapshot.url
+      const redeemed = await redeem(value)
+      if (!current()) return
+      if (redeemed && "error" in redeemed) return void setState("error", redeemed.error)
+      if (redeemed) return await connect(await target(redeemed.pairing))
+      if (snapshot.method === "link") {
+        const address = bareServerAddress(snapshot.link)
         if (address) return void setState({ method: "password", url: address, link: "", error: "" })
-
         return void setState("error", language.t("server.connect.link.invalid"))
       }
-
-      // A pairing link pasted into the address field still pairs.
-      const redeemed = await redeem(state.url)
-
-      if (redeemed && "error" in redeemed) return void setState("error", redeemed.error)
-
-      if (redeemed) return connect(await target(redeemed.pairing))
-      const url = serverAddress(state.url)
-
+      const url = serverAddress(snapshot.url)
       if (!url) return void setState("error", language.t("server.connect.address.invalid"))
+      if (platform.platform === "web" && isMixedContent(location.href, url))
+        return void setState("error", language.t("server.connect.mixedContent"))
+      await connect({ url, password: snapshot.password || undefined })
+    } catch {
+      if (current()) setState("error", connectionError(snapshot.method === "link" ? snapshot.link : snapshot.url))
+    } finally {
+      if (controller === attempt) {
+        controller = undefined
+        clearTimeout(timer)
+        setState("pending", false)
+      }
+    }
+  }
 
-      await connect({ url, password: state.password || undefined })
-    },
-    onError: () => setState("error", connectionError(state.method === "link" ? state.link : state.url)),
-  }))
-
-  const submit = () => {
-    if (request.isPending) return
-    setState("error", "")
-    request.mutate()
+  const edit = () => {
+    if (state.unauthorized) setState("method", "password")
+    requestAnimationFrame(() => {
+      const field = document.getElementById(
+        state.unauthorized
+          ? "server-connect-password"
+          : state.method === "link"
+            ? "server-connect-link"
+            : "server-connect-url",
+      )
+      if (field instanceof HTMLInputElement) {
+        field.focus()
+        field.select()
+      }
+    })
   }
 
   return (
@@ -149,7 +172,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
                 }}
                 onScan={(link) => {
                   setState({ method: "link", link, error: "", scanning: false })
-                  request.mutate()
+                  void submit()
                 }}
               />
             </Suspense>
@@ -178,7 +201,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
                     appearance="large"
                     placeholder={language.t("server.connect.link.placeholder")}
                     value={state.link}
-                    disabled={request.isPending}
+                    disabled={state.pending}
                     aria-describedby={state.error ? "server-connect-error" : undefined}
                     onInput={(event) => setState({ link: event.currentTarget.value, error: "" })}
                   />
@@ -200,7 +223,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
                   appearance="large"
                   placeholder={language.t("dialog.server.add.placeholder")}
                   value={state.url}
-                  disabled={request.isPending}
+                  disabled={state.pending}
                   aria-describedby={state.error ? "server-connect-error" : undefined}
                   onInput={(event) => setState({ url: event.currentTarget.value, error: "" })}
                 />
@@ -214,7 +237,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
                   autocomplete="current-password"
                   appearance="large"
                   value={state.password}
-                  disabled={request.isPending}
+                  disabled={state.pending}
                   aria-describedby="server-connect-password-hint"
                   onInput={(event) => setState({ password: event.currentTarget.value, error: "" })}
                 />
@@ -227,15 +250,35 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
               <p id="server-connect-error" class="server-connect-error" role="alert">
                 {state.error}
               </p>
+              <Button type="button" variant="outline" onClick={edit}>
+                {language.t(
+                  state.unauthorized ? "server.connect.recovery.credentials" : "server.connect.recovery.edit",
+                )}
+              </Button>
+              <details>
+                <summary>{language.t("server.connect.recovery.diagnostics")}</summary>
+                <p>{language.t("server.connect.recovery.steps")}</p>
+              </details>
             </Show>
             <Button
               type="submit"
               variant="contrast"
               size="large"
-              disabled={request.isPending || !(state.method === "link" ? state.link : state.url).trim()}
+              disabled={state.pending || !(state.method === "link" ? state.link : state.url).trim()}
             >
-              {language.t(request.isPending ? "dialog.server.add.checking" : "server.connect.button")}
+              {language.t(
+                state.pending
+                  ? "dialog.server.add.checking"
+                  : state.error
+                    ? "server.connect.recovery.retry"
+                    : "server.connect.button",
+              )}
             </Button>
+            <Show when={state.pending}>
+              <Button type="button" variant="outline" onClick={() => cancel()}>
+                {language.t("common.cancel")}
+              </Button>
+            </Show>
           </form>
           <Show when={state.method === "link" && platform.platform === "web"}>
             <Show
@@ -245,7 +288,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
               <Button
                 variant="neutral"
                 size="large"
-                disabled={request.isPending || !camera.available.latest}
+                disabled={state.pending || !camera.available.latest}
                 onClick={() => setState("scanning", true)}
               >
                 {language.t("server.connect.scan")}
@@ -254,7 +297,7 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
           </Show>
           <ConnectMethodSwitch
             method={state.method}
-            disabled={request.isPending}
+            disabled={state.pending}
             onChange={(method) => setState({ method, error: "" })}
           />
           <Show when={state.method === "link"}>

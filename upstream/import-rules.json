@@ -254,7 +254,8 @@
         "packages/app/src/runtime/server/registry.tsx",
         "packages/app/src/runtime/server/runtime.tsx",
         "packages/app/src/servers/connect/screen.css",
-        "packages/app/src/servers/connect/screen.tsx"
+        "packages/app/src/servers/connect/screen.tsx",
+        "packages/app/src/runtime/server/health.ts"
       ],
       "adapters": [
         "packages/app/src/extensions/project-inventory.ts"
