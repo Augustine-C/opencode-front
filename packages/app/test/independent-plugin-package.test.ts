@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
 import { deflateRawSync } from "node:zlib";
+import { IDBFactory, IDBObjectStore } from "fake-indexeddb";
 import { inspectPluginPackage } from "../src/plugins/independent/package";
+import { createIndependentPluginRepository } from "../src/plugins/independent/repository";
 
 type Entry = {
   path: string;
@@ -121,6 +123,37 @@ function zip(entries: Entry[]) {
 
 async function rejected(entries: Entry[], message: string) {
   await expect(inspectPluginPackage(zip(entries))).rejects.toThrow(message);
+}
+
+let repositorySequence = 0;
+function repository(factory = new IDBFactory(), shared = false) {
+  const databaseName = `independent-plugin-test-${++repositorySequence}`;
+  return {
+    factory,
+    databaseName,
+    create: () =>
+      createIndependentPluginRepository({
+        indexedDB: factory,
+        databaseName,
+        channel: shared ? undefined : null,
+        now: () => 1_800_000_000_000 + repositorySequence,
+      }),
+  };
+}
+
+function openDatabase(factory: IDBFactory, name: string) {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const request = factory.open(name);
+    request.addEventListener("success", () => resolve(request.result), {
+      once: true,
+    });
+    request.addEventListener(
+      "error",
+      () =>
+        reject(request.error ?? new Error("Could not open fixture database")),
+      { once: true },
+    );
+  });
 }
 
 test("independent plugin package validates its manifest and computes order-independent content digest", async () => {
@@ -312,4 +345,221 @@ test("ZIP parser enforces per-file, aggregate expansion, and entry-count limits 
   await expect(inspectPluginPackage(zip(tooMany))).rejects.toThrow(
     "more than 1,000 entries",
   );
+});
+
+test("plugin preview and invalid installation do not execute code or write records", async () => {
+  const setup = repository();
+  const store = setup.create();
+  const executable = packageEntries(
+    "globalThis.__independentPluginRan = true; export const setup = () => {}",
+  );
+  try {
+    const preview = await store.preview(zip(executable));
+    expect(preview.action).toBe("install");
+    expect(await store.list()).toEqual([]);
+    expect(
+      (globalThis as Record<string, unknown>).__independentPluginRan,
+    ).toBeUndefined();
+    await expect(
+      store.install(
+        zip(packageEntries("import('bad'); export const setup = () => {}")),
+      ),
+    ).rejects.toThrow("cannot import other modules");
+    expect(await store.list()).toEqual([]);
+  } finally {
+    await store.close();
+  }
+});
+
+test("plugin installation is atomic, idempotent, and preserves the active package while staging updates", async () => {
+  const setup = repository();
+  const store = setup.create();
+  const initial = zip(packageEntries());
+  try {
+    const installed = await store.install(initial);
+    expect(installed.enabled).toBe(false);
+    expect(installed.activeDigest).toMatch(/^[0-9a-f]{64}$/);
+    expect((await store.install(initial)).activeDigest).toBe(
+      installed.activeDigest,
+    );
+    await expect(
+      store.install(
+        zip(packageEntries("export const setup = () => 'changed'")),
+      ),
+    ).rejects.toThrow("different contents; increment its version");
+
+    await store.setEnabled("example.hello-world", true);
+    const candidateFile = zip(
+      packageEntries("export const setup = () => {}", { version: "2.0.0" }),
+    );
+    const candidate = await store.install(candidateFile);
+    expect(candidate.enabled).toBe(true);
+    expect(candidate.activeDigest).toBe(installed.activeDigest);
+    expect(candidate.candidateDigest).toMatch(/^[0-9a-f]{64}$/);
+    expect((await store.active(candidate.id))?.module.manifest.version).toBe(
+      "1.2.3",
+    );
+    expect(
+      (await store.list()).find((entry) => entry.id === candidate.id),
+    ).toMatchObject({
+      healthy: true,
+      version: "1.2.3",
+      candidateVersion: "2.0.0",
+      enabled: true,
+    });
+
+    await store.close();
+    const reopened = setup.create();
+    try {
+      expect(
+        (await reopened.list()).find((entry) => entry.id === candidate.id),
+      ).toMatchObject({
+        version: "1.2.3",
+        candidateVersion: "2.0.0",
+      });
+    } finally {
+      await reopened.close();
+    }
+  } catch (error) {
+    await store.close();
+    throw error;
+  }
+});
+
+test("plugin repository serializes concurrent writers and broadcasts committed changes", async () => {
+  const setup = repository(new IDBFactory(), true);
+  const first = setup.create();
+  const second = setup.create();
+  let changed!: (id: string) => void;
+  const notified = new Promise<string>((resolve) => {
+    changed = resolve;
+  });
+  const stop = second.subscribe((id) => changed(id));
+  try {
+    await Promise.all([
+      first.install(
+        zip(
+          packageEntries("export const setup = () => {}", {
+            id: "example.first",
+          }),
+        ),
+      ),
+      second.install(
+        zip(
+          packageEntries("export const setup = () => {}", {
+            id: "example.second",
+          }),
+        ),
+      ),
+    ]);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const id = await Promise.race([
+      notified,
+      new Promise<string>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error("Broadcast timed out")),
+          1000,
+        );
+      }),
+    ]).finally(() => {
+      if (timeout) clearTimeout(timeout);
+    });
+    expect(["example.first", "example.second"]).toContain(id);
+    expect((await first.list()).map((entry) => entry.id).sort()).toEqual([
+      "example.first",
+      "example.second",
+    ]);
+  } finally {
+    stop();
+    await Promise.all([first.close(), second.close()]);
+  }
+});
+
+test("plugin uninstall garbage-collects only unreferenced module bytes and damaged records are recoverable", async () => {
+  const setup = repository();
+  const store = setup.create();
+  try {
+    const first = await store.install(
+      zip(
+        packageEntries("export const setup = () => {}", {
+          id: "example.first",
+        }),
+      ),
+    );
+    const second = await store.install(
+      zip(
+        packageEntries("export const setup = () => {}", {
+          id: "example.second",
+        }),
+      ),
+    );
+    expect(await store.remove(first.id)).toBe(true);
+    await expect(store.module(first.activeDigest)).rejects.toThrow(
+      "missing or corrupt",
+    );
+    expect((await store.active(second.id))?.record.activeDigest).toBe(
+      second.activeDigest,
+    );
+
+    const db = await openDatabase(setup.factory, setup.databaseName);
+    const transaction = db.transaction("installations", "readwrite");
+    transaction.objectStore("installations").put({
+      id: "example.damaged",
+      activeDigest: "missing-digest",
+      enabled: true,
+      updatedAt: 1,
+    });
+    await new Promise<void>((resolve, reject) => {
+      transaction.addEventListener("complete", () => resolve(), { once: true });
+      transaction.addEventListener("abort", () => reject(transaction.error), {
+        once: true,
+      });
+    });
+    db.close();
+    expect(
+      (await store.list()).find((entry) => entry.id === "example.damaged"),
+    ).toMatchObject({
+      healthy: false,
+      problem: "The selected plugin package is missing from local storage",
+    });
+    await expect(store.active("example.damaged")).rejects.toThrow(
+      "missing or corrupt",
+    );
+  } finally {
+    await store.close();
+  }
+});
+
+test("plugin repository keeps the old installation when IndexedDB reports a quota failure", async () => {
+  const setup = repository();
+  const store = setup.create();
+  const active = await store.install(zip(packageEntries()));
+  const originalPut = IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put = function (value, key) {
+    if (this.name === "modules")
+      throw new DOMException("storage full", "QuotaExceededError");
+    return originalPut.call(this, value, key);
+  };
+  try {
+    await expect(
+      store.install(
+        zip(
+          packageEntries("export const setup = () => {}", { version: "2.0.0" }),
+        ),
+      ),
+    ).rejects.toThrow("Plugin storage is full");
+  } finally {
+    IDBObjectStore.prototype.put = originalPut;
+  }
+  try {
+    const record = (await store.list()).find((entry) => entry.id === active.id);
+    expect(record).toMatchObject({
+      activeDigest: active.activeDigest,
+      version: "1.2.3",
+      healthy: true,
+    });
+    expect(record?.candidateDigest).toBeUndefined();
+  } finally {
+    await store.close();
+  }
 });

@@ -300,7 +300,7 @@ function visitManifestFiles(files: ArchiveFile[]) {
   };
 }
 
-async function contentDigest(files: Map<string, Uint8Array>) {
+export async function pluginContentDigest(files: Map<string, Uint8Array>) {
   const encoder = new TextEncoder();
   const sorted = [...files].sort(([left], [right]) =>
     left < right ? -1 : left > right ? 1 : 0,
@@ -340,7 +340,7 @@ export async function inspectPluginPackage(
   return {
     manifest: parsed.manifest,
     files: parsed.files,
-    digest: await contentDigest(parsed.files),
+    digest: await pluginContentDigest(parsed.files),
     compressedBytes: input.size,
     uncompressedBytes: parsed.totalBytes,
   };
