@@ -1,5 +1,6 @@
 import type { IndependentPluginManifest } from "@opencode/frontend-plugin/independent";
 import {
+  developmentPluginPackage,
   inspectPluginPackage,
   pluginContentDigest,
   validatePluginManifest,
@@ -245,6 +246,7 @@ export function createIndependentPluginRepository(
     databaseName?: string;
     now?: () => number;
     channel?: BroadcastChannel | null;
+    allowDevelopmentReload?: boolean;
   } = {},
 ) {
   const factory =
@@ -254,6 +256,9 @@ export function createIndependentPluginRepository(
     throw new Error("This browser does not provide IndexedDB plugin storage");
   const databaseName = options.databaseName ?? PLUGIN_DATABASE;
   const now = options.now ?? Date.now;
+  const allowDevelopmentReload =
+    options.allowDevelopmentReload ?? import.meta.env?.DEV === true;
+  let lastDevelopmentTimestamp = 0;
   const database = openDatabase(factory, databaseName);
   const listeners = new Set<(id: string) => void>();
   const channel =
@@ -380,7 +385,10 @@ export function createIndependentPluginRepository(
     return { record, module };
   }
 
-  async function installPackage(pkg: PluginPackage) {
+  async function installPackage(
+    pkg: PluginPackage,
+    options: { replaceCandidate?: boolean } = {},
+  ) {
     const execute = async () => {
       const db = await database;
       return new Promise<PluginInstallation>((resolve, reject) => {
@@ -487,13 +495,23 @@ export function createIndependentPluginRepository(
                       result = current;
                       return;
                     }
-                    throw new Error(
-                      "This plugin version is already installed with different contents; increment its version",
-                    );
                   }
-                  throw new Error(
-                    "A plugin update is already awaiting activation",
-                  );
+                  if (!options.replaceCandidate)
+                    throw new Error(
+                      candidate.manifest.version === pkg.manifest.version
+                        ? "This plugin version is already installed with different contents; increment its version"
+                        : "A plugin update is already awaiting activation",
+                    );
+                  result = {
+                    ...current,
+                    candidateDigest: pkg.digest,
+                    updatedAt: now(),
+                  };
+                  modules.put(storedModule(pkg, now()));
+                  installations.put(result);
+                  collectUnreferenced(transaction);
+                  changed = true;
+                  return;
                 }
                 result = {
                   ...current,
@@ -1045,6 +1063,29 @@ export function createIndependentPluginRepository(
     async install(file: Blob) {
       const pkg = await inspectPluginPackage(file);
       return installPackage(pkg);
+    },
+    async installDevelopment(id: string, file: Blob) {
+      if (!allowDevelopmentReload)
+        throw new Error(
+          "Development plugin reload is available only in dev builds",
+        );
+      const current = await loadRecord(id);
+      if (!current)
+        throw new Error(
+          `Plugin ${id} must be installed before development reload`,
+        );
+      if (current.activationPending)
+        throw new Error(`Plugin ${id} is still being activated`);
+      const pkg = await inspectPluginPackage(file);
+      if (pkg.manifest.id !== id)
+        throw new Error(`Development package ID must match ${id}`);
+      const timestamp = Math.max(
+        Math.floor(now()),
+        lastDevelopmentTimestamp + 1,
+      );
+      lastDevelopmentTimestamp = timestamp;
+      const development = await developmentPluginPackage(pkg, timestamp);
+      return installPackage(development, { replaceCandidate: true });
     },
     list,
     active,

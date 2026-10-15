@@ -86,6 +86,8 @@ export const dict = {
   "plugins.package.failedActivation": "Version {{version}} failed to start. The previous package and saved data were restored.",
   "plugins.package.failedDetails": "Recovery details",
   "plugins.package.storageMigrationWarning": "Storage schema changed from {{from}} to {{to}}. The plugin must migrate its namespaced data. Rollback can restore host snapshots of that local data; remote or external effects cannot be undone.",
+  "plugins.package.developmentReload": "Reload local plugin ZIP",
+  "plugins.package.developmentReloadHint": "Development only: rebuild the standalone ZIP and select it here. The app replaces the plugin instance without rebuilding the host; failed setup details appear with the installed plugin.",
   "plugins.package.damaged": "The stored package is missing or damaged. Remove it and import a valid package to recover.",
   "plugins.package.enableAfterInstall": "Enable after installation",
   "plugins.package.alreadyInstalled": "This exact package version is already installed.",

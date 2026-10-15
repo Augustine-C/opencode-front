@@ -15,4 +15,10 @@ From this monorepo root, use `bun run --cwd examples/independent-plugin-template
 
 The output goes to `examples/independent-plugin-template/dist/`. Install only ZIPs from plugin authors you trust: the current runtime executes plugin code in the host page and does not sandbox it. The manifest capability list communicates API requirements; it is not a security boundary.
 
-Change `id`, `version`, `capabilities`, `styles`, and `assets` in `plugin.manifest.json` before publishing. Use a new SemVer version whenever package contents change.
+Change `id`, `version`, `capabilities`, `styles`, and `assets` in `plugin.manifest.json` before publishing. Published packages must use a new SemVer version whenever package contents change.
+
+## Reloading during host development
+
+When developing this plugin in the monorepo, run the host with `bun run dev` and build the standalone ZIP with `bun run --cwd examples/independent-plugin-template build`. In **Settings → Frontend plugins**, use **Reload local plugin ZIP** on an enabled plugin and select the new ZIP from `examples/independent-plugin-template/dist/`. The development host assigns a local build identifier, activates a fresh plugin instance, and cleans up the previous instance without rebuilding the host. Rebuild and reload as often as needed; published packages should still use a new SemVer version for every content change.
+
+This control is available only in the Vite development build. Production builds do not expose or accept development reloads.

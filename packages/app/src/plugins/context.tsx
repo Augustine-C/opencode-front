@@ -487,6 +487,24 @@ function createPlugins() {
       await refreshIndependent()
       await syncIndependent(id)
     },
+    async reloadIndependentDevelopment(id: string, file: Blob) {
+      if (!import.meta.env.DEV)
+        throw new Error(
+          "Development plugin reload is available only in dev builds",
+        )
+      if (!repository) throw new Error("Plugin storage is unavailable")
+      await pending.catch(() => {})
+      const installation = (await repository.list()).find(
+        (entry) => entry.id === id,
+      )
+      if (!installation?.enabled)
+        throw new Error(
+          "Enable the plugin before reloading its development build",
+        )
+      await repository.installDevelopment(id, file)
+      await refreshIndependent()
+      await api.activateIndependent(id)
+    },
     async restoreIndependent(id: string) {
       if (!repository) throw new Error("Plugin storage is unavailable")
       await pending.catch(() => {})

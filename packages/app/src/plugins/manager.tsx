@@ -28,6 +28,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
     }
     packagePreview?: { file: File; result: PackagePreview; enable: boolean }
     removing?: string
+    developmentReloadID?: string
     removeData: boolean
   }>({ error: "", detail: "", importing: false, removeData: false })
   let importButton: HTMLButtonElement | undefined
@@ -36,6 +37,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
   let packageHeading: HTMLHeadingElement | undefined
   let fileInput!: HTMLInputElement
   let packageInput!: HTMLInputElement
+  let developmentInput!: HTMLInputElement
   const diagnostics = (error: unknown) =>
     pluginDiagnostic(error, [
       ...plugins.state.config,
@@ -149,6 +151,18 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
       fail(error, "package")
     } finally {
       setState("importing", false)
+    }
+  }
+
+  const reloadDevelopmentPackage = async (id: string, file: File) => {
+    if (state.importing) return
+    setState({ importing: true, error: "", detail: "" })
+    try {
+      await plugins.reloadIndependentDevelopment(id, file)
+    } catch (error) {
+      fail(error, "package")
+    } finally {
+      setState({ importing: false, developmentReloadID: undefined })
     }
   }
 
@@ -427,6 +441,21 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                     >
                       {installation.name ?? installation.id}
                     </Switch>
+                    <Show when={import.meta.env.DEV && installation.enabled}>
+                      <Button
+                        size="small"
+                        variant="outline"
+                        disabled={
+                          state.importing || status()?.state === "loading"
+                        }
+                        onClick={() => {
+                          setState("developmentReloadID", installation.id)
+                          developmentInput.click()
+                        }}
+                      >
+                        {language.t("plugins.package.developmentReload")}
+                      </Button>
+                    </Show>
                     <Show when={installation.candidateDigest}>
                       <Button
                         size="small"
@@ -486,6 +515,27 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
             }}
           </For>
         </SettingsList>
+        <Show when={import.meta.env.DEV}>
+          <input
+            ref={developmentInput}
+            type="file"
+            hidden
+            accept=".zip,application/zip"
+            aria-label={language.t("plugins.package.developmentReload")}
+            disabled={state.importing}
+            onChange={(event) => {
+              const input = event.currentTarget
+              const file = input.files?.[0]
+              const id = state.developmentReloadID
+              input.value = ""
+              if (file && id) void reloadDevelopmentPackage(id, file)
+              else setState("developmentReloadID", undefined)
+            }}
+          />
+          <p class="text-12-regular text-v2-text-text-muted leading-5">
+            {language.t("plugins.package.developmentReloadHint")}
+          </p>
+        </Show>
         <p class="text-12-regular text-v2-text-text-muted leading-5">
           {language.t("plugins.visibility")}
         </p>

@@ -1,7 +1,20 @@
 import { expect, test } from "bun:test";
+import { createPluginHost } from "@opencode/frontend-plugin/host";
+import type { Context } from "@opencode/frontend-plugin";
+import { PLUGIN_RUNTIME_SYMBOL } from "@opencode/frontend-plugin/independent";
 import { deflateRawSync } from "node:zlib";
 import { IDBFactory, IDBObjectStore } from "fake-indexeddb";
 import { inspectPluginPackage } from "../src/plugins/independent/package";
+import {
+  capturePluginData,
+  prepareIndependentActivationData,
+  settleIndependentActivation,
+  type PluginDataStorage,
+} from "../src/plugins/independent/activation";
+import {
+  createIndependentPluginDefinition,
+  exposeSharedPluginRuntime,
+} from "../src/plugins/independent/loader";
 import {
   createIndependentPluginRepository,
   type PluginDataSnapshot,
@@ -129,7 +142,11 @@ async function rejected(entries: Entry[], message: string) {
 }
 
 let repositorySequence = 0;
-function repository(factory = new IDBFactory(), shared = false) {
+function repository(
+  factory = new IDBFactory(),
+  shared = false,
+  allowDevelopmentReload?: boolean,
+) {
   const databaseName = `independent-plugin-test-${++repositorySequence}`;
   return {
     factory,
@@ -139,6 +156,9 @@ function repository(factory = new IDBFactory(), shared = false) {
         indexedDB: factory,
         databaseName,
         channel: shared ? undefined : null,
+        ...(allowDevelopmentReload === undefined
+          ? {}
+          : { allowDevelopmentReload }),
         now: () => 1_800_000_000_000 + repositorySequence,
       }),
   };
@@ -426,6 +446,170 @@ test("plugin installation is atomic, idempotent, and preserves the active packag
   } catch (error) {
     await store.close();
     throw error;
+  }
+});
+
+test("development reload replaces staged local builds and stays unavailable when disabled", async () => {
+  const setup = repository(new IDBFactory(), false, true);
+  const store = setup.create();
+  try {
+    const first = await store.install(
+      zip(packageEntries("export const setup = () => 'v1'")),
+    );
+    await store.setEnabled(first.id, true);
+    const second = await store.installDevelopment(
+      first.id,
+      zip(packageEntries("export const setup = () => 'v2'")),
+    );
+    const secondDigest = second.candidateDigest!;
+    const third = await store.installDevelopment(
+      first.id,
+      zip(packageEntries("export const setup = () => 'v3'")),
+    );
+    const installation = (await store.list()).find(
+      (entry) => entry.id === first.id,
+    );
+    expect(installation).toMatchObject({
+      activeDigest: first.activeDigest,
+      enabled: true,
+      candidateDigest: third.candidateDigest,
+    });
+    expect(installation?.candidateVersion).toMatch(/^1\.2\.3\+dev\./);
+    expect(installation?.candidateDigest).not.toBe(secondDigest);
+    expect(
+      (await store.module(third.candidateDigest!)).files.find(
+        (file) => file.path === "main.js",
+      )?.bytes,
+    ).toEqual(encoder.encode("export const setup = () => 'v3'"));
+    await expect(store.module(secondDigest)).rejects.toThrow(
+      "missing or corrupt",
+    );
+  } finally {
+    await store.close();
+  }
+
+  const disabledSetup = repository();
+  const disabled = disabledSetup.create();
+  try {
+    await expect(
+      disabled.installDevelopment("example.hello-world", zip(packageEntries())),
+    ).rejects.toThrow("only in dev builds");
+  } finally {
+    await disabled.close();
+  }
+});
+
+test("repeated development reloads replace one live module without accumulating contributions", async () => {
+  const setup = repository(new IDBFactory(), false, true);
+  const store = setup.create();
+  const values = new Map<string, string>();
+  const storage = {
+    get length() {
+      return values.size;
+    },
+    key(index: number) {
+      return [...values.keys()][index] ?? null;
+    },
+    getItem(key: string) {
+      return values.get(key) ?? null;
+    },
+    setItem(key: string, value: string) {
+      values.set(key, value);
+    },
+    removeItem(key: string) {
+      values.delete(key);
+    },
+  } as PluginDataStorage;
+  const context: Omit<
+    Context,
+    "ui" | "options" | "signal" | "storage" | "assets"
+  > = {
+    app: { version: "test", platform: "web" },
+    client: () => undefined,
+    sessionID: () => undefined,
+    connection: () => undefined,
+    data: { listen: () => () => {} },
+  };
+  const host = createPluginHost({ context, storage });
+  const global = globalThis as Record<string, unknown>;
+  global.__developmentReloadCleanups = 0;
+  const source = (label: string) => `
+    export function setup(context) {
+      context.storage.set("label", ${JSON.stringify(label)});
+      context.ui.command({ id: "reload", title: ${JSON.stringify(label)}, run() {} });
+      context.ui.panel.register({ name: "reload", title: ${JSON.stringify(label)} });
+      context.ui.slot({ append: "app", render: () => ${JSON.stringify(label)} });
+      return () => { globalThis.__developmentReloadCleanups += 1; };
+    }
+  `;
+  let definition:
+    | ReturnType<typeof createIndependentPluginDefinition>
+    | undefined;
+  const registerActive = async () => {
+    const active = await store.active("example.hello-world");
+    if (!active) throw new Error("Development plugin disappeared");
+    if (definition) await host.unregister(active.record.id, definition);
+    definition = createIndependentPluginDefinition({
+      repository: store,
+      id: active.record.id,
+      name: active.module.manifest.name,
+      digest: active.record.activeDigest,
+    });
+    host.register(definition);
+    await host.enable(active.record.id);
+  };
+  try {
+    exposeSharedPluginRuntime();
+    const first = await store.install(zip(packageEntries(source("v1"))));
+    await store.setEnabled(first.id, true);
+    await registerActive();
+
+    const versions = new Set<string>();
+    for (const label of ["v2", "v3"]) {
+      await store.installDevelopment(
+        first.id,
+        zip(packageEntries(source(label))),
+      );
+      const before = await store.active(first.id);
+      if (!before?.record.candidateDigest)
+        throw new Error("Development package was not staged");
+      await host.disable(first.id);
+      const snapshot = capturePluginData(
+        storage,
+        first.id,
+        before.record.activeDigest,
+        before.module.manifest.storageVersion ?? 1,
+      );
+      await store.activateCandidate(first.id, snapshot);
+      await prepareIndependentActivationData(store, storage, first.id);
+      await registerActive();
+      expect(
+        await settleIndependentActivation({
+          repository: store,
+          storage,
+          host,
+          id: first.id,
+        }),
+      ).toBe("healthy");
+
+      const active = await store.active(first.id);
+      expect(active?.module.manifest.version).toMatch(/^1\.2\.3\+dev\./);
+      versions.add(active?.module.manifest.version ?? "");
+      expect(host.state.commands).toHaveLength(1);
+      expect(host.state.commands[0]?.title).toBe(label);
+      expect(host.state.availablePanels).toHaveLength(1);
+      expect(host.state.claims).toHaveLength(1);
+      expect(values.get(`opencode-front.plugin.${first.id}.label`)).toBe(
+        JSON.stringify(label),
+      );
+    }
+    expect(versions.size).toBe(2);
+    expect(global.__developmentReloadCleanups).toBe(2);
+  } finally {
+    await host.dispose();
+    await store.close();
+    Reflect.deleteProperty(globalThis, Symbol.for(PLUGIN_RUNTIME_SYMBOL));
+    delete global.__developmentReloadCleanups;
   }
 });
 

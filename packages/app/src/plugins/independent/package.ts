@@ -345,3 +345,39 @@ export async function inspectPluginPackage(
     uncompressedBytes: parsed.totalBytes,
   };
 }
+
+export async function developmentPluginPackage(
+  pkg: PluginPackage,
+  sequence: number,
+): Promise<PluginPackage> {
+  if (!Number.isSafeInteger(sequence) || sequence < 0)
+    throw new Error(
+      "Development package sequence must be a non-negative integer",
+    );
+  const baseVersion = pkg.manifest.version.split("+", 1)[0];
+  const version = `${baseVersion}+dev.${sequence.toString(36)}.${pkg.digest.slice(0, 10)}`;
+  if (version.length > 100)
+    throw new Error(
+      "Plugin version is too long to add a development build identifier",
+    );
+  const files = new Map(pkg.files);
+  const sourceManifest = { ...pkg.manifest, version };
+  files.set(
+    "manifest.json",
+    new TextEncoder().encode(JSON.stringify(sourceManifest)),
+  );
+  const manifest = validatePluginManifest(
+    sourceManifest,
+    new Set(files.keys()),
+  );
+  return {
+    ...pkg,
+    manifest,
+    files,
+    digest: await pluginContentDigest(files),
+    uncompressedBytes: [...files.values()].reduce(
+      (total, bytes) => total + bytes.byteLength,
+      0,
+    ),
+  };
+}
