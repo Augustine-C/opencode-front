@@ -252,8 +252,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                     disabled={
                       state.importing ||
                       !!state.preview ||
-                      !!state.packagePreview ||
-                      status()?.state === "loading"
+                      !!state.packagePreview
                     }
                     onChange={async (enabled) => {
                       setState("error", "")
@@ -427,8 +426,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                         !installation.healthy ||
                         state.importing ||
                         !!state.preview ||
-                        !!state.packagePreview ||
-                        status()?.state === "loading"
+                        !!state.packagePreview
                       }
                       onChange={async (enabled) => {
                         setState("error", "")

@@ -95,3 +95,72 @@ test("independent entry imports through the shared Solid runtime and releases co
     Reflect.deleteProperty(globalThis, Symbol.for(PLUGIN_RUNTIME_SYMBOL))
   }
 })
+
+test("cancelling pending setup disposes its Solid owner before setup finishes", async () => {
+  let started!: () => void
+  let finish!: () => void
+  let cleaned!: () => void
+  const ready = new Promise<void>((resolve) => {
+    started = resolve
+  })
+  const waiting = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  const cleanupDone = new Promise<void>((resolve) => {
+    cleaned = resolve
+  })
+  const probe = { started, waiting, cleaned, ownerCleanups: 0, effects: 0, update: () => {} }
+  const global = globalThis as Record<string, unknown>
+  global.__independentPending = probe
+  const bytes = new TextEncoder().encode(`
+    const runtime = globalThis[Symbol.for("${PLUGIN_RUNTIME_SYMBOL}")].solid;
+    export async function setup(context) {
+      const probe = globalThis.__independentPending;
+      const [value, setValue] = runtime.createSignal(0);
+      probe.update = () => setValue(v => v + 1);
+      runtime.createEffect(() => { value(); probe.effects++; });
+      runtime.onCleanup(() => { probe.ownerCleanups++; });
+      context.ui.command({ id: "pending", title: "Pending", run() {} });
+      probe.started();
+      await probe.waiting;
+      context.ui.command({ id: "stale", title: "Stale", run() {} });
+      return () => { probe.cleaned(); };
+    }
+  `)
+  const module = {
+    digest: "pending-fixture",
+    manifest: { id: "example.pending", name: "Pending", entry: "main.js", assets: [] },
+    files: [{ path: "main.js", bytes }],
+  } as unknown as StoredPluginModule
+  exposeSharedPluginRuntime()
+  const host = createPluginHost({ context })
+  host.register(
+    createIndependentPluginDefinition({
+      repository: { module: async () => module },
+      id: module.manifest.id,
+      name: module.manifest.name,
+      digest: module.digest,
+    }),
+  )
+  try {
+    const enabled = host.enable(module.manifest.id)
+    await ready
+    expect(probe.effects).toBe(1)
+    await host.disable(module.manifest.id)
+    expect(probe.ownerCleanups).toBe(1)
+    probe.update()
+    expect(probe.effects).toBe(1)
+    expect(host.state.commands).toHaveLength(0)
+    await enabled
+    finish()
+    await cleanupDone
+    expect(probe.ownerCleanups).toBe(1)
+    expect(host.state.commands).toHaveLength(0)
+    expect(host.state.statuses[0].state).toBe("disabled")
+  } finally {
+    finish()
+    await host.dispose()
+    delete global.__independentPending
+    Reflect.deleteProperty(globalThis, Symbol.for(PLUGIN_RUNTIME_SYMBOL))
+  }
+})

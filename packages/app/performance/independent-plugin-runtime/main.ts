@@ -1,3 +1,4 @@
+import { pluginStoragePrefix } from "@opencode/frontend-plugin/storage"
 import * as solid from "solid-js"
 import * as web from "solid-js/web"
 import * as store from "solid-js/store"
@@ -247,7 +248,7 @@ window.pluginAcceptance = {
     await repository.remove(pluginID)
     pluginDefinitions.delete(pluginID)
     if (removeData) {
-      const prefix = `opencode-front.plugin.${pluginID}.`
+      const prefix = pluginStoragePrefix(pluginID)
       for (let index = localStorage.length - 1; index >= 0; index--) {
         const key = localStorage.key(index)
         if (key?.startsWith(prefix)) localStorage.removeItem(key)
@@ -265,7 +266,7 @@ window.pluginAcceptance = {
       assetURL:
         document.querySelector<HTMLImageElement>("#plugin-slot img")?.src,
       storedGreeting: localStorage.getItem(
-        `opencode-front.plugin.${pluginID}.greetings`,
+        `${pluginStoragePrefix(pluginID)}greetings`,
       ),
     }
   },

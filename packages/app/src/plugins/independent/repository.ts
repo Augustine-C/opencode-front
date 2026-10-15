@@ -1,4 +1,5 @@
 import type { IndependentPluginManifest } from "@opencode/frontend-plugin/independent";
+import { pluginStoragePrefix } from "@opencode/frontend-plugin/storage";
 import {
   developmentPluginPackage,
   inspectPluginPackage,
@@ -211,7 +212,7 @@ function validateDataSnapshot(
   digest: string,
   snapshot: PluginDataSnapshot,
 ) {
-  const prefix = `opencode-front.plugin.${id}.`;
+  const prefix = pluginStoragePrefix(id);
   if (
     snapshot.digest !== digest ||
     !Number.isSafeInteger(snapshot.storageVersion) ||

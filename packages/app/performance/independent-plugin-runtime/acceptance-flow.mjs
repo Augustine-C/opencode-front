@@ -83,7 +83,7 @@ export async function runIndependentPluginAcceptance(page, archivePath) {
   await page.evaluate(() => window.pluginAcceptance.uninstall(true))
   assert.equal(
     await page.evaluate(() =>
-      localStorage.getItem("opencode-front.plugin.example.hello.greetings"),
+      localStorage.getItem("opencode-front.plugin.v2:example.hello:greetings"),
     ),
     null,
   )

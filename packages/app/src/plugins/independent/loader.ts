@@ -57,13 +57,21 @@ export function createIndependentPluginDefinition(input: {
           `Plugin ${input.id} package is missing its entry module`,
         )
       const resources = createPluginResources(module)
-      const release = () => resources.dispose()
+      let moduleDispose: (() => void) | undefined
+      const release = () => {
+        const dispose = moduleDispose
+        moduleDispose = undefined
+        try {
+          dispose?.()
+        } finally {
+          resources.dispose()
+        }
+      }
       if (context.signal.aborted) {
         release()
         throw new DOMException("Plugin activation was cancelled", "AbortError")
       }
       context.signal.addEventListener("abort", release, { once: true })
-      let moduleDispose: (() => void) | undefined
       try {
         await resources.attachStyles(context.signal)
         if (context.signal.aborted)
@@ -115,13 +123,11 @@ export function createIndependentPluginDefinition(input: {
           try {
             await cleanup?.()
           } finally {
-            moduleDispose?.()
             release()
           }
         }
       } catch (error) {
         context.signal.removeEventListener("abort", release)
-        moduleDispose?.()
         release()
         throw error
       }

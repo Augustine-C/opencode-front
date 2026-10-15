@@ -1,3 +1,4 @@
+import { pluginStoragePrefix } from "@opencode/frontend-plugin/storage"
 import { expect, test } from "bun:test"
 import {
   capturePluginData,
@@ -13,7 +14,7 @@ import type {
 } from "../src/plugins/independent/repository"
 
 const id = "example.recovery"
-const prefix = `opencode-front.plugin.${id}.`
+const prefix = pluginStoragePrefix(id)
 const key = `${prefix}value`
 
 function storage(initial: Array<[string, string]> = []) {
@@ -160,4 +161,36 @@ test("snapshot validation refuses unsafe restore before clearing existing plugin
 
   const captured = capturePluginData(area, id, "old", 1)
   expect(captured.values).toEqual([[key, '"keep"']])
+})
+
+test("snapshot restore isolates dotted descendant IDs and refuses ambiguous legacy keys", () => {
+  const parent = "example.foo"
+  const child = "example.foo.bar"
+  const parentKey = `${pluginStoragePrefix(parent)}bar.value`
+  const childKey = `${pluginStoragePrefix(child)}value`
+  const { area, values } = storage([
+    [parentKey, "1"],
+    [childKey, "2"],
+  ])
+  const captured = capturePluginData(area, parent, "old", 1)
+  expect(captured.values).toEqual([[parentKey, "1"]])
+  values.set(childKey, "3")
+  values.set(parentKey, "4")
+  restorePluginData(area, parent, captured)
+  expect(values.get(parentKey)).toBe("1")
+  expect(values.get(childKey)).toBe("3")
+  expect(() =>
+    restorePluginData(area, parent, {
+      ...captured,
+      values: [[childKey, "2"]],
+    }),
+  ).toThrow("invalid storage values")
+  // An ambiguous snapshot from the unreleased dotted-key format is never restored.
+  expect(() =>
+    restorePluginData(area, parent, {
+      ...captured,
+      values: [["opencode-front.plugin.example.foo.bar.value", "2"]],
+    }),
+  ).toThrow("invalid storage values")
+  expect(values.get(childKey)).toBe("3")
 })

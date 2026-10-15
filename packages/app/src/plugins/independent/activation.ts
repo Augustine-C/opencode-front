@@ -1,3 +1,4 @@
+import { pluginStoragePrefix } from "@opencode/frontend-plugin/storage"
 import {
   PLUGIN_DATA_SNAPSHOT_LIMIT,
   type IndependentPluginRepository,
@@ -25,7 +26,7 @@ export function capturePluginData(
   digest: string,
   storageVersion: number,
 ): PluginDataSnapshot {
-  const prefix = `opencode-front.plugin.${id}.`
+  const prefix = pluginStoragePrefix(id)
   const values: Array<[string, string]> = []
   for (let index = 0; index < storage.length; index++) {
     const key = storage.key(index)
@@ -51,7 +52,7 @@ export function restorePluginData(
   id: string,
   snapshot: PluginDataSnapshot,
 ) {
-  const prefix = `opencode-front.plugin.${id}.`
+  const prefix = pluginStoragePrefix(id)
   if (
     typeof snapshot.digest !== "string" ||
     !Number.isSafeInteger(snapshot.storageVersion) ||

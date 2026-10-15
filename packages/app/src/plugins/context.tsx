@@ -11,6 +11,7 @@ import {
 import { createStore } from "solid-js/store"
 import { useLocation } from "@solidjs/router"
 import { createPluginHost } from "@opencode/frontend-plugin/host"
+import { pluginStoragePrefix } from "@opencode/frontend-plugin/storage"
 import {
   adaptConfig,
   previewConfig,
@@ -150,7 +151,17 @@ function createPlugins() {
     const restored = independent.installations.find((entry) => entry.id === id)
     const config = state.config.find((entry) => entry.id === id)
     if (restored?.enabled && config?.enabled)
-      await host.enable(id, config.options)
+      startPlugin(id, config.options)
+  }
+  function startPlugin(id: string, options: Record<string, unknown>) {
+    // Setup may never settle. Configuration operations only wait for repository changes,
+    // while each instance owns its asynchronous activation and cancellation.
+    void host
+      .enable(id, options)
+      .then(async () => {
+        if (registered.has(id)) await settleIndependentActivation(id)
+      })
+      .catch((error) => host.report(id, error))
   }
   async function apply(
     entries: ResolvedPlugin[],
@@ -170,14 +181,7 @@ function createPlugins() {
             continue
           }
         }
-        await host.enable(entry.id, entry.options)
-        if (registered.has(entry.id)) {
-          try {
-            await settleIndependentActivation(entry.id)
-          } catch (error) {
-            host.report(entry.id, error)
-          }
-        }
+        startPlugin(entry.id, entry.options)
       }
     }
   }
@@ -310,12 +314,7 @@ function createPlugins() {
             host.report(id, error)
             return
           }
-          await host.enable(id, entry.options)
-          try {
-            await settleIndependentActivation(id)
-          } catch (error) {
-            host.report(id, error)
-          }
+          startPlugin(id, entry.options)
         }
       } else if (status !== "disabled") {
         await host.disable(id)
@@ -327,7 +326,7 @@ function createPlugins() {
     independentSyncs.set(id, tracked)
     return tracked
   }
-  // Serialize changes so an earlier asynchronous setup cannot overwrite the latest configuration.
+  // Serialize persisted preferences, without waiting for third-party setup.
   let pending = Promise.resolve()
   function save(entries: ResolvedPlugin[]) {
     pending = pending
@@ -443,6 +442,7 @@ function createPlugins() {
     },
     toggle(id: string, enabled: boolean) {
       if (disposed) return
+      if (!enabled) void host.disable(id)
       const existing = state.config.find((entry) => entry.id === id)
       return save(
         existing
@@ -528,15 +528,16 @@ function createPlugins() {
     },
     async removeIndependent(id: string, removeData: boolean) {
       if (!repository) throw new Error("Plugin storage is unavailable")
-      await pending.catch(() => {})
       await host.disable(id)
+      await pending.catch(() => {})
+      // A queued configuration change may have started another generation.
       await host.unregister(id)
       if (!(await repository.remove(id))) return false
       const entries = state.config.filter((entry) => entry.id !== id)
       setState("config", entries)
       persistConfig(entries)
       if (removeData) {
-        const prefix = `opencode-front.plugin.${id}.`
+        const prefix = pluginStoragePrefix(id)
         for (let index = localStorage.length - 1; index >= 0; index--) {
           const key = localStorage.key(index)
           if (key?.startsWith(prefix)) localStorage.removeItem(key)

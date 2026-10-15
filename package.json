@@ -90,16 +90,18 @@
     "desktop": "bun run scripts/desktop.ts",
     "upstream:check": "bun run scripts/upstream/check.ts check",
     "upstream:plan": "bun run scripts/upstream/check.ts plan",
-    "typecheck:upstream": "tsgo --noEmit --module ESNext --moduleResolution Bundler --target ESNext --types bun --skipLibCheck scripts/upstream/check.ts scripts/upstream/model.ts scripts/upstream/test/imports.test.ts",
+    "typecheck:upstream": "tsgo --ignoreConfig --noEmit --module ESNext --moduleResolution Bundler --target ESNext --types bun --skipLibCheck scripts/upstream/check.ts scripts/upstream/model.ts scripts/upstream/test/imports.test.ts",
     "upstream:record": "bun run scripts/upstream/check.ts record"
   },
   "devDependencies": {
+    "@opencode/frontend-plugin": "workspace:*",
     "@electron/packager": "19.0.1",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "typescript": "catalog:",
-    "electron": "44.4.5"
+    "electron": "44.4.5",
+    "solid-js": "catalog:"
   },
   "trustedDependencies": [
     "esbuild",

@@ -135,6 +135,19 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 - 文档：[独立模板 README](../../examples/independent-plugin-template/README.md) 记录 monorepo 下的本地打包和热重载流程；[插件系统说明](../plugin-system.md) 说明开发入口仅用于 Vite 开发构建。
 - 限制：重载是重新选择已生成的 ZIP，不监控文件系统或自动重建插件。Electron 实机和 macOS／Windows 覆盖仍未完成，IP-05 保持未勾选。
 
+### 审核修复与产品界面复验（2026-10-15）
+
+- 修复基线：`origin/work 32d4bcb`，对应 `main e58b835` 之后的独立插件实现。
+- 数据隔离：读写、快照、仓库校验、恢复和卸载删除共用带明确终止符的 v2 命名空间。`example.foo` 与 `example.foo.bar` 不再共享前缀；取消后的实例不能通过 SDK 写入存储。旧开发格式的数据保留但不自动迁移，歧义快照拒绝恢复；见[迁移说明](../plugin-system.md#independent-package-storage-migration-and-recovery)。
+- 生命周期：配置队列仅等待宿主管理的操作，不等待第三方 setup；加载期间可禁用和卸载，取消先于卸载的配置协调。宿主取消会释放 enable 等待，晚到 cleanup 仍被执行；等待旧 cleanup 的 enable 也不能在禁用后重新启动。独立模块的 Solid root 直接绑定 abort，setup 挂起时仍立即执行 owner cleanup。
+- 回归证据：恢复旧命名空间规则后，父子 ID 快照隔离用例失败；换回旧 loader 后，挂起 owner cleanup 用例失败；换回旧宿主后，取消 enable 等待和旧 cleanup 后复活用例失败。恢复修复后，针对性测试 38 项、215 次断言通过。
+- 产品界面：通过本机浏览器操作生产构建的真实插件管理对话框，未连接后端。独立 ZIP 经过文件选择、非执行预览及安装确认；setup 永不返回时，禁用、其他插件配置及卸载均可完成，界面探针确认 owner cleanup 已执行。卸载 `example.foo` 并勾选删除数据后，`example.foo.bar` 仍能从存储读取原值 `3`。子插件的新版本先暂存、再手动激活，随后正常启用。此处验证的是产品 UI，不是替代管理 API 的夹具。
+- 验证包 SHA-256：父插件 `d1705f7368fc5efc0cb5d51e504d6f412c799083e23abf93f313442a36018c40`；子插件 1.0.0 `b71337f4d0f4f468430caed135c057953307252f95a8d9a02d02bc9d800cf841`；显示原始存储值的子插件 1.0.1 `2597dec0f4a84564e6fa40f07e256e5531a79867ff8687a60e21d7fef05e1797`。
+- 检查：`bun run check` 通过（86 项测试、461 次断言，包含 upstream 边界与全部类型检查）；`bun run build` 通过。根目录添加 Solid JSX 配置及示例项目直接依赖，修复 Bun 从根目录运行测试时错误选择 React JSX runtime 的问题；上游工具的显式文件类型检查使用 `--ignoreConfig`。
+- 附加产品验证：失败候选暴露出继承宿主 Solid 错误边界的问题。宿主现在为 setup 与 effect 单独接管错误，避免插件异常使整个应用进入错误页。候选 1.0.2 将值改为 `4` 后抛错；新版生产页面成功恢复 1.0.1 及值 `3`，管理界面显示自动恢复结果；[截图](../screenshots/independent-plugins-review-fixes.jpg)。继承外层错误边界的同步失败与 effect 失败已扩展进现有宿主回归用例。
+- 依赖准备限制：本机 Bun 1.3.14 的 `bun install` 成功；`bun install --frozen-lockfile` 仍报告锁文件需要变化，未计为通过，原因尚未确认，需另行排查。
+- 验收结论：本次补齐三项修复和生产设置 UI 的针对性复验。完整 IP-05 的打包宿主、离线重开及 macOS／Windows 平台矩阵仍未完成，继续保持未验收状态。
+
 ## 实施记录模板
 
 每项完成后追加：任务编号、实现提交、测试命令与结果、插件 ZIP 摘要、宿主构建摘要、平台与版本、已知限制、回退步骤。计划文档当前不包含任何完成验收声明。

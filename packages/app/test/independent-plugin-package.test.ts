@@ -1,3 +1,4 @@
+import { pluginStoragePrefix } from "@opencode/frontend-plugin/storage"
 import { expect, test } from "bun:test";
 import { createPluginHost } from "@opencode/frontend-plugin/host";
 import type { Context } from "@opencode/frontend-plugin";
@@ -599,7 +600,7 @@ test("repeated development reloads replace one live module without accumulating 
       expect(host.state.commands[0]?.title).toBe(label);
       expect(host.state.availablePanels).toHaveLength(1);
       expect(host.state.claims).toHaveLength(1);
-      expect(values.get(`opencode-front.plugin.${first.id}.label`)).toBe(
+      expect(values.get(`${pluginStoragePrefix(first.id)}label`)).toBe(
         JSON.stringify(label),
       );
     }
@@ -630,7 +631,7 @@ test("plugin versions can be promoted, restored, and discarded without losing th
     await store.activateCandidate(first.id, {
       digest: first.activeDigest,
       storageVersion: 1,
-      values: [[`opencode-front.plugin.${first.id}.saved`, '"v1 data"']],
+      values: [[`${pluginStoragePrefix(first.id)}saved`, '"v1 data"']],
       capturedAt: 1,
     });
     expect((await store.active(first.id))?.module.manifest.version).toBe(
@@ -661,7 +662,7 @@ test("plugin versions can be promoted, restored, and discarded without losing th
     await store.restorePrevious(first.id, {
       digest: second.candidateDigest!,
       storageVersion: 2,
-      values: [[`opencode-front.plugin.${first.id}.saved`, '"v2 data"']],
+      values: [[`${pluginStoragePrefix(first.id)}saved`, '"v2 data"']],
       capturedAt: 2,
     });
     expect((await store.active(first.id))?.module.manifest.version).toBe(
@@ -681,13 +682,13 @@ test("plugin versions can be promoted, restored, and discarded without losing th
       await store.dataSnapshot(first.id, first.activeDigest),
     ).toMatchObject({
       storageVersion: 1,
-      values: [[`opencode-front.plugin.${first.id}.saved`, '"v1 data"']],
+      values: [[`${pluginStoragePrefix(first.id)}saved`, '"v1 data"']],
     });
     expect(
       await store.dataSnapshot(first.id, second.candidateDigest!),
     ).toMatchObject({
       storageVersion: 2,
-      values: [[`opencode-front.plugin.${first.id}.saved`, '"v2 data"']],
+      values: [[`${pluginStoragePrefix(first.id)}saved`, '"v2 data"']],
     });
 
     expect(await store.discardCandidate(first.id)).toBe(true);
@@ -723,7 +724,7 @@ test("failed candidate activation restores the previous package and its data sna
     const snapshot: PluginDataSnapshot = {
       digest: first.activeDigest,
       storageVersion: 1,
-      values: [[`opencode-front.plugin.${first.id}.saved`, '"before update"']],
+      values: [[`${pluginStoragePrefix(first.id)}saved`, '"before update"']],
       capturedAt: 1,
     };
     await store.activateCandidate(first.id, snapshot);

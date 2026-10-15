@@ -1,4 +1,4 @@
-import { batch, createRoot, getOwner, runWithOwner, type Owner } from "solid-js"
+import { batch, catchError, createRoot, getOwner, runWithOwner, type Owner } from "solid-js"
 import { createStore } from "solid-js/store"
 import type {
   Command,
@@ -10,6 +10,7 @@ import type {
   SlotPath,
 } from "./index"
 import type { Claim } from "./structure"
+import { pluginStoragePrefix } from "./storage"
 
 export type Render = SlotClaim["render"]
 export type PluginPanel = {
@@ -43,6 +44,7 @@ export function createPluginHost(input: {
     panelRequest: 0,
   })
   const definitions = new Map<string, Definition>()
+  const requests = new Map<string, object>()
   const active = new Map<
     string,
     { abort: AbortController; cleanup: Set<() => void | Promise<void>> }
@@ -102,6 +104,7 @@ export function createPluginHost(input: {
     })
   }
   async function disable(id: string) {
+    requests.delete(id)
     const generation = active.get(id)
     active.delete(id)
     generation?.abort.abort()
@@ -116,8 +119,11 @@ export function createPluginHost(input: {
     })
   }
   async function enable(id: string, options: Record<string, unknown> = {}) {
-    await disable(id)
-    if (disposed) return
+    const stopping = disable(id)
+    const request = {}
+    requests.set(id, request)
+    await stopping
+    if (disposed || requests.get(id) !== request) return
     const plugin = definitions.get(id)
     if (!plugin) throw new Error(`Unknown frontend plugin: ${id}`)
     const generation = {
@@ -158,15 +164,16 @@ export function createPluginHost(input: {
         version: 1,
         get<T>(key: string): T | undefined {
           const value = input.storage?.getItem(
-            `opencode-front.plugin.${id}.${key}`,
+            `${pluginStoragePrefix(id)}${key}`,
           )
           return value === null || value === undefined
             ? undefined
             : (JSON.parse(value) as T)
         },
         set(key, value) {
+          if (!alive()) return
           input.storage?.setItem(
-            `opencode-front.plugin.${id}.${key}`,
+            `${pluginStoragePrefix(id)}${key}`,
             JSON.stringify(value),
           )
         },
@@ -278,18 +285,58 @@ export function createPluginHost(input: {
       },
     }
     try {
-      const pending = runWithOwner(owner, () =>
-        createRoot((dispose) => {
-          generation.cleanup.add(dispose)
-          return plugin.setup(context)
-        }),
-      )
-      const cleanup = await pending
-      if (cleanup) {
-        if (alive()) generation.cleanup.add(cleanup)
-        else await cleanup()
+      let initialized = false
+      const pending = new Promise<void>((resolve, reject) => {
+        const fail = (error: unknown) => {
+          reject(error)
+          if (initialized && alive()) {
+            void disable(id)
+            report(id, error)
+          }
+        }
+        runWithOwner(owner, () =>
+          createRoot((dispose) => {
+            generation.cleanup.add(dispose)
+            // Own Solid errors before they can reach the application's ErrorBoundary.
+            catchError(() => {
+              void Promise.resolve(plugin.setup(context))
+                .then(async (cleanup) => {
+                  if (cleanup) {
+                    if (alive()) generation.cleanup.add(cleanup)
+                    else await cleanup()
+                  }
+                  resolve()
+                })
+                .catch(reject)
+            }, fail)
+          }),
+        )
+      })
+      let cancel!: () => void
+      const cancelled = new Promise<void>((resolve) => {
+        cancel = resolve
+      })
+      generation.abort.signal.addEventListener("abort", cancel, { once: true })
+      if (!alive()) cancel()
+      // Keep observing late completion for cleanup/errors, but release callers on abort.
+      const settled = Promise.resolve(pending)
+        .then(() => {
+          if (alive()) {
+            initialized = true
+            status(id, "enabled")
+          }
+        })
+        .catch(async (error) => {
+          if (!alive()) return
+          const stopping = disable(id)
+          report(id, error)
+          await stopping
+        })
+      try {
+        await Promise.race([settled, cancelled])
+      } finally {
+        generation.abort.signal.removeEventListener("abort", cancel)
       }
-      if (alive()) status(id, "enabled")
     } catch (error) {
       if (!alive()) return
       await disable(id)
