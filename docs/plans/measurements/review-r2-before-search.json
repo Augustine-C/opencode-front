@@ -1,0 +1,52 @@
+{
+  "browser": "151.0.7922.173",
+  "viewport": "1280x900",
+  "fixture": "Production native search controller and history adapter; mock data provider, 20 loaded messages then 10 earlier messages",
+  "workload": "Initial zero matches to the first page of matches; two animation frames included",
+  "warmup": 1,
+  "samples": [
+    {
+      "durationMs": 26.09999999962747,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 25.799999999813735,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 27,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 28.299999999813735,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 23.699999999254942,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 26.59999999962747,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 29.899999999441206,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 23.09999999962747,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 20.800000000745058,
+      "count": "1/10"
+    },
+    {
+      "durationMs": 23.700000000186265,
+      "count": "1/10"
+    }
+  ],
+  "medianMs": 25.949999999720603,
+  "slowestMs": 29.899999999441206,
+  "errors": []
+}

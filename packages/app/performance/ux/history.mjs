@@ -44,9 +44,31 @@ await page.screenshot({ path: process.env.UX_SCREENSHOT || "/workspace/work/open
 await page.keyboard.press("Escape")
 assert.equal(await trigger.evaluate((el) => document.activeElement === el), true)
 assert.deepEqual(errors, [])
+const initialMiss = await browser.newPage()
+initialMiss.on("pageerror", (error) => errors.push(error.message))
+await initialMiss.goto(`${process.env.UX_FIXTURE_URL || "http://127.0.0.1:4446"}/?history=1`)
+await initialMiss.getByRole("button", { name: "Search messages", exact: true }).click()
+await initialMiss.getByRole("searchbox", { name: "Search messages" }).fill("Message 7")
+await initialMiss.getByText("No matches in loaded messages", { exact: true }).waitFor()
+await initialMiss.getByRole("button", { name: "Load earlier messages", exact: true }).click()
+assert.equal(await initialMiss.locator(".session-navigation-count").innerText(), "1/10")
+// The next five pages contain no matches; the following batch prepends Message 7 before Message 70.
+await initialMiss.getByRole("button", { name: "Search earlier pages", exact: true }).click()
+await initialMiss.getByRole("button", { name: "Search earlier pages", exact: true }).waitFor()
+assert.equal(await initialMiss.locator(".session-navigation-count").innerText(), "1/10")
+await initialMiss.getByRole("button", { name: "Search earlier pages", exact: true }).click()
+await initialMiss.getByRole("button", { name: "Load earlier messages", exact: true }).waitFor({ state: "hidden" })
+assert.equal(
+  await initialMiss.locator(".session-navigation-count").innerText(),
+  "2/11",
+  "the first paginated hit keeps its identity when an earlier hit arrives",
+)
+await initialMiss.close()
+assert.deepEqual(errors, [])
 console.log(
   JSON.stringify({
     stableMatchAfterPrepend: true,
+    initialMissThenPaginatedHit: true,
     scopeFeedback: true,
     fivePageLimit: true,
     cancelStopsFurtherPages: true,

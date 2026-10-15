@@ -168,6 +168,12 @@ export function createTimelineSearchController(input: {
     return Math.max(0, index)
   })
 
+  // Pagination can supply the first hit without an input event, so retain that resolved selection too.
+  createEffect(() => {
+    const match = matches()[activeIndex()]
+    if (match) setState("active", JSON.stringify([match.partID, match.occurrence]))
+  })
+
   const activePartID = createMemo(() => matches()[activeIndex()]?.partID)
   const activeOccurrence = createMemo(() => matches()[activeIndex()]?.occurrence)
 
