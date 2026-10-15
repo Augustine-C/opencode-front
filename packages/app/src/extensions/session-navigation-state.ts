@@ -1,4 +1,4 @@
-import { createEffect, createMemo, on } from "solid-js"
+import { createEffect, createMemo, on, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { readPromptPresentation } from "@/composer/comment-note"
 import type { SessionModel } from "@/session/model"
@@ -38,7 +38,13 @@ export function createSessionNavigation(session: SessionModel, timeline: Session
     }
     return response.slice(0, 600)
   })
-  const [state, setState] = createStore({ error: false })
+  const [state, setState] = createStore({ error: false, continuing: false })
+  let continuation = 0
+  const cancel = () => {
+    continuation++
+    setState("continuing", false)
+  }
+  onCleanup(cancel)
   const history = {
     get more() {
       const id = session.identity.sessionID()
@@ -51,19 +57,47 @@ export function createSessionNavigation(session: SessionModel, timeline: Session
     get error() {
       return state.error
     },
+    get continuing() {
+      return state.continuing
+    },
+    cancel,
+    searchMore: async (matches: () => number) => {
+      if (state.continuing || history.loading || !history.more) return
+      const owner = session.ownership.capture()
+      const token = ++continuation
+      const before = matches()
+      setState("continuing", true)
+      try {
+        // A new explicit action is required after five pages, even when no matches were found.
+        for (let page = 0; page < 5 && token === continuation && owner.current() && history.more; page++) {
+          if (!(await history.load())) break
+          if (matches() > before) break
+        }
+      } finally {
+        if (token === continuation && owner.current()) setState("continuing", false)
+      }
+    },
     load: async () => {
       const id = session.identity.sessionID()
       if (!id || history.loading || !history.more) return
       const owner = session.ownership.capture()
       setState("error", false)
+      timeline.view.unpin()
       try {
         await session.shared.data.session.message.loadMore(id)
+        return owner.current()
       } catch {
         if (owner.current()) setState("error", true)
+        return false
       }
     },
   }
-  createEffect(on(session.identity.sessionKey, () => setState("error", false)))
+  createEffect(
+    on(session.identity.sessionKey, () => {
+      cancel()
+      setState("error", false)
+    }),
+  )
   return {
     messages,
     navigation,

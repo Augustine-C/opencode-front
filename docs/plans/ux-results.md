@@ -19,7 +19,7 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 - [x] Production connection recovery: invalid address, wrong credentials, network failure, cancel/retry and success with simulated HTTP boundaries.
 - [x] Folded group attention/running/unread indicators and keyboard descriptions.
 - [x] Navigator filter, same-name ownership, IME, Escape, keyboard selection and preserved collapse preferences.
-- [ ] Historical search scope, pagination failure/cancellation and ownership isolation.
+- [x] Historical search scope, pagination failure/cancellation and ownership isolation.
 - [ ] Plugin configuration preview, cancel, invalid configuration and retry.
 - [ ] Version provenance and current-service changes.
 - [ ] Live service: connect, send, stream, switch, permissions, Review and terminal. Requires an already running authorized service.
@@ -49,3 +49,11 @@ The thin shell saves a versioned, separate normal rectangle and maximized flag i
 The group popover now filters cached session title, project and instance labels with the native command palette's case-insensitive substring rule. Its matcher lives in a UI-heavy dialog module, so the adapter uses the same simple rule over a memoized local index rather than importing the entire command dialog. Results retain saved group order and show instance/project context. Filtering temporarily reveals matches without writing collapse state, removes drag targets, and never fetches transcripts. Keyboard navigation uses an active descendant while input focus stays in the query. IME composition does not select; Escape clears a query before closing; close restores trigger focus. Empty queries preserve current-session positioning.
 
 `bun run check`: 52 tests passed; production/PWA and production fixture builds passed. The extended groups browser keeper passed instance/project/Chinese filtering, no-results feedback, IME, arrow/Enter selection, two-stage Escape, focus restoration and collapse preferences, plus 390/320px and 640×450 (200% viewport equivalent) widths. No page errors or horizontal popover overflow. [Pre-index-optimization measurements](measurements/ux-04-ui.json) use the same 20/100/500 fixture; 500-session opening median 136.1ms, slowest 153.7ms. These are the comparison baseline for UX-06, not claimed gains over UX-00.
+
+## UX-05 — history search continuity implemented
+
+Search now distinguishes no loaded matches from an exhausted session history. A user may load one page or explicitly search up to five earlier pages, stopping on a new match. Stop, query changes, close and session ownership changes prevent further pages; the page already in flight may finish. Errors remain scoped to the requesting session. Loading unpins native auto-follow, while native virtualization/return-to-latest remains responsible for reading geometry. Active search hits are keyed by part/occurrence so prepending old matches does not silently move selection. The search controller also resets on the full session identity, including instance, rather than only the session ID.
+
+`bun run check`: 53 tests passed. Production/PWA and adapter fixture builds passed. The history browser keeper passed stable hit selection after prepend (2/4 → 4/6), partial/exhausted scopes, five-page limit, stop-after-page, failure/retry, late failures after switching instances with the same session ID, and Escape/focus restoration. It also exposed and fixed focus loss when the final load button disappears. Fixture data replaces service pages; it does not represent native virtualized transcript rendering during streaming. [Before](measurements/ux-05-before-tabs.json)/[after](measurements/ux-05-after-tabs.json) production reducer samples retained identical bundle hashes and checksums; they cannot establish transcript performance.
+
+Full-service rail jumps during streaming, actual reading anchors, Review/terminal/layout continuity and native return-to-latest behavior remain pending the live-service environment. No unbounded full-history load or backend change was introduced.

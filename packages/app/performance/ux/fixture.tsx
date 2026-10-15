@@ -1,12 +1,17 @@
+import { lazy, Show } from "solid-js"
 import { render } from "solid-js/web"
 import { useProjectTabGroups } from "../../src/extensions/project-tabs"
 import { TabGroupNavigator } from "../../src/extensions/tab-group-navigator"
 import { items, state, setState } from "./context"
 import "../../src/index.css"
+const HistoryFixture = lazy(() => import("./history.tsx"))
 function App() {
   const groups = useProjectTabGroups({ tabs: () => items, current: () => state.current })
   return (
     <main style={{ padding: "24px" }}>
+      <Show when={new URLSearchParams(location.search).has("history")}>
+        <HistoryFixture />
+      </Show>
       <TabGroupNavigator
         groups={groups}
         tabs={groups.ordered}

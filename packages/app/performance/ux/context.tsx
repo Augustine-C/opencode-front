@@ -84,3 +84,5 @@ export const useLanguage = () => ({
     Object.entries(params).reduce((s, [k, v]) => s.replaceAll(`{{${k}}}`, String(v)), en[key] ?? key),
   plural: (key, count) => `${count}`,
 })
+
+export { useData, useCommand } from "./history-data"

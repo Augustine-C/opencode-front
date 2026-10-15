@@ -89,6 +89,7 @@ function applyHighlights(
 
 export function createTimelineSearchController(input: {
   sessionID: () => string | undefined
+  sessionKey?: () => string
   scrollRef: () => HTMLDivElement | undefined
   revealMessage: (id: string, partID?: string) => void
   pauseAutoScroll: () => void
@@ -96,7 +97,7 @@ export function createTimelineSearchController(input: {
   const command = useCommand()
   const language = useLanguage()
   const data = useData()
-  const [state, setState] = createStore({ value: "", active: 0, visible: false })
+  const [state, setState] = createStore({ value: "", active: "", visible: false })
   const [focusTick, setFocusTick] = createSignal(0)
   let inputEl: HTMLInputElement | undefined
   let searchFrame: number | undefined
@@ -163,11 +164,8 @@ export function createTimelineSearchController(input: {
 
     if (list.length === 0) return 0
 
-    if (state.active >= list.length) return 0
-
-    if (state.active < 0) return 0
-
-    return state.active
+    const index = list.findIndex((match) => JSON.stringify([match.partID, match.occurrence]) === state.active)
+    return Math.max(0, index)
   })
 
   const activePartID = createMemo(() => matches()[activeIndex()]?.partID)
@@ -236,11 +234,11 @@ export function createTimelineSearchController(input: {
 
   function close() {
     cancelSearchScroll()
-    setState({ value: "", active: 0, visible: false })
+    setState({ value: "", active: "", visible: false })
     inputEl?.blur()
   }
 
-  createEffect(on(input.sessionID, close, { defer: true }))
+  createEffect(on(input.sessionKey ?? input.sessionID, close, { defer: true }))
 
   function setValue(value: string) {
     cancelSearchScroll()
@@ -249,12 +247,12 @@ export function createTimelineSearchController(input: {
     const match = list[0]
 
     if (!value.trim() || !match) {
-      setState("active", 0)
+      setState("active", "")
 
       return
     }
 
-    setState("active", 0)
+    setState("active", JSON.stringify([match.partID, match.occurrence]))
     input.pauseAutoScroll()
     input.revealMessage(match.revealID, match.partID)
     scrollToMatch(match)
@@ -292,7 +290,7 @@ export function createTimelineSearchController(input: {
 
     if (list.length === 0) return
     const next = (activeIndex() + delta + list.length) % list.length
-    setState("active", next)
+    setState("active", JSON.stringify([list[next].partID, list[next].occurrence]))
     const match = list[next]
 
     if (!match) return

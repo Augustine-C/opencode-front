@@ -1,6 +1,11 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "session.navigation.noLoadedResults": "No matches in loaded messages",
+  "session.navigation.noHistoryResults": "No matches in this session history",
+  "session.navigation.searchMore": "Search earlier pages",
+  "session.navigation.stopSearching": "Stop after this page",
+  "session.navigation.searchLimit": "Loads up to five earlier pages, stopping when a new match is found. Stopping does not cancel the page already loading.",
   "session.tab.group.filter": "Filter open sessions",
   "session.tab.group.noResults": "No open sessions match this filter.",
   "session.tab.group.context": "{{instance}} · {{project}}",
