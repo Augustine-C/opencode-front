@@ -20,7 +20,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
     preview?: { value: unknown; result: ReturnType<PluginsApi["previewConfig"]> }
   }>({ error: "", detail: "", importing: false })
   let importButton: HTMLButtonElement | undefined
-  let applyButton: HTMLButtonElement | undefined
+  let previewHeading: HTMLHeadingElement | undefined
   const diagnostics = (error: unknown) =>
     pluginDiagnostic(error, [...plugins.state.config, ...(state.preview?.result.plugins ?? [])])
   const apply = async () => {
@@ -135,7 +135,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                   }
                   const result = plugins.previewConfig(value)
                   setState("preview", { value, result })
-                  requestAnimationFrame(() => applyButton?.focus())
+                  requestAnimationFrame(() => previewHeading?.focus())
                 } catch (error) {
                   setState({ error: "configuration", detail: String(error) })
                 } finally {
@@ -150,7 +150,9 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
         <Show when={state.preview}>
           {(preview) => (
             <section aria-label={language.t("plugins.preview.title")} class="flex flex-col gap-3">
-              <h3 class="settings-section-title">{language.t("plugins.preview.title")}</h3>
+              <h3 ref={previewHeading} tabIndex={-1} class="settings-section-title outline-none">
+                {language.t("plugins.preview.title")}
+              </h3>
               <p>{language.t("plugins.preview.replacement")}</p>
               <p>{language.t("plugins.preview.code")}</p>
               <SettingsList>
@@ -178,7 +180,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
               </Show>
               <p>{language.t("plugins.preview.recovery")}</p>
               <div class="flex gap-2">
-                <Button ref={applyButton} variant="contrast" disabled={state.importing} onClick={() => void apply()}>
+                <Button variant="contrast" disabled={state.importing} onClick={() => void apply()}>
                   {language.t("plugins.preview.apply")}
                 </Button>
                 <Button
