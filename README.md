@@ -76,7 +76,7 @@ Short ticks in the conversation's left margin preview a sent prompt and its resp
 
 ## UX improvement roadmap
 
-See the [user experience optimization plan](docs/plans/README.md) for priorities, implementation tasks, acceptance criteria, and validation requirements. Planned work is tracked separately from released features.
+The [user experience optimization plan](docs/plans/README.md) has been implemented in focused source commits. See the [implementation and validation record](docs/plans/ux-results.md) for per-task evidence, reproducible measurements and pending live-service/macOS/Windows acceptance. These source changes are unreleased.
 
 ## Validate and build
 

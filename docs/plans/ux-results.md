@@ -83,3 +83,25 @@ The instance selector defaults to the session that opened settings (or an unambi
 This also completes UX-01's compact connection footer: it uses the instance alias or host, with the full URL on demand in its tooltip. The plugin SDK's optional `connection.name` is additive for existing plugins.
 
 `bun run check`: 57 tests / 291 assertions passed. Production/PWA and adapter fixture builds passed. Build-info tests verify clean exact tags, mismatched tags, untagged source, dirty builds and independent GUI versions. The real version adapter/browser keeper passed unreleased provenance, GUI baseline, switching services, unknown values after disconnect, external-link attributes, compact footer and 390px layout without page errors. Desktop staging reuses the same built renderer and includes window persistence; actual packaged macOS/Windows execution remains pending.
+
+## Final verification and commit ledger
+
+Final source checks: 57 passing tests / 291 assertions; import audit 3,212 pristine files + 48 declared overlays, no boundary errors; all app/SDK/extension/example type checks passed. Production/PWA build passed with existing CSS, mixed-import and chunk-size warnings. Five browser keeper scripts passed: production connection and plugin manager, plus real grouping/filter, history-search and version adapters with fixture providers. Additional production smoke checks covered light 1280×900 and dark 390×844 modes (actual computed backgrounds differed), preview-heading focus and no horizontal overflow. A touch-enabled 390px Chromium context selected a filtered session successfully. Desktop staging passed. No browser page errors were observed.
+
+The upstream tag list was checked again at completion: v2.0.29 is still the latest v2 tag. Work stays on the local `work` branch. No push, tag, Release, backend operation or running-app restart was performed. The root client version remains `2.0.28+0`; builds identify these source changes as unreleased, independently of the imported GUI v2.0.29.
+
+| Step | Commit |
+| --- | --- |
+| Upstream v2.0.29 synchronization | `0d0e375` |
+| UX-00 baseline/reproduction | `ca4c930` |
+| UX-01 connection recovery | `445b2de` |
+| UX-02 group status | `9c6fd21` |
+| UX-03 desktop geometry | `791ae66` |
+| UX-04 open-session filter | `a0ba12c` |
+| UX-05 historical search | `17c71c3` |
+| UX-06 group indexes/performance | `47a1734` |
+| UX-07 import preview/recovery | `2b3088d` |
+| UX-07 review-heading focus | `33eb0a0` |
+| UX-08 version sources and compact connection footer | `ed32eef` |
+
+Remaining acceptance work is explicit: real service connect/send/stream/permissions/Review/terminal flows, actual virtualized long-history reading and return-to-latest/layout continuity, packaged macOS/Windows window restore/monitor/scaling/link behavior, and low-end/long-duration performance. The checked implementation tasks above do not certify these unavailable environments.

@@ -12,3 +12,18 @@ node packages/app/performance/ux/benchmark.mjs work/ux-ui.json
 ```
 
 The benchmark uses 20/100/500 cached session titles, four instances and five projects per instance, a 1280×900 viewport, one warm-up and ten measured open/select cycles. After filtering is implemented it also measures input-to-render. Each duration includes two animation frames. Raw samples, page errors, long tasks and coarse CDP DOM/heap counters are recorded. The current benchmark forces GC before its coarse snapshots; retained heap still includes warm-up, caches and JIT effects. `retention.mjs` separately checks 20/40/60 popup cycles after disposal. Neither report proves leak freedom. Browser scheduling and container load affect these samples. Compare repeated batches under the same conditions; do not infer native service or low-end-device performance.
+
+
+## Behavior keepers
+
+With the production app preview at port 4444 and the fixture preview at 4445, run the keepers from the root:
+
+```sh
+node packages/app/performance/ux/connection.mjs
+node packages/app/performance/ux/plugins.mjs
+UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/groups.mjs
+UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/history.mjs
+UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/version.mjs
+```
+
+The first two drive the production app with simulated HTTP/configuration data. The other three drive real adapters with fixture providers; `?history=1` and `?version=1` select those additional fixture surfaces. Set `UX_SCREENSHOT` to a writable destination when retaining a screenshot; it defaults to the original task workspace. No script starts a backend or supplies real credentials. Native platform execution and full virtualized transcripts remain separate acceptance work.
