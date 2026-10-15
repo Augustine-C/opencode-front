@@ -8,7 +8,9 @@
     ".": "./src/index.ts",
     "./host": "./src/runtime.ts",
     "./config": "./src/config.ts",
-    "./structure": "./src/structure.ts"
+    "./structure": "./src/structure.ts",
+    "./storage": "./src/storage.ts",
+    "./independent": "./src/independent.ts"
   },
   "scripts": {
     "typecheck": "tsgo --noEmit"

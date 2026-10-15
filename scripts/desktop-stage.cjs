@@ -14,7 +14,7 @@ const stage = path.join(root, "dist/desktop-app")
 fs.rmSync(stage, { recursive: true, force: true })
 fs.mkdirSync(path.join(stage, "scripts"), { recursive: true })
 fs.cpSync(renderer, path.join(stage, "packages/app/dist"), { recursive: true })
-for (const file of ["desktop-main.cjs", "desktop-window-state.cjs"])
+for (const file of ["desktop-main.cjs", "desktop-window-state.cjs", "desktop-protocol.cjs"])
   fs.copyFileSync(path.join(root, "scripts", file), path.join(stage, "scripts", file))
 for (const file of ["LICENSE", "NOTICE"]) fs.copyFileSync(path.join(root, file), path.join(stage, file))
 fs.writeFileSync(

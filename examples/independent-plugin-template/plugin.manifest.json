@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "id": "example.hello",
+  "name": "Hello independent plugin",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "runtimeVersion": "solid-v1",
+  "entry": "main.js",
+  "styles": ["styles/main.css"],
+  "assets": ["assets/hello.svg"],
+  "capabilities": [
+    "commands.register",
+    "panels.register",
+    "slots.register",
+    "storage.read",
+    "storage.write",
+    "assets.read"
+  ],
+  "description": "A starter module built independently from the host application.",
+  "license": "MIT",
+  "storageVersion": 1
+}

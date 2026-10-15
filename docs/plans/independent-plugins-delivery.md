@@ -6,7 +6,7 @@
 
 | 编号 | 任务 | 依赖 | 必须交付的证据 |
 | --- | --- | --- | --- |
-| IP-00 | 运行时加载可行性验证 | 无 | 固定宿主 Web／实际 Electron 加载单入口模块；Solid context/cleanup、CSP、oc 协议、CSS/图片结果与决策记录 |
+| IP-00 | 运行时加载可行性验证 | 无 | 构建后创建的单入口 Blob ESM 在 Chromium 与 Electron 44.4.5 的 oc 协议夹具加载；共享 Solid context/store/effect/DOM helper、CSP、CSS/图片及清理通过；决策记录。macOS/Windows 实际打包验证保留在 IP-05 平台验收 |
 | IP-01 | 清单、打包工具与模板 | IP-00 | 格式说明、类型产物、独立仓库可执行构建命令、产物校验、兼容表 |
 | IP-02 | 安装仓库与校验事务 | IP-01 | 非执行预览、ZIP 校验、原子存储、配额失败、多窗口冲突与损坏记录恢复 |
 | IP-03 | 动态注册与实例生命周期 | IP-00、IP-02 | 安装定义进入运行时目录；启停与异步竞争测试；命令／面板／样式／资源清理 |
@@ -64,6 +64,101 @@ IP-00 是实现门槛；若无法共享运行时或满足现有平台策略，�
 5. 更新插件 API 文档、迁移说明和恢复指南，注明能力声明不构成安全隔离。
 6. 按安装仓库、加载器、管理界面和 SDK 分成可回退的 Conventional Commits。
 7. 提交／推送与宿主发布分开处理；实现后首次分发加载器需升级宿主一次，之后兼容插件模块可独立分发。
+
+## 已完成任务记录
+
+### IP-00 加载与共享运行时可行性验证
+
+见[运行时决策记录](independent-plugins-runtime.md)；实现提交 `e884497`。Chromium 151 与 Linux Electron 44.4.5 的 `oc://renderer` 夹具验证通过。macOS／Windows 实际打包验证列入 IP-05。
+
+### IP-01 清单校验与独立构建模板
+
+- 实现提交：`e2bd382` (`feat(plugins): add independent plugin package tooling`)
+- 验证：`bun test --conditions=browser packages/app/test/independent-plugin-package.test.ts`（5 项、29 次断言通过）；模板 `typecheck` 与 `build` 通过；`bun run check`（64 项、327 次断言通过）；`bun run build` 通过；`bun run upstream:check` 无边界错误。
+- 独立包：`example.hello@1.0.0`，1,882 字节；ZIP SHA-256 `04b93c969a96c833eb04104266ff99f753f6e5aca55d59112235fc6711074e78`；宿主内容摘要 `1f566dd05641f374be51d8cad1792ceca104b34aaaf5c5e2e55542bdf0090a8b`。包由宿主解析器读取，含 `main.js`、`styles/main.css`、`assets/hello.svg`。
+- 宿主构建：Linux x86_64，Bun 1.4.3；产物文件树 SHA-256 `c6d32bfa2ef5f44122a7e843a5f52810005fb17a17deb8e05e858d226cf7d08a`。正式构建通过；现有 CSS `::highlight()` 规则产生优化警告。
+- 结果：v1 清单、静态预览解析、ZIP 边界检查、内容寻址摘要和独立模板已交付。安装仓库、加载器与管理界面仍在 IP-02～IP-04；当前宿主还不能导入 ZIP。模块是受信任的同页面代码，不具备权限隔离。macOS／Windows 留待 IP-05。
+- 回退：`git revert e2bd382`。
+
+### IP-02 包存储与安装事务
+
+- 实现提交：`2703041` (`feat(plugins): add atomic IndexedDB package repository`)
+- 验证：独立插件包与仓库测试 10 项、54 次断言通过；`bun run check`（69 项、352 次断言通过）；`bun run build` 通过。
+- 存储：`opencode-independent-plugins` IndexedDB v1，模块字节与安装记录在同一事务写入。相同摘要幂等；同版本不同内容拒绝；新版本先写入候选指针，保留当前活动版本；并发事务序列化，BroadcastChannel 通知其他窗口，支持 Web Locks 的浏览器额外按插件 ID 加锁。
+- 证据：测试覆盖不执行预览、损坏/不兼容包无写入、卸载回收、跨仓库并发恢复和模拟配额异常；现有安装记录在候选写入中断后保持可用。产物树摘要 `670f1a808d24311ffa9b4a6ccc4384821b8927b0a2e9f4315051af68baac8c21`。
+- 限制：IP-02 提供存储 API，但 UI 尚未接入；IP-03/IP-04 完成前用户不能从设置安装或管理独立模块。卸载暂不处理插件业务数据，留在 IP-04。
+- 回退：`git revert 2703041`。
+
+### IP-03 动态注册与资源生命周期
+
+- 实现提交：`101bf43` (`feat(plugins): load independent modules at runtime`)
+- 验证：`bun run check`（76 项、383 次断言通过；包含 upstream 边界检查与全部类型检查）；`bun run build` 通过。定向加载器、资源与 SDK 生命周期测试 22 项、97 次断言通过。
+- 运行时：启动时从 IndexedDB 恢复安装定义；模板产物经 Blob ESM 加载并通过 `Symbol.for("opencode-front.plugin-runtime.v1")` 复用宿主 Solid runtime。动态定义列表可响应新增／移除，停用时清理命令、面板、slot、Solid owner、CSS link 与资源 URL。
+- 资源：样式使用 CSS AST 做插件 ID 作用域，拒绝 `@import`、未知全局 at-rule 和远程 CSS 资源；插件只能用清单声明的资源路径，所有对象 URL 由实例统一释放。数字开头的合法 ID 也会被正确引用。
+- 示例：模板插件现展示命令、面板、slot、CSS、图片和持久化数据，独立构建仍不会被宿主打包。
+- 宿主构建产物文件树摘要：`a1bc9ddf22e7ef520e1d28e0cf82d47dc4dbfec6c6cd84b453e683318a985951`。生产构建含现有 `::highlight()` CSS 优化警告和 chunk 体积提示；构建成功。实际打包的 macOS／Windows 验收仍列入 IP-05。
+- 限制：管理界面尚未提供安装 ZIP、启停与卸载交互；这在 IP-04 完成前仍不可由用户直接安装。Blob ESM 以信任的同页面代码运行，不提供权限沙箱。
+- 回退：`git revert 101bf43`。
+
+### IP-04 插件管理界面与启动恢复
+
+- 实现提交：`b10200c` (`feat(plugins): add independent plugin manager`)
+- 验证：`bun run check`（77 项、390 次断言通过；包含 upstream 边界检查与全部类型检查）；`bun run build` 通过；独立包、仓库、加载器、资源和 SDK 生命周期定向测试 33 项、158 次断言通过。
+- 安装：设置页提供独立 ZIP 安装入口和非执行预览，展示清单名称、ID、版本、API/runtime/包格式兼容性、声明能力、大小、来源、作者与许可证。兼容性错误在写入前拒绝；声明来源标明为未验证信息。原 JSON/JSONC 配置导入仍是独立入口，缺失模块只显示未安装，不会下载或运行。
+- 管理：新包确认后可立即启用；更新先存为候选，不执行代码；用户可启用候选、放弃候选或恢复上一版本。卸载前二次确认，并可选择保留或删除该插件的本地存储数据。版本切换校验摘要，并在同一 IndexedDB 事务内更新活动指针、回收不再引用的模块；冲突时不覆盖其他窗口的指针。
+- 恢复：提供一次性跳过独立插件的重启入口；跳过时模块保留但不启用，设置页可在当前会话手动恢复。IndexedDB 不可用时解释原因并禁用安装入口。
+- 交付限制：本阶段未标记 IP-05 完成；实际 macOS／Windows Electron 安装、重开、窗口恢复与 `oc://renderer` 验收仍待执行。宿主构建文件树摘要：`9c567ecc48c4c5c08f1eb7c113f0b3933e30a28ec9dc2e3e2a4d5dd716a06f63`。
+- 回退：`git revert b10200c`。
+
+### IP-05 独立模块端到端验收
+
+- 验收代码提交：`eef551e` (`test(plugins): verify independent package end to end`)
+- 自动化：`node packages/app/performance/independent-plugin-runtime/acceptance.mjs` 按顺序构建生产宿主、独立模板 ZIP 与浏览器夹具，然后在 Chromium 151.0.7922.173 运行完整流；通过。ZIP 是在本次宿主构建完成后生成的 `example.hello@1.0.0`，2,401 字节，SHA-256 `18850b255d8de1d3f462ee2cf8550748938979dccbe40bd61bee74b652ef4c11`。
+- 结果：静态预览时命令和安装记录均为零；确认后无需重建宿主即出现命令、面板、slot、CSS 与图片；命令更新插件存储；页面重载后由 IndexedDB 离线恢复且显示先前数据；禁用清空命令、面板、slot、样式与对象 URL；卸载按选择删除本地插件数据。浏览器无 page errors。
+- 固定宿主产物文件树 SHA-256：`93995dc1c773b05e4bc9dbd62cdd0da4f225d28b666a83a83f8e03fa1d457ff3`；模板 ZIP 构建前后摘要一致。每次完整重建会受 build provenance 影响，所以应比较同一次验收的前后摘要。
+- 范围限制：该夹具使用真实包解析器、IndexedDB 仓库、运行时加载器与资源所有者，但不驱动产品设置 UI。当前环境没有图形显示服务器或 Xvfb，因此 Linux Electron E2E 未运行；实体 macOS／Windows Electron 安装包验收也未覆盖，IP-05 保持未勾选。
+
+### IP-06 自动回退与数据迁移
+
+- 实现提交：`61e37c4` (`feat(plugins): add versioned data rollback for updates`)、`21a7dcc` (`test(plugins): cover version activation recovery flow`)
+- 契约：SDK 暴露 `context.storage.version`，对应包清单的 `storageVersion`（默认 1）；插件负责按该版本迁移自己的稳定命名空间。切换版本前，宿主把插件 namespaced localStorage 快照（最多 4 MiB）与 IndexedDB 活动指针一起保存。候选首次运行前恢复旧版本数据供迁移；已有目标摘要快照时恢复目标数据。缺少或损坏必需快照时拒绝执行／自动回退，并向插件状态报告原因。
+- 失败恢复：候选 setup 成功后清除激活标记；失败时先恢复上一版本数据，再原子回退包指针，记录失败版本与恢复详情，清理候选模块并重新启用旧定义。激活检查未完成期间禁止再安装或切换版本；手动恢复也要求目标包的数据快照。
+- 验证：`bun run check`（81 项、418 次断言通过，含快照捕获／恢复顺序、失败 setup 协调、跨插件 key 隔离与仓库指针回退）；`bun run build` 通过；Chromium 151.0.7922.173 独立包验收通过，页面错误为零，宿主构建后文件树摘要 `00f82e7437cbd6c6041adf082864b1787dfce9d56f5cdd369127ada71a4fe8e0` 在模板 ZIP 构建后不变。
+- 限制：回滚只恢复宿主管理的本插件 localStorage 命名空间；服务端写入、网络请求、插件直接使用的 IndexedDB、文件和其他外部副作用不能由宿主撤销。实际 Electron 平台覆盖仍按 IP-05 记录。
+
+### IP-07 开发重载与开发者文档
+
+- 实现提交：`c4ecd65` (`feat(plugins): add development-only package reload`)
+- 开发流程：Vite 开发构建的已启用插件行提供 **Reload local plugin ZIP**。开发者重新构建独立模板 ZIP 并选择文件即可；宿主用包内容摘要和单调递增的本地构建标识生成内部 SemVer build metadata，不必修改模板版本。连续选择会替换待激活包，然后走 IP-06 快照、启用和失败恢复流程；生产构建隐藏入口，仓库 API 也拒绝开发重载。
+- 生命周期验收：测试使用真实 ZIP 解析、fake IndexedDB、Blob 模块加载器和插件 host，连续重载两个同 manifest 版本的构建。每轮只保留一个命令、面板和插槽，标题和持久化值更新为新模块，旧实例 cleanup 各运行一次；同一候选尚未激活时再次导入会回收旧候选。错误仍沿用安装插件的 setup 状态与诊断展示。
+- 验证：`bun run check`（83 项、440 次断言通过）；`bun run build` 通过；Chromium 151.0.7922.173 独立包验收通过且无页面错误，宿主文件树摘要 `8be862ace0f870c4c2801d4b010b675c2b041c330c9f9471039df99f9ac10ca4` 在插件 ZIP 构建后不变。
+- 文档：[独立模板 README](../../examples/independent-plugin-template/README.md) 记录 monorepo 下的本地打包和热重载流程；[插件系统说明](../plugin-system.md) 说明开发入口仅用于 Vite 开发构建。
+- 限制：重载是重新选择已生成的 ZIP，不监控文件系统或自动重建插件。Electron 实机和 macOS／Windows 覆盖仍未完成，IP-05 保持未勾选。
+
+### 审核修复与产品界面复验（2026-10-15）
+
+- 修复基线：`origin/work 32d4bcb`，对应 `main e58b835` 之后的独立插件实现。
+- 数据隔离：读写、快照、仓库校验、恢复和卸载删除共用带明确终止符的 v2 命名空间。`example.foo` 与 `example.foo.bar` 不再共享前缀；取消后的实例不能通过 SDK 写入存储。旧开发格式的数据保留但不自动迁移，歧义快照拒绝恢复；见[迁移说明](../plugin-system.md#independent-package-storage-migration-and-recovery)。
+- 生命周期：配置队列仅等待宿主管理的操作，不等待第三方 setup；加载期间可禁用和卸载，取消先于卸载的配置协调。宿主取消会释放 enable 等待，晚到 cleanup 仍被执行；等待旧 cleanup 的 enable 也不能在禁用后重新启动。独立模块的 Solid root 直接绑定 abort，setup 挂起时仍立即执行 owner cleanup。
+- 回归证据：恢复旧命名空间规则后，父子 ID 快照隔离用例失败；换回旧 loader 后，挂起 owner cleanup 用例失败；换回旧宿主后，取消 enable 等待和旧 cleanup 后复活用例失败。恢复修复后，针对性测试 38 项、215 次断言通过。
+- 产品界面：通过本机浏览器操作生产构建的真实插件管理对话框，未连接后端。独立 ZIP 经过文件选择、非执行预览及安装确认；setup 永不返回时，禁用、其他插件配置及卸载均可完成，界面探针确认 owner cleanup 已执行。卸载 `example.foo` 并勾选删除数据后，`example.foo.bar` 仍能从存储读取原值 `3`。子插件的新版本先暂存、再手动激活，随后正常启用。此处验证的是产品 UI，不是替代管理 API 的夹具。
+- 验证包 SHA-256：父插件 `d1705f7368fc5efc0cb5d51e504d6f412c799083e23abf93f313442a36018c40`；子插件 1.0.0 `b71337f4d0f4f468430caed135c057953307252f95a8d9a02d02bc9d800cf841`；显示原始存储值的子插件 1.0.1 `2597dec0f4a84564e6fa40f07e256e5531a79867ff8687a60e21d7fef05e1797`。
+- 检查：`bun run check` 通过（86 项测试、461 次断言，包含 upstream 边界与全部类型检查）；`bun run build` 通过。根目录添加 Solid JSX 配置及示例项目直接依赖，修复 Bun 从根目录运行测试时错误选择 React JSX runtime 的问题；上游工具的显式文件类型检查使用 `--ignoreConfig`。
+- 附加产品验证：失败候选暴露出继承宿主 Solid 错误边界的问题。宿主现在为 setup 与 effect 单独接管错误，避免插件异常使整个应用进入错误页。候选 1.0.2 将值改为 `4` 后抛错；新版生产页面成功恢复 1.0.1 及值 `3`，管理界面显示自动恢复结果；[截图](../screenshots/independent-plugins-review-fixes.jpg)。继承外层错误边界的同步失败与 effect 失败已扩展进现有宿主回归用例。
+- 依赖准备限制：本机 Bun 1.3.14 的 `bun install` 成功；`bun install --frozen-lockfile` 仍报告锁文件需要变化，未计为通过，原因尚未确认，需另行排查。
+- 验收结论：本次补齐三项修复和生产设置 UI 的针对性复验。完整 IP-05 的打包宿主、离线重开及 macOS／Windows 平台矩阵仍未完成，继续保持未验收状态。
+
+### macOS 实际打包应用复验（2026-10-15）
+
+- 基线 `work 9f732a5`，在 macOS 27.0.1 arm64 上构建并归档实际 Electron 44.4.5 `.app`，解包后签名校验与启动通过。
+- 产品原生界面完成独立 ZIP 安装、CSS／图片加载、窗口重开恢复、最大化恢复、30 次启停、挂起期间禁用／卸载、Solid owner cleanup、卸载保留／删除数据和父子 ID 隔离；宿主及应用文件树摘要前后一致，原有用户资料未改变。
+- 具体结果、摘要、截图和未覆盖项见 [macOS 实机记录](independent-plugins-macos.md)。本次未退出运行中的主进程，未连接后端；安装后的完整进程冷启动、会话内命令／面板、严格断网和 Windows 实机仍未完成，IP-05 继续保持未验收状态。
+
+### 会话面板缺陷修复与重新出包（2026-10-16）
+
+- 用户反馈 10-15 归档的应用安装 panel-demo 后「+ Add tab」可见但点击无效。根因为桥接层 Panel 贡献在注册 effect 重跑时被宿主 owner 清理撤销；修复提交 `ad5f23d` 将 Panel 与 MenuItem 一并放入 `createRoot` 保护，并升级回归测试覆盖（修复前 2 个测试失败，修复后 7/7 通过）。
+- 重新构建打包应用并完成实机复验：隔离资料目录启动，安装 ZIP、只读连接真实本地后端、在实际会话中从「+ Add tab」打开「Project overview」，插件面板与原生 Review 标签共存并渲染内容；用户真实资料与后端进程未受影响。签名校验与启动冒烟通过。
+- 新归档 `opencode-front-macos-arm64-ad5f23d.tar.gz`（SHA-256 `8fdaf304…8ecbb`），取代含缺陷的 10-15 归档。严格断网、Windows 实机与长期资源测量仍未覆盖，IP-05 维持未验收。
 
 ## 实施记录模板
 

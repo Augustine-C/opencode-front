@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createRoot, createMemo } from "solid-js"
+import { createRoot, createMemo, getOwner, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createPluginHost } from "../../frontend-plugin/src/runtime"
 import { define, type Context } from "../../frontend-plugin/src/index"
@@ -104,9 +104,14 @@ function fixture() {
           value: typeof value === "function" ? createMemo(value as () => unknown) : value,
         }
         contributions.push(item)
-        return () => {
-          contributions.splice(contributions.indexOf(item), 1)
+        const remove = () => {
+          const index = contributions.indexOf(item)
+          if (index >= 0) contributions.splice(index, 1)
         }
+        // The host withdraws a contribution with the owner that registered it: one added during the
+        // bridge's reconciliation effect is withdrawn when the effect re-runs, as on re-run cleanup.
+        if (getOwner()) onCleanup(remove)
+        return remove
       },
     } as unknown as NativeContext
     attachPluginPanels({

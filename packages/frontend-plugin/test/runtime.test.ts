@@ -1,17 +1,25 @@
 import { expect, test } from "bun:test"
+import { catchError, createEffect, createRoot } from "solid-js"
+import { createStore } from "solid-js/store"
 import { createPluginHost } from "../src/runtime"
 import { define, type Context, type SlotClaim } from "../src/index"
 import { resolveSlots, type Claim } from "../src/structure"
 import { adaptConfig, parseConfig } from "../src/config"
 
-const context: Omit<Context, "ui" | "storage" | "signal" | "options"> = {
+const context: Omit<
+  Context,
+  "ui" | "storage" | "signal" | "options" | "assets"
+> = {
   app: { version: "test", platform: "web" },
   client: () => undefined,
   sessionID: () => undefined,
   connection: () => undefined,
   data: { listen: () => () => {} },
 }
-const plugin = (id: string, setup: Parameters<typeof define>[0]["setup"] = () => {}) =>
+const plugin = (
+  id: string,
+  setup: Parameters<typeof define>[0]["setup"] = () => {},
+) =>
   define({
     id,
     name: id,
@@ -52,32 +60,63 @@ test("disable disposes slot claims, commands, event listeners and setup cleanup"
 })
 
 test("failed setup rolls back registrations and retry does not duplicate contributions", async () => {
-  const host = createPluginHost({ context })
+  const outerErrors: unknown[] = []
+  const [failure, setFailure] = createStore({ effect: false })
+  const root = createRoot((dispose) => ({
+    host: catchError(() => createPluginHost({ context }), (error) => outerErrors.push(error))!,
+    dispose,
+  }))
+  const host = root.host
   host.register(
     plugin("broken", (ctx) => {
       ctx.ui.slot({ append: "app", render: () => "partial" })
       ctx.ui.command({ id: "retry", title: "Retry", run: () => {} })
       ctx.ui.panel.register({ name: "retry", title: "Retry" })
       if (ctx.options.fail !== false) throw new Error("Invalid credential")
+      createEffect(() => {
+        if (failure.effect) throw new Error("Plugin effect failed")
+      })
     }),
   )
   await host.enable("broken")
   expect(host.state.claims).toHaveLength(0)
-  expect(host.state.statuses[0]).toMatchObject({ state: "error", error: "Invalid credential" })
+  expect(host.state.statuses[0]).toMatchObject({
+    state: "error",
+    error: "Invalid credential",
+  })
+  expect(outerErrors).toEqual([])
   await host.enable("broken", { fail: false })
   await host.enable("broken", { fail: false })
   expect(host.state.statuses[0].state).toBe("enabled")
   expect(host.state.claims).toHaveLength(1)
   expect(host.state.commands).toHaveLength(1)
   expect(host.state.availablePanels).toHaveLength(1)
+  setFailure("effect", true)
+  expect(host.state.commands).toHaveLength(0)
+  expect(host.state.statuses[0]).toMatchObject({ state: "error", error: "Plugin effect failed" })
+  expect(outerErrors).toEqual([])
   await host.dispose()
+  root.dispose()
 })
 
 test("disabled asynchronous setup cannot register stale contributions", async () => {
-  const host = createPluginHost({ context })
+  const values = new Map<string, string>()
+  const host = createPluginHost({
+    context,
+    storage: {
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => {
+        values.set(key, value)
+      },
+    },
+  })
   let release!: () => void
   let aborted = false
   let cleaned = false
+  let completed!: () => void
+  const cleanupDone = new Promise<void>((resolve) => {
+    completed = resolve
+  })
   const ready = new Promise<void>((resolve) => {
     release = resolve
   })
@@ -85,9 +124,11 @@ test("disabled asynchronous setup cannot register stale contributions", async ()
     plugin("slow", async (ctx) => {
       await ready
       aborted = ctx.signal.aborted
+      ctx.storage.set("stale", true)
       ctx.ui.slot({ append: "app", render: () => "stale" })
       return () => {
         cleaned = true
+        completed()
       }
     }),
   )
@@ -96,8 +137,10 @@ test("disabled asynchronous setup cannot register stale contributions", async ()
   await host.disable("slow")
   release()
   await enabled
+  await cleanupDone
   expect(aborted).toBe(true)
   expect(cleaned).toBe(true)
+  expect(values.size).toBe(0)
   expect(host.state.claims).toHaveLength(0)
   expect(host.state.statuses[0].state).toBe("disabled")
 })
@@ -125,7 +168,10 @@ test("reload replaces the old generation and passes options", async () => {
 })
 
 test("config reuses package aliases and options, keeps unsupported packages visible", () => {
-  const status = { ...plugin("browser-status"), tui: ["@acme/tui-status@1.0.0"] }
+  const status = {
+    ...plugin("browser-status"),
+    tui: ["@acme/tui-status@1.0.0"],
+  }
   const result = adaptConfig(
     {
       plugins: [
@@ -137,13 +183,24 @@ test("config reuses package aliases and options, keeps unsupported packages visi
     [status],
   )
   expect(result.plugins).toEqual([
-    { id: "browser-status", package: "@acme/tui-status@1.0.0", options: { token: "configured" }, enabled: false },
+    {
+      id: "browser-status",
+      package: "@acme/tui-status@1.0.0",
+      options: { token: "configured" },
+      enabled: false,
+    },
   ])
   expect(result.unsupported).toEqual(["missing-adapter"])
-  expect(() => adaptConfig({ plugins: [{ package: "bad", options: [] }] }, [status])).toThrow()
+  expect(() =>
+    adaptConfig({ plugins: [{ package: "bad", options: [] }] }, [status]),
+  ).toThrow()
 })
 
-function claim(key: string, target: string, kind: "append" | "replace" | "before"): Claim<string> {
+function claim(
+  key: string,
+  target: string,
+  kind: "append" | "replace" | "before",
+): Claim<string> {
   return { key, plugin: key, placement: { target, kind }, render: key }
 }
 test("replacement suppresses descendants and keeps siblings; last replacement wins", () => {
@@ -157,13 +214,21 @@ test("replacement suppresses descendants and keeps siblings; last replacement wi
     ],
   })
   expect(result.slotted.get("prompt.footer")?.replace?.key).toBe("last")
-  expect(result.slotted.get("prompt.footer")?.before.map((item) => item.key)).toEqual(["sibling"])
-  expect(result.suppressed.map((item) => item.claim.key)).toEqual(["first", "status"])
+  expect(
+    result.slotted.get("prompt.footer")?.before.map((item) => item.key),
+  ).toEqual(["sibling"])
+  expect(result.suppressed.map((item) => item.claim.key)).toEqual([
+    "first",
+    "status",
+  ])
 })
 test("missing additive slots degrade to ancestors, missing replacements are suppressed", () => {
   const result = resolveSlots({
     paths: new Set(["prompt.footer"]),
-    claims: [claim("status", "prompt.footer.status", "append"), claim("replace", "prompt.footer.file", "replace")],
+    claims: [
+      claim("status", "prompt.footer.status", "append"),
+      claim("replace", "prompt.footer.file", "replace"),
+    ],
   })
   expect(result.degraded[0].to).toBe("prompt.footer")
   expect(result.slotted.get("prompt.footer")?.append[0].key).toBe("status")
@@ -171,12 +236,18 @@ test("missing additive slots degrade to ancestors, missing replacements are supp
 })
 
 // SDK placement exclusivity must be enforced by TypeScript as well as the runtime boundary.
-// @ts-expect-error A claim cannot have two placement keys.
-const invalid: SlotClaim = { append: "app", before: "app", render: () => "invalid" }
+const invalid: SlotClaim = {
+  append: "app",
+  // @ts-expect-error A claim cannot have two placement keys.
+  before: "app",
+  render: () => "invalid",
+}
 void invalid
 
 test("JSONC import accepts comments and trailing commas and rejects invalid JSON", () => {
-  expect(parseConfig('{ // inherited TUI config\n "plugins": ["status",], }')).toEqual({ plugins: ["status"] })
+  expect(
+    parseConfig('{ // inherited TUI config\n "plugins": ["status",], }'),
+  ).toEqual({ plugins: ["status"] })
   expect(() => parseConfig('{ "plugins": [ }')).toThrow("Invalid JSONC")
 })
 
@@ -184,7 +255,10 @@ test("TUI namespace and negative directives preserve options", () => {
   const result = adaptConfig(
     {
       plugins: [
-        { package: "acme.status", options: { endpoint: "https://example.com" } },
+        {
+          package: "acme.status",
+          options: { endpoint: "https://example.com" },
+        },
         "acme.panel",
         "-acme.*",
         "acme.status",
@@ -196,12 +270,16 @@ test("TUI namespace and negative directives preserve options", () => {
     ["acme.status", true],
     ["acme.panel", false],
   ])
-  expect(result.plugins[0].options).toEqual({ endpoint: "https://example.com" })
+  expect(result.plugins[0].options).toEqual({
+    endpoint: "https://example.com",
+  })
 })
 
 test("panel ownership prevents another plugin from closing it and disable removes it", async () => {
   let sessionID: string | undefined
-  const host = createPluginHost({ context: { ...context, sessionID: () => sessionID } })
+  const host = createPluginHost({
+    context: { ...context, sessionID: () => sessionID },
+  })
   let first!: Context
   let second!: Context
   host.register(
@@ -218,11 +296,16 @@ test("panel ownership prevents another plugin from closing it and disable remove
   await host.enable("second")
   expect(first.ui.panel.open("details")).toBe(false)
   sessionID = "session_one"
-  expect(first.ui.panel.open("details", { presentation: "fullscreen" })).toBe(true)
+  expect(first.ui.panel.open("details", { presentation: "fullscreen" })).toBe(
+    true,
+  )
   second.ui.panel.close()
   expect(host.state.panel?.plugin).toBe("first")
   expect(host.state.panel?.title).toBe("first")
-  expect(first.ui.panel.current()).toEqual({ name: "details", sessionID: "session_one" })
+  expect(first.ui.panel.current()).toEqual({
+    name: "details",
+    sessionID: "session_one",
+  })
   sessionID = "session_two"
   expect(first.ui.panel.current()).toBeUndefined()
   await host.disable("first")
@@ -243,22 +326,27 @@ test("plugin state is namespaced and persists across generations", async () => {
     },
   })
   const seen: unknown[] = []
+  const storageVersions: number[] = []
   host.register(
-    plugin("first", (ctx) => {
-      seen.push(ctx.storage.get("value"))
-      ctx.storage.set("value", 7)
+    plugin("example.foo", (ctx) => {
+      storageVersions.push(ctx.storage.version)
+      seen.push(ctx.storage.get("bar.value"))
+      ctx.storage.set("bar.value", 7)
     }),
   )
   host.register(
-    plugin("second", (ctx) => {
+    plugin("example.foo.bar", (ctx) => {
       seen.push(ctx.storage.get("value"))
+      ctx.storage.set("value", 9)
     }),
   )
-  await host.enable("first")
-  await host.enable("second")
-  await host.enable("first")
+  await host.enable("example.foo")
+  await host.enable("example.foo.bar")
+  await host.enable("example.foo")
   expect(seen).toEqual([undefined, undefined, 7])
-  expect(storage.get("opencode-front.plugin.first.value")).toBe("7")
+  expect(storageVersions).toEqual([1, 1])
+  expect(storage.get("opencode-front.plugin.v2:example.foo:bar.value")).toBe("7")
+  expect(storage.get("opencode-front.plugin.v2:example.foo.bar:value")).toBe("9")
   await host.dispose()
 })
 
@@ -279,6 +367,8 @@ test("host disposal aborts pending setup and prevents new generations", async ()
   await Promise.resolve()
   await host.dispose()
   expect(ctx.signal.aborted).toBe(true)
+  // Cancellation must settle enable even if the plugin never resolves setup.
+  await enabled
   release()
   await enabled
   await host.enable("slow")
@@ -286,13 +376,42 @@ test("host disposal aborts pending setup and prevents new generations", async ()
   expect(host.state.claims).toHaveLength(0)
 })
 
+test("disable cancels an enable still waiting for the previous generation's cleanup", async () => {
+  const host = createPluginHost({ context })
+  let finish!: () => void
+  const waiting = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  let setups = 0
+  host.register(
+    plugin("waiting", () => {
+      setups++
+      return () => waiting
+    }),
+  )
+  await host.enable("waiting")
+  const next = host.enable("waiting")
+  await host.disable("waiting")
+  finish()
+  await next
+  expect(setups).toBe(1)
+  expect(host.state.statuses[0].state).toBe("disabled")
+  await host.dispose()
+})
+
 test("panel menu registrations open on demand, reopen after close, and clean up on reload", async () => {
   let sessionID: string | undefined
   let stop!: () => void | Promise<void>
-  const host = createPluginHost({ context: { ...context, sessionID: () => sessionID } })
+  const host = createPluginHost({
+    context: { ...context, sessionID: () => sessionID },
+  })
   host.register(
     plugin("menu", (ctx) => {
-      stop = ctx.ui.panel.register({ name: "overview", title: "Overview", presentation: "fullscreen" })
+      stop = ctx.ui.panel.register({
+        name: "overview",
+        title: "Overview",
+        presentation: "fullscreen",
+      })
     }),
   )
   try {
@@ -358,11 +477,20 @@ test("panel registrations isolate owners and roll back duplicate or failed setup
     await host.enable("second")
     await host.enable("duplicate")
     await host.enable("broken-panel")
-    expect(host.state.availablePanels.map((panel) => panel.plugin)).toEqual(["first", "second"])
-    expect(host.state.statuses.find((status) => status.id === "duplicate")?.state).toBe("error")
-    expect(host.state.statuses.find((status) => status.id === "broken-panel")?.state).toBe("error")
+    expect(host.state.availablePanels.map((panel) => panel.plugin)).toEqual([
+      "first",
+      "second",
+    ])
+    expect(
+      host.state.statuses.find((status) => status.id === "duplicate")?.state,
+    ).toBe("error")
+    expect(
+      host.state.statuses.find((status) => status.id === "broken-panel")?.state,
+    ).toBe("error")
     await host.disable("first")
-    expect(host.state.availablePanels.map((panel) => panel.title)).toEqual(["Second"])
+    expect(host.state.availablePanels.map((panel) => panel.title)).toEqual([
+      "Second",
+    ])
   } finally {
     await host.dispose()
   }
@@ -373,11 +501,52 @@ test("import preview describes replacement and ignored adapters without applying
   const { previewConfig } = await import("../src/config")
   const available = [plugin("old"), plugin("new")]
   const current = [{ id: "old", package: "old", enabled: true, options: {} }]
-  const preview = previewConfig({ plugins: ["new", "uninstalled"] }, available, current)
+  const preview = previewConfig(
+    { plugins: ["new", "uninstalled"] },
+    available,
+    current,
+  )
   expect(preview.changes.map(({ id, action }) => [id, action])).toEqual([
     ["old", "disable"],
     ["new", "enable"],
   ])
   expect(preview.unsupported).toEqual(["uninstalled"])
-  expect(current).toEqual([{ id: "old", package: "old", enabled: true, options: {} }])
+  expect(current).toEqual([
+    { id: "old", package: "old", enabled: true, options: {} },
+  ])
+})
+
+test("dynamic definitions appear reactively and unregister waits for contribution cleanup", async () => {
+  const cleaned: string[] = []
+  const host = createPluginHost({ context })
+  const definition = plugin("independent.dynamic", (ctx) => {
+    ctx.ui.command({ id: "hello", title: "Hello", run: () => {} })
+    ctx.ui.slot({ append: "app", render: () => "loaded" })
+    return () => {
+      cleaned.push("done")
+    }
+  })
+  host.register(definition)
+  expect(host.definitions()).toEqual([definition])
+  await host.enable(definition.id)
+  expect(host.state.commands).toHaveLength(1)
+  expect(await host.unregister(definition.id, definition)).toBe(true)
+  expect(host.definitions()).toEqual([])
+  expect(host.state.commands).toHaveLength(0)
+  expect(host.state.claims).toHaveLength(0)
+  expect(cleaned).toEqual(["done"])
+  expect(await host.unregister(definition.id)).toBe(false)
+  await host.dispose()
+})
+
+test("runtime gives plugins an explicit failure when no package resource owner exists", async () => {
+  const host = createPluginHost({ context })
+  host.register(
+    plugin("built-in", (ctx) => {
+      expect(() => ctx.assets.url("image.svg")).toThrow("has no package asset")
+    }),
+  )
+  await host.enable("built-in")
+  expect(host.state.statuses[0].state).toBe("enabled")
+  await host.dispose()
 })

@@ -312,6 +312,7 @@
         "README.md",
         "bun.lock",
         "package.json",
+        "tsconfig.json",
         "docs/**",
         "examples/**",
         "scripts/**",

@@ -1,0 +1,89 @@
+import type { Context } from "@opencode/frontend-plugin"
+import { createStore } from "solid-js/store"
+import { createEffect, onCleanup, untrack } from "solid-js"
+import "./style.css"
+
+// An opt-in example migrated from examples/frontend-plugins: no requests run until the user supplies an endpoint.
+// Expected JSON: { "label": "Build queue", "value": "3 pending" }.
+export function setup(context: Context) {
+  const [state, setState] = createStore({ label: "", value: "", error: "", loading: false })
+  const endpoint = typeof context.options.endpoint === "string" ? context.options.endpoint : undefined
+  const interval =
+    typeof context.options.interval === "number" && Number.isFinite(context.options.interval)
+      ? Math.max(5000, context.options.interval)
+      : 60000
+  let timer: ReturnType<typeof setTimeout> | undefined
+  async function refresh() {
+    if (!endpoint || state.loading || context.signal.aborted) return
+    clearTimeout(timer)
+    setState({ loading: true, error: "" })
+    try {
+      const url = new URL(endpoint)
+      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Status unavailable")
+      const response = await fetch(url, { signal: context.signal, credentials: "omit" })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const result: unknown = await response.json()
+      if (
+        !result ||
+        typeof result !== "object" ||
+        !("label" in result) ||
+        !("value" in result) ||
+        typeof result.label !== "string" ||
+        typeof result.value !== "string"
+      )
+        throw new Error("Expected a JSON response with string label and value fields.")
+      if (!context.signal.aborted) setState({ label: result.label, value: result.value })
+    } catch (error) {
+      if (!context.signal.aborted)
+        setState({ value: "", error: error instanceof Error ? error.message : String(error) })
+    } finally {
+      setState("loading", false)
+      if (!context.signal.aborted) timer = setTimeout(() => void refresh(), interval)
+    }
+  }
+  const content = () => (
+    <span class="third-party-status-footer">
+      {!endpoint
+        ? "Configure a status endpoint in plugin options."
+        : state.error
+          ? "Status unavailable"
+          : state.value
+            ? `${state.label}: ${state.value}`
+            : "Loading status…"}
+    </span>
+  )
+  context.ui.slot({ append: "home.footer.status", render: content })
+  context.ui.slot({ append: "prompt.footer.status", render: content })
+  context.ui.slot({ append: "sidebar.footer", render: content })
+  context.ui.slot({
+    append: "session.panel",
+    render: (input) =>
+      input.name === "third-party-status" ? (
+        <div class="third-party-status-panel">
+          {content()}
+          <p role={state.error ? "alert" : undefined}>{state.error}</p>
+          <button onClick={() => void refresh()} disabled={state.loading}>
+            Refresh status
+          </button>
+        </div>
+      ) : null,
+  })
+  createEffect(() => {
+    onCleanup(
+      untrack(() => context.ui.command({ id: "refresh", title: "Refresh third-party status", run: refresh })),
+    )
+    onCleanup(
+      untrack(() =>
+        context.ui.command({
+          id: "panel",
+          title: "Open third-party status panel",
+          run: () => {
+            context.ui.panel.open("third-party-status")
+          },
+        }),
+      ),
+    )
+  })
+  void refresh()
+  return () => clearTimeout(timer)
+}

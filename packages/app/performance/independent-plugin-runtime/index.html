@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' blob:; style-src 'self' blob:; img-src 'self' data: blob:"
+    />
+    <meta charset="UTF-8" />
+    <title>Independent plugin runtime probe</title>
+    <link rel="stylesheet" href="/probe.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="plugin-slot"></div>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

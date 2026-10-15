@@ -1,0 +1,10 @@
+.hello-independent-plugin {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+}
+
+.hello-independent-plugin img {
+  flex: none;
+}

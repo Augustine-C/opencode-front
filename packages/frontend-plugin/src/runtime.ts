@@ -1,7 +1,16 @@
-import { batch, createRoot, getOwner, runWithOwner, type Owner } from "solid-js"
+import { batch, catchError, createRoot, getOwner, runWithOwner, type Owner } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { Command, Context, Definition, Panel, Placement, SlotClaim, SlotPath } from "./index"
+import type {
+  Command,
+  Context,
+  Definition,
+  Panel,
+  Placement,
+  SlotClaim,
+  SlotPath,
+} from "./index"
 import type { Claim } from "./structure"
+import { pluginStoragePrefix } from "./storage"
 
 export type Render = SlotClaim["render"]
 export type PluginPanel = {
@@ -13,9 +22,13 @@ export type PluginPanel = {
 }
 const samePanel = (a: PluginPanel, b: PluginPanel) =>
   a.plugin === b.plugin && a.name === b.name && a.sessionID === b.sessionID
-export type PluginStatus = { id: string; state: "disabled" | "loading" | "enabled" | "error"; error?: string }
+export type PluginStatus = {
+  id: string
+  state: "disabled" | "loading" | "enabled" | "error"
+  error?: string
+}
 export function createPluginHost(input: {
-  context: Omit<Context, "ui" | "options" | "signal" | "storage">
+  context: Omit<Context, "ui" | "options" | "signal" | "storage" | "assets">
   storage?: Pick<Storage, "getItem" | "setItem">
   owner?: Owner | null
 }) {
@@ -23,6 +36,7 @@ export function createPluginHost(input: {
   const [state, setState] = createStore({
     claims: [] as Claim<Render>[],
     commands: [] as (Command & { plugin: string })[],
+    definitions: [] as Definition[],
     statuses: [] as PluginStatus[],
     panel: undefined as PluginPanel | undefined,
     panels: [] as PluginPanel[],
@@ -30,7 +44,11 @@ export function createPluginHost(input: {
     panelRequest: 0,
   })
   const definitions = new Map<string, Definition>()
-  const active = new Map<string, { abort: AbortController; cleanup: Set<() => void | Promise<void>> }>()
+  const requests = new Map<string, object>()
+  const active = new Map<
+    string,
+    { abort: AbortController; cleanup: Set<() => void | Promise<void>> }
+  >()
   let sequence = 0
   let disposed = false
   function report(id: string, error: unknown) {
@@ -46,52 +64,76 @@ export function createPluginHost(input: {
   }
   function remove(id: string) {
     if (state.panel?.plugin === id) setState("panel", undefined)
-    setState("panels", (panels) => panels.filter((panel) => panel.plugin !== id))
-    setState("availablePanels", (panels) => panels.filter((panel) => panel.plugin !== id))
-    setState("claims", (claims) => claims.filter((claim) => claim.plugin !== id))
-    setState("commands", (commands) => commands.filter((command) => command.plugin !== id))
+    setState("panels", (panels) =>
+      panels.filter((panel) => panel.plugin !== id),
+    )
+    setState("availablePanels", (panels) =>
+      panels.filter((panel) => panel.plugin !== id),
+    )
+    setState("claims", (claims) =>
+      claims.filter((claim) => claim.plugin !== id),
+    )
+    setState("commands", (commands) =>
+      commands.filter((command) => command.plugin !== id),
+    )
   }
   function dismissPanel(panel: PluginPanel) {
     batch(() => {
-      setState("panels", (panels) => panels.filter((entry) => !samePanel(entry, panel)))
-      if (state.panel && samePanel(state.panel, panel)) setState("panel", undefined)
+      setState("panels", (panels) =>
+        panels.filter((entry) => !samePanel(entry, panel)),
+      )
+      if (state.panel && samePanel(state.panel, panel))
+        setState("panel", undefined)
     })
   }
   function selectPanel(panel: PluginPanel) {
     const selected = state.panels.find((entry) => samePanel(entry, panel))
-    if (selected?.sessionID === input.context.sessionID()) setState("panel", { ...selected })
+    if (selected?.sessionID === input.context.sessionID())
+      setState("panel", { ...selected })
   }
   function togglePanel(panel = state.panel) {
     if (!panel) return
     const index = state.panels.findIndex((entry) => samePanel(entry, panel))
     if (index === -1) return
-    const presentation = state.panels[index].presentation === "panel" ? "fullscreen" : "panel"
+    const presentation =
+      state.panels[index].presentation === "panel" ? "fullscreen" : "panel"
     batch(() => {
       setState("panels", index, "presentation", presentation)
-      if (state.panel && samePanel(state.panel, panel)) setState("panel", "presentation", presentation)
+      if (state.panel && samePanel(state.panel, panel))
+        setState("panel", "presentation", presentation)
     })
   }
   async function disable(id: string) {
+    requests.delete(id)
     const generation = active.get(id)
     active.delete(id)
     generation?.abort.abort()
     remove(id)
     status(id, "disabled")
     if (!generation) return
-    const results = await Promise.allSettled([...generation.cleanup].map((cleanup) => Promise.resolve().then(cleanup)))
+    const results = await Promise.allSettled(
+      [...generation.cleanup].map((cleanup) => Promise.resolve().then(cleanup)),
+    )
     results.forEach((result) => {
       if (result.status === "rejected") report(id, result.reason)
     })
   }
   async function enable(id: string, options: Record<string, unknown> = {}) {
-    await disable(id)
-    if (disposed) return
+    const stopping = disable(id)
+    const request = {}
+    requests.set(id, request)
+    await stopping
+    if (disposed || requests.get(id) !== request) return
     const plugin = definitions.get(id)
     if (!plugin) throw new Error(`Unknown frontend plugin: ${id}`)
-    const generation = { abort: new AbortController(), cleanup: new Set<() => void | Promise<void>>() }
+    const generation = {
+      abort: new AbortController(),
+      cleanup: new Set<() => void | Promise<void>>(),
+    }
     active.set(id, generation)
     status(id, "loading")
-    const alive = () => active.get(id) === generation && !generation.abort.signal.aborted
+    const alive = () =>
+      active.get(id) === generation && !generation.abort.signal.aborted
     function track(cleanup: () => void | Promise<void>) {
       generation.cleanup.add(cleanup)
       return () => {
@@ -119,19 +161,37 @@ export function createPluginHost(input: {
         },
       },
       storage: {
+        version: 1,
         get<T>(key: string): T | undefined {
-          const value = input.storage?.getItem(`opencode-front.plugin.${id}.${key}`)
-          return value === null || value === undefined ? undefined : (JSON.parse(value) as T)
+          const value = input.storage?.getItem(
+            `${pluginStoragePrefix(id)}${key}`,
+          )
+          return value === null || value === undefined
+            ? undefined
+            : (JSON.parse(value) as T)
         },
         set(key, value) {
-          input.storage?.setItem(`opencode-front.plugin.${id}.${key}`, JSON.stringify(value))
+          if (!alive()) return
+          input.storage?.setItem(
+            `${pluginStoragePrefix(id)}${key}`,
+            JSON.stringify(value),
+          )
+        },
+      },
+      assets: {
+        url(path) {
+          throw new Error(`Plugin ${id} has no package asset named ${path}`)
         },
       },
       ui: {
         panel: {
           register(panel) {
             if (!alive()) return () => {}
-            if (state.availablePanels.some((entry) => entry.plugin === id && entry.name === panel.name)) {
+            if (
+              state.availablePanels.some(
+                (entry) => entry.plugin === id && entry.name === panel.name,
+              )
+            ) {
               throw new Error(`Duplicate panel: ${id}:${panel.name}`)
             }
             const open = () => context.ui.panel.open(panel.name, panel)
@@ -140,7 +200,11 @@ export function createPluginHost(input: {
               plugin: id,
               open,
             })
-            return track(() => setState("availablePanels", (panels) => panels.filter((entry) => entry.open !== open)))
+            return track(() =>
+              setState("availablePanels", (panels) =>
+                panels.filter((entry) => entry.open !== open),
+              ),
+            )
           },
           open(name, options) {
             const sessionID = input.context.sessionID()
@@ -153,7 +217,9 @@ export function createPluginHost(input: {
               presentation: options?.presentation ?? "panel",
             }
             batch(() => {
-              const index = state.panels.findIndex((entry) => samePanel(entry, panel))
+              const index = state.panels.findIndex((entry) =>
+                samePanel(entry, panel),
+              )
               if (index === -1) setState("panels", state.panels.length, panel)
               else setState("panels", index, panel)
               setState("panel", { ...panel })
@@ -163,19 +229,28 @@ export function createPluginHost(input: {
           },
           close() {
             const panel = state.panel
-            if (panel?.plugin === id && panel.sessionID === input.context.sessionID()) dismissPanel(panel)
+            if (
+              panel?.plugin === id &&
+              panel.sessionID === input.context.sessionID()
+            )
+              dismissPanel(panel)
           },
           current() {
             const panel = state.panel
-            if (panel?.plugin !== id || panel.sessionID !== input.context.sessionID()) return
+            if (
+              panel?.plugin !== id ||
+              panel.sessionID !== input.context.sessionID()
+            )
+              return
             return { name: panel.name, sessionID: panel.sessionID }
           },
         },
         slot<P extends SlotPath>(claim: SlotClaim<P>) {
-          const keys = (["before", "after", "prepend", "append", "replace"] as const).filter(
-            (key) => claim[key] !== undefined,
-          )
-          if (keys.length !== 1) throw new Error("A slot claim must specify exactly one placement")
+          const keys = (
+            ["before", "after", "prepend", "append", "replace"] as const
+          ).filter((key) => claim[key] !== undefined)
+          if (keys.length !== 1)
+            throw new Error("A slot claim must specify exactly one placement")
           if (!alive()) return () => {}
           const kind: Placement = keys[0]
           const key = `${id}:${++sequence}`
@@ -185,35 +260,100 @@ export function createPluginHost(input: {
             placement: { kind, target: claim[kind]! },
             render: claim.render as Render,
           })
-          return track(() => setState("claims", (claims) => claims.filter((claim) => claim.key !== key)))
+          return track(() =>
+            setState("claims", (claims) =>
+              claims.filter((claim) => claim.key !== key),
+            ),
+          )
         },
         command(command) {
           if (!alive()) return () => {}
           const key = `${id}:${command.id}`
-          if (state.commands.some((entry) => entry.id === key)) throw new Error(`Duplicate command: ${key}`)
-          setState("commands", state.commands.length, { ...command, id: key, plugin: id })
-          return track(() => setState("commands", (commands) => commands.filter((command) => command.id !== key)))
+          if (state.commands.some((entry) => entry.id === key))
+            throw new Error(`Duplicate command: ${key}`)
+          setState("commands", state.commands.length, {
+            ...command,
+            id: key,
+            plugin: id,
+          })
+          return track(() =>
+            setState("commands", (commands) =>
+              commands.filter((command) => command.id !== key),
+            ),
+          )
         },
       },
     }
     try {
-      const pending = runWithOwner(owner, () =>
-        createRoot((dispose) => {
-          generation.cleanup.add(dispose)
-          return plugin.setup(context)
-        }),
-      )
-      const cleanup = await pending
-      if (cleanup) {
-        if (alive()) generation.cleanup.add(cleanup)
-        else await cleanup()
+      let initialized = false
+      const pending = new Promise<void>((resolve, reject) => {
+        const fail = (error: unknown) => {
+          reject(error)
+          if (initialized && alive()) {
+            void disable(id)
+            report(id, error)
+          }
+        }
+        runWithOwner(owner, () =>
+          createRoot((dispose) => {
+            generation.cleanup.add(dispose)
+            // Own Solid errors before they can reach the application's ErrorBoundary.
+            catchError(() => {
+              void Promise.resolve(plugin.setup(context))
+                .then(async (cleanup) => {
+                  if (cleanup) {
+                    if (alive()) generation.cleanup.add(cleanup)
+                    else await cleanup()
+                  }
+                  resolve()
+                })
+                .catch(reject)
+            }, fail)
+          }),
+        )
+      })
+      let cancel!: () => void
+      const cancelled = new Promise<void>((resolve) => {
+        cancel = resolve
+      })
+      generation.abort.signal.addEventListener("abort", cancel, { once: true })
+      if (!alive()) cancel()
+      // Keep observing late completion for cleanup/errors, but release callers on abort.
+      const settled = Promise.resolve(pending)
+        .then(() => {
+          if (alive()) {
+            initialized = true
+            status(id, "enabled")
+          }
+        })
+        .catch(async (error) => {
+          if (!alive()) return
+          const stopping = disable(id)
+          report(id, error)
+          await stopping
+        })
+      try {
+        await Promise.race([settled, cancelled])
+      } finally {
+        generation.abort.signal.removeEventListener("abort", cancel)
       }
-      if (alive()) status(id, "enabled")
     } catch (error) {
       if (!alive()) return
       await disable(id)
       report(id, error)
     }
+  }
+  async function unregister(id: string, expected?: Definition) {
+    const plugin = definitions.get(id)
+    if (!plugin || (expected && plugin !== expected)) return false
+    await disable(id)
+    if (definitions.get(id) !== plugin) return false
+    definitions.delete(id)
+    setState("definitions", [...definitions.values()])
+    setState("statuses", (statuses) =>
+      statuses.filter((entry) => entry.id !== id),
+    )
+    return true
   }
   return {
     state,
@@ -228,12 +368,22 @@ export function createPluginHost(input: {
     togglePanel,
     register(plugin: Definition) {
       if (disposed) throw new Error("Plugin host is disposed")
-      if (plugin.apiVersion !== 1) throw new Error(`Unsupported plugin API: ${plugin.id}`)
-      if (definitions.has(plugin.id)) throw new Error(`Duplicate plugin: ${plugin.id}`)
+      if (plugin.apiVersion !== 1)
+        throw new Error(`Unsupported plugin API: ${plugin.id}`)
+      if (definitions.has(plugin.id))
+        throw new Error(`Duplicate plugin: ${plugin.id}`)
       definitions.set(plugin.id, plugin)
+      setState("definitions", [...definitions.values()])
       status(plugin.id, "disabled")
+      let removed = false
+      return () => {
+        if (removed) return
+        removed = true
+        void unregister(plugin.id, plugin)
+      }
     },
-    definitions: () => [...definitions.values()],
+    unregister,
+    definitions: () => state.definitions,
     dispose: () => {
       disposed = true
       return Promise.all([...active.keys()].map(disable))

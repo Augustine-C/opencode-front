@@ -1,6 +1,6 @@
 # 独立插件包与运行时设计
 
-返回[功能计划](independent-plugins.md)。本页为拟议契约，IP-00 验证后冻结第一版格式；示例字段不表示当前 SDK 已支持。
+返回[功能计划](independent-plugins.md)。IP-00 已验证运行方式并冻结第一版包契约；示例字段仍需对应的 IP-01～IP-03 实现后才会由宿主支持。
 
 ## 包结构与清单
 
@@ -8,7 +8,7 @@
 service-dashboard.zip
 ├── manifest.json
 ├── main.js
-├── style.css
+├── styles/main.css
 └── assets/
     └── icon.svg
 ```
@@ -22,31 +22,53 @@ service-dashboard.zip
   "apiVersion": 1,
   "runtimeVersion": "solid-v1",
   "entry": "main.js",
-  "styles": ["style.css"],
+  "styles": ["styles/main.css"],
   "capabilities": ["session.read", "commands.register", "panels.register"]
 }
 ```
 
-`formatVersion`、`apiVersion` 与 `runtimeVersion` 分别描述包格式、宿主 API 和共享渲染运行时契约，不直接绑定 OpenCode GUI 每个版本。`solid-v1` 是待验证的运行时契约标识，并非 SolidJS 的 npm 版本兼容承诺。冻结时提供明确的宿主支持表。清单可有描述、作者、源码链接与许可证；自报来源不是已验证身份。
+`formatVersion`、`apiVersion` 与 `runtimeVersion` 分别描述包格式、宿主 API 和共享渲染运行时契约，不直接绑定 OpenCode GUI 每个版本。v1 字段、能力名、类型和 runtime symbol 已在 `@opencode/frontend-plugin/independent` 冻结。`solid-v1` 是共享运行时 ABI 标识，并非 SolidJS 的 npm 版本兼容承诺。清单可有描述、作者、HTTPS 源码链接与许可证；自报来源不是已验证身份。
+
+| 包字段             | v1 约定                                                             |
+| ------------------ | ------------------------------------------------------------------- |
+| `formatVersion`    | 整数 `1`；ZIP 使用标准单盘目录，可 store 或 deflate                 |
+| `apiVersion`       | 整数 `1`；`setup(context)` 的前端插件 SDK                           |
+| `runtimeVersion`   | 字符串 `solid-v1`；宿主注入的 Solid、web、store 共享命名空间        |
+| `entry`            | 固定 `main.js`；ESM 命名导出 `setup(context)`，不允许模块导入或分块 |
+| `styles`, `assets` | 包内相对路径清单；只能使用 ASCII 文件路径                           |
+| `capabilities`     | 已知 API 能力名的子集；用于兼容和告知，不执行权限隔离               |
+| 插件 ID            | 至少两段的小写反向命名空间，如 `example.service-dashboard`          |
+| ZIP 限制           | 20 MiB 压缩、50 MiB 解压、单文件 20 MiB、最多 1,000 个条目          |
+
+当前宿主计划的兼容矩阵：
+
+| 宿主支持标识           | 包格式 | API | Solid ABI  | 说明                                                            |
+| ---------------------- | ------ | --- | ---------- | --------------------------------------------------------------- |
+| 加载器升级后的前端宿主 | 1      | 1   | `solid-v1` | 通过 ZIP 导入；本阶段开发中的 main 在加载器交付前不提供安装入口 |
+| 旧版前端宿主           | —      | —   | —          | 无独立 ZIP 加载器，需要更新一次宿主                             |
+
+保持格式、API 与 runtime ABI 独立递增；插件管理器按完整三元组拒绝不匹配的包，并给出最低宿主更新路径。
 
 校验要求：
 
 - ID 使用有命名空间的稳定格式；内置 ID 保留，第三方包不能覆盖；插件定义 ID 与清单必须一致。
 - 版本使用 SemVer；未知格式、API 主版本、运行时契约及必需能力在执行代码前拒绝，并给出可操作说明。
 - 入口与所有资源须为包内规范化相对路径，检查缺失文件、重复文件名、大小写冲突、绝对路径、`..`、反斜杠和符号链接等歧义；ZIP 不解压到用户文件系统。
-- 读取过程中限制压缩包大小、解压总量、文件数和单文件大小，不能先完整解压再检查。建议起始限制为 20 MiB 压缩包、50 MiB 解压总量、1,000 个文件，IP-00 后根据示例确定并统一在 UI 告知。
+- 读取过程中限制压缩包大小、解压总量、文件数和单文件大小；v1 固定为 20 MiB 压缩包、50 MiB 解压总量、每文件 20 MiB、1,000 个归档条目，并在安装界面告知。
 - 为每个内容版本计算摘要用于完整性、幂等与存储寻址。摘要不是作者签名，也不证明可信。
 - 预览仅解析静态清单与文件元数据，不能执行入口或调用插件提供的预览函数。
 
 ## 独立构建与共享运行时
 
-首选产物为单文件 ESM，默认导出一个接收宿主运行时的工厂，由工厂返回现有 SDK 的插件 Definition。工厂参数和函数名在可行性验证后定稿。
+首选产物为单文件 ESM，命名导出 `setup(context)`，直接符合现有 SDK 插件 Definition 的入口签名。
 
-构建工具负责将开发时的 `solid-js`、`solid-js/web`、`solid-js/store` 及 SDK 运行时引用转为宿主注入的共享 facade；其他浏览器依赖打进主文件。禁止产物残留裸模块导入、相对 JS 分块和对宿主 `@/` 内部路径的依赖。不要让插件带入第二份 SolidJS：需要验证 context、owner、effect 清理与 JSX 编译结果共享同一运行时。
+模板构建器将 `solid-js`、`solid-js/web`、`solid-js/store` 转成 `Symbol.for("opencode-front.plugin-runtime.v1")` 下的宿主共享 facade；其他浏览器依赖打进主文件。禁止产物残留模块导入、动态分块和宿主 `@/` 内部路径。不要让插件带入第二份 SolidJS：IP-00 已在 Chromium 和 Electron 夹具验证共享 runtime、owner、effect 清理与 JSX；IP-05 还需覆盖固定宿主导入完整插件。
 
-工具应生成版本信息、清单与 ZIP，并对产物做结构检查；不能把简单正则检查当作任意恶意代码的安全审计。宿主不在用户机器上编译 TSX、不从包仓库安装依赖。
+模板 `examples/independent-plugin-template` 生成清单对应的单文件 ESM、样式、资源和 ZIP，并在打包时用 AST 检查禁止模块导入；不能把结构检查当作任意恶意代码的安全审计。宿主不在用户机器上编译 TSX、不从包仓库安装依赖。清单校验器与 ZIP 读取器位于 `packages/app/src/plugins/independent`，契约类型从 `@opencode/frontend-plugin/independent` 导出。
 
 稳定 SDK 提供宿主已有 `context.ui.command`、`context.ui.panel.register/open`、插槽、存储、连接与会话 accessors。对外导出的类型也需要可独立获取，避免模板依赖 monorepo 私有路径。第一阶段仅提供明确受支持的 UI 原语；不暴露整个上游 UI 内部模块。
+
+自定义面板的产品落点为现有 Side Panel：ZIP 的 setup 注册面板入口，`session.panel` 提供内容，现有 `plugin-panels.ts` 桥接层将其接入原生 `Panel(region: "side")`、菜单与布局。面板复用已有标签和会话生命周期；独立打包不改变面板所属的容器。固定定位的页面卡片不能替代此接入方式的产品验收。
 
 ## 模块与资源加载
 
@@ -60,9 +82,9 @@ JS 模块使用新 URL 区分内容版本，初始化结果进行结构校验。
 
 建议 IndexedDB 保存两类数据：
 
-| 数据 | 内容 |
-| --- | --- |
-| 模块内容记录 | 内容摘要、原始清单、入口/CSS/资源字节、安装时间 |
+| 数据         | 内容                                               |
+| ------------ | -------------------------------------------------- |
+| 模块内容记录 | 内容摘要、原始清单、入口/CSS/资源字节、安装时间    |
 | 插件安装记录 | ID、选中版本、上一可用版本、待激活版本、初始化状态 |
 
 模块字节不得写入 localStorage。现有插件配置保留选项与启用意愿，业务数据仍走按插件 ID 隔离的 storage。迁移后本地模块、内置定义与配置合并成统一可用列表；未安装的配置项显示未安装，不偷偷联网下载。

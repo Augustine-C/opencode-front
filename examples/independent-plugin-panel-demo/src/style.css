@@ -1,0 +1,163 @@
+/* Flattened from examples/frontend-plugins/src/panel-demo.css: the host CSS scoper
+   prefixes every selector with [data-plugin-id], which native nesting cannot survive. */
+[data-component="plugin-panel-demo"] {
+  container: plugin-panel-demo / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: var(--v2-text-text-base);
+  font-size: 13px;
+  line-height: var(--line-height-base);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--v2-text-text-muted);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--v2-background-bg-layer-02);
+  color: var(--v2-text-text-base);
+  font-size: 12px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-metrics > div {
+  border: 1px solid var(--v2-border-border-muted);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--v2-background-bg-layer-02);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-metrics dt {
+  color: var(--v2-text-text-muted);
+  margin-bottom: 6px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-metrics dd {
+  font-size: 18px;
+  font-weight: 530;
+  line-height: 24px;
+  margin: 0;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-metrics .panel-demo-ready {
+  color: var(--v2-text-text-accent);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--v2-border-border-muted);
+  border-radius: 8px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-card h3,
+[data-component="plugin-panel-demo"] .panel-demo-card label {
+  font-weight: 500;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--v2-background-bg-layer-02);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--v2-background-bg-accent);
+  transition: width 150ms ease;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-component="plugin-panel-demo"] textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid var(--v2-border-border-muted);
+  border-radius: 6px;
+  background: var(--v2-background-bg-base);
+  color: var(--v2-text-text-base);
+  line-height: var(--line-height-base);
+}
+
+[data-component="plugin-panel-demo"] textarea:focus-visible {
+  outline: 2px solid var(--v2-border-border-base);
+  outline-offset: 2px;
+}
+
+[data-component="plugin-panel-demo"] textarea::placeholder {
+  color: var(--v2-text-text-faint);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-session-label {
+  color: var(--v2-text-text-muted);
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-session-id {
+  overflow-wrap: anywhere;
+  color: var(--v2-text-text-muted);
+  font-size: 12px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+[data-component="plugin-panel-demo"] .panel-demo-reset {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--v2-border-border-muted);
+  border-radius: 6px;
+  background: var(--v2-background-bg-layer-02);
+  color: var(--v2-text-text-base);
+  cursor: pointer;
+}
+
+@container plugin-panel-demo (min-width: 640px) {
+  [data-component="plugin-panel-demo"] .panel-demo-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-component="plugin-panel-demo"] .panel-demo-progress > span {
+    transition: none;
+  }
+}
