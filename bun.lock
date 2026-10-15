@@ -46,6 +46,7 @@
         "@solidjs/router": "catalog:",
         "@tanstack/solid-query": "5.91.4",
         "@tanstack/solid-virtual": "catalog:",
+        "acorn": "8.18.0",
         "core-js": "3.50.0",
         "effect": "catalog:",
         "fuzzysort": "catalog:",

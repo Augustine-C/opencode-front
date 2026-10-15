@@ -45,6 +45,12 @@ export default define({
 
 Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `createCatalog`. Installed plugins appear in **Settings → Frontend plugins** and through the command palette. Before connecting, the connection screen's settings icon opens the same controls. External adapters must use the host's Solid runtime, with `solid-js` as a peer dependency. Source TSX imports are compiled by Vite. A separately published adapter should ship browser-compatible ESM; avoid bundling a second Solid runtime or importing Node APIs. This first release uses an explicit build-time catalog rather than a runtime marketplace.
 
+## Independent ZIP packages
+
+The independent package plan is being implemented in stages. IP-01 adds the v1 manifest/type contract and a standalone build template at [`examples/independent-plugin-template`](../examples/independent-plugin-template/README.md); it produces a self-contained ZIP without including the plugin in the host build. The host does not yet expose installation until the storage, loader, and manager stages land. See the [package format and compatibility plan](plans/independent-plugins-design.md).
+
+Independent modules run as trusted code in the host page. Their declared capabilities explain API needs but do not sandbox or restrict JavaScript access. The package builder embeds Solid imports as references to the host's shared runtime; it rejects emitted ESM imports and chunks. Package contents must use a new SemVer version whenever any file changes.
+
 ## Slot contract
 
 | Slot                   | Input                                                         | Host position                              |

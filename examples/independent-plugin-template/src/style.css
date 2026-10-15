@@ -1,0 +1,4 @@
+.hello-independent-plugin {
+  color: var(--text-primary);
+  background-image: url("../public/hello.svg");
+}
