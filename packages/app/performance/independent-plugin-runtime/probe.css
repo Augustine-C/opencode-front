@@ -1,0 +1,7 @@
+:root {
+  --text-primary: rgb(1, 2, 3);
+}
+
+#plugin-slot {
+  padding: 1rem;
+}

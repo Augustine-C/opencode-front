@@ -3,6 +3,7 @@ import { spawn } from "node:child_process"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
+import { runIndependentPluginAcceptance } from "../acceptance-flow.mjs"
 
 const port = Number(process.env.IP_ELECTRON_DEBUG_PORT || 9237)
 const electron = spawn(
@@ -48,6 +49,10 @@ try {
   assert.equal(await page.locator('[data-probe="shared-solid"]').count(), 0)
   assert.equal(await page.locator('[data-probe-style="true"]').count(), 0)
   assert.equal(await page.evaluate(() => window.probeCleanups), 1)
+  const archivePath = resolve(
+    process.argv[2] ?? "examples/independent-plugin-template/dist/example.hello-1.0.0.zip",
+  )
+  const independent = await runIndependentPluginAcceptance(page, archivePath)
   assert.deepEqual(errors, [])
   console.log(
     JSON.stringify({
@@ -58,6 +63,7 @@ try {
       sharedContextAndStore: true,
       jsxWebRuntime: true,
       ownerCleanup: true,
+      ...independent,
       pageErrors: errors,
     }),
   )
