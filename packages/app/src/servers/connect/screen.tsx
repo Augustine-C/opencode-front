@@ -83,6 +83,8 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
       const result = await check(http, { signal: attempt.signal })
       if (!current()) return
       if (!result.healthy) {
+        // Pairing forms contain a link or QR payload, not the endpoint needed for password recovery.
+        if (result.unauthorized) setState("url", http.url)
         setState({
           unauthorized: !!result.unauthorized,
           error: result.unauthorized ? language.t("server.connect.recovery.unauthorized") : connectionError(http.url),

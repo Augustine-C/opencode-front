@@ -92,6 +92,56 @@ await secure
   .getByRole("alert")
   .filter({ hasText: /HTTPS|secure|HTTP/ })
   .waitFor()
+for (const method of ["link", "password"]) {
+  const paired = await browser.newPage()
+  paired.on("pageerror", (error) => errors.push(error.message))
+  let redemptions = 0
+  await paired.route("http://pairing.fixture:4096/**", async (route) => {
+    if (route.request().method() === "OPTIONS")
+      return route.fulfill({
+        status: 204,
+        headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" },
+      })
+    if (route.request().url().endsWith("/auth/connect/recovery-code")) {
+      redemptions++
+      return route.fulfill({ status: 200, json: { token: "synthetic-pairing-token" } })
+    }
+    if (!route.request().url().endsWith("/api/info")) return route.fulfill({ status: 200, json: [] })
+    const authorization = route.request().headers().authorization ?? ""
+    const corrected = Buffer.from(authorization.replace(/^Basic\s+/, ""), "base64")
+      .toString()
+      .endsWith(":corrected-pairing-password")
+    return route.fulfill(
+      corrected
+        ? { status: 200, json: { version: "2.0.29", pid: 0, urls: [], paths: { tmp: "/tmp" } } }
+        : { status: 401, json: { _tag: "UnauthorizedError" } },
+    )
+  })
+  await paired.goto("http://127.0.0.1:4444/")
+  if (method === "password") await paired.getByRole("button", { name: "Use password", exact: true }).click()
+  await paired
+    .locator(method === "link" ? "#server-connect-link" : "#server-connect-url")
+    .fill("http://pairing.fixture:4096/auth/connect/recovery-code")
+  await paired.getByRole("button", { name: "Connect", exact: true }).click()
+  await paired
+    .getByRole("alert")
+    .filter({ hasText: /rejected these credentials/ })
+    .waitFor()
+  await paired.getByRole("button", { name: "Edit credentials", exact: true }).click()
+  assert.equal(
+    await paired.locator("#server-connect-url").inputValue(),
+    "http://pairing.fixture:4096",
+    `${method}: credential editing retains the resolved service address`,
+  )
+  assert.equal(await paired.locator("#server-connect-password").evaluate((el) => document.activeElement === el), true)
+  await paired.locator("#server-connect-password").fill("corrected-pairing-password")
+  assert.equal(await paired.getByRole("button", { name: "Connect", exact: true }).isEnabled(), true)
+  await paired.getByRole("button", { name: "Connect", exact: true }).click()
+  await paired.locator('[data-component="connect-server"]').waitFor({ state: "detached" })
+  assert.equal(redemptions, 1, "password recovery does not redeem the pairing link again")
+  await paired.close()
+}
+assert.deepEqual(errors, [])
 console.log(
   JSON.stringify({
     invalidAddress: true,
@@ -102,6 +152,7 @@ console.log(
     timeout: true,
     successfulRegistration: true,
     mixedContent: true,
+    pairingCredentialRecovery: ["link", "password"],
     pageErrors: errors,
   }),
 )

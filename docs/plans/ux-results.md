@@ -105,3 +105,9 @@ The upstream tag list was checked again at completion: v2.0.29 is still the late
 | UX-08 version sources and compact connection footer | `ed32eef` |
 
 Remaining acceptance work is explicit: real service connect/send/stream/permissions/Review/terminal flows, actual virtualized long-history reading and return-to-latest/layout continuity, packaged macOS/Windows window restore/monitor/scaling/link behavior, and low-end/long-duration performance. The checked implementation tasks above do not certify these unavailable environments.
+
+## Review correction R1 — paired address survives credential recovery
+
+The production connection keeper reproduced the reported failure on `dd91474`: redeeming a pairing link succeeded, the health check returned HTTP 401, and Edit credentials opened an empty address field. The connection screen now retains the endpoint of the current failed authentication probe in the address field, behind the existing request-ownership guard. It does not copy the pairing token into the password field.
+
+The keeper now covers pairing links in both the dedicated link form and the password form's address field. Both restore the actual server address, focus the password, accept a corrected password, successfully register the connection and redeem the pairing code only once. The added assertion failed before the fix and passed afterward. `bun run check` passed (57 tests / 291 assertions), the production/PWA build passed, and the connection and plugin-manager browser keepers passed without page errors. Responses and credentials are synthetic; no live service operation was performed.
