@@ -155,6 +155,7 @@ export function createPluginHost(input: {
         },
       },
       storage: {
+        version: 1,
         get<T>(key: string): T | undefined {
           const value = input.storage?.getItem(
             `opencode-front.plugin.${id}.${key}`,

@@ -57,6 +57,7 @@ declare module "@opencode/frontend-plugin" {
     data: { listen: (handler: (event: unknown) => void) => Cleanup }
     assets: { url(path: string): string }
     storage: {
+      version: number
       get<T>(key: string): T | undefined
       set(key: string, value: unknown): void
     }

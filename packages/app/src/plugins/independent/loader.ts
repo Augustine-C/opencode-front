@@ -90,7 +90,14 @@ export function createIndependentPluginDefinition(input: {
         const moduleCleanup = await runWithOwner(owner ?? null, () =>
           createRoot((dispose) => {
             moduleDispose = dispose
-            return namespace.setup!({ ...context, assets: resources.assets })
+            return namespace.setup!({
+              ...context,
+              assets: resources.assets,
+              storage: {
+                ...context.storage,
+                version: module.manifest.storageVersion ?? 1,
+              },
+            })
           }),
         )
         const cleanup =

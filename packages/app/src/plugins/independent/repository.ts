@@ -2,6 +2,7 @@ import type { IndependentPluginManifest } from "@opencode/frontend-plugin/indepe
 import {
   inspectPluginPackage,
   pluginContentDigest,
+  validatePluginManifest,
   type PluginPackage,
 } from "./package";
 
@@ -10,6 +11,7 @@ export const PLUGIN_DATABASE_VERSION = 1;
 const MODULES = "modules";
 const INSTALLATIONS = "installations";
 const CHANNEL = "opencode-front:independent-plugins:v1";
+const MAX_SNAPSHOT_BYTES = 4 * 1024 * 1024;
 
 export type StoredPluginModule = {
   digest: string;
@@ -20,6 +22,13 @@ export type StoredPluginModule = {
   installedAt: number;
 };
 
+export type PluginDataSnapshot = {
+  digest: string;
+  storageVersion: number;
+  values: Array<[string, string]>;
+  capturedAt: number;
+};
+
 export type PluginInstallation = {
   id: string;
   activeDigest: string;
@@ -27,13 +36,24 @@ export type PluginInstallation = {
   previousDigest?: string;
   enabled: boolean;
   updatedAt: number;
+  activationPending?: boolean;
+  activationDataDigest?: string;
+  storageSnapshots?: PluginDataSnapshot[];
+  failedVersion?: string;
+  lastFailure?: string;
 };
 
-export type PluginInstallationInfo = PluginInstallation & {
+export type PluginInstallationInfo = Omit<
+  PluginInstallation,
+  "storageSnapshots"
+> & {
   name?: string;
   version?: string;
+  storageVersion?: number;
   candidateVersion?: string;
+  candidateStorageVersion?: number;
   previousVersion?: string;
+  previousStorageVersion?: number;
   healthy: boolean;
   problem?: string;
 };
@@ -168,15 +188,9 @@ async function verifyModule(module: StoredPluginModule, digest: string) {
       return false;
     const source = JSON.parse(
       new TextDecoder("utf-8", { fatal: true }).decode(manifestBytes),
-    ) as Record<string, unknown>;
-    return (
-      source.id === module.manifest.id &&
-      source.name === module.manifest.name &&
-      source.version === module.manifest.version &&
-      source.apiVersion === module.manifest.apiVersion &&
-      source.runtimeVersion === module.manifest.runtimeVersion &&
-      source.formatVersion === module.manifest.formatVersion
-    );
+    ) as unknown;
+    const manifest = validatePluginManifest(source, new Set(files.keys()));
+    return JSON.stringify(manifest) === JSON.stringify(module.manifest);
   } catch {
     return false;
   }
@@ -189,6 +203,40 @@ function storageFailure(error: unknown) {
     );
   }
   return error instanceof Error ? error : new Error(String(error));
+}
+
+function validateDataSnapshot(
+  id: string,
+  digest: string,
+  snapshot: PluginDataSnapshot,
+) {
+  const prefix = `opencode-front.plugin.${id}.`;
+  if (
+    snapshot.digest !== digest ||
+    !Number.isSafeInteger(snapshot.storageVersion) ||
+    snapshot.storageVersion < 1 ||
+    !Number.isFinite(snapshot.capturedAt) ||
+    !Array.isArray(snapshot.values)
+  )
+    throw new Error("Plugin data snapshot metadata is invalid");
+  const keys = new Set<string>();
+  for (const entry of snapshot.values) {
+    if (
+      !Array.isArray(entry) ||
+      entry.length !== 2 ||
+      typeof entry[0] !== "string" ||
+      !entry[0].startsWith(prefix) ||
+      typeof entry[1] !== "string" ||
+      keys.has(entry[0])
+    )
+      throw new Error("Plugin data snapshot contains invalid storage values");
+    keys.add(entry[0]);
+  }
+  if (
+    new TextEncoder().encode(JSON.stringify(snapshot.values)).byteLength >
+    MAX_SNAPSHOT_BYTES
+  )
+    throw new Error("Plugin data snapshot exceeds the safe size limit");
 }
 
 export function createIndependentPluginRepository(
@@ -270,6 +318,7 @@ export function createIndependentPluginRepository(
       const previous = record.previousDigest
         ? byDigest.get(record.previousDigest)
         : undefined;
+      const { storageSnapshots: _snapshots, ...publicRecord } = record;
       const problem = !active
         ? "The selected plugin package is missing from local storage"
         : active.manifest.id !== record.id
@@ -284,11 +333,20 @@ export function createIndependentPluginRepository(
                   ? "Previous plugin package ID does not match its installation record"
                   : undefined;
       return {
-        ...record,
+        ...publicRecord,
         name: active?.manifest.name,
         version: active?.manifest.version,
+        storageVersion: active
+          ? (active.manifest.storageVersion ?? 1)
+          : undefined,
         candidateVersion: candidate?.manifest.version,
+        candidateStorageVersion: candidate
+          ? (candidate.manifest.storageVersion ?? 1)
+          : undefined,
         previousVersion: previous?.manifest.version,
+        previousStorageVersion: previous
+          ? (previous.manifest.storageVersion ?? 1)
+          : undefined,
         healthy: !problem,
         ...(problem ? { problem } : {}),
       };
@@ -401,6 +459,11 @@ export function createIndependentPluginRepository(
                 if (!activeModule || activeModule.manifest.id !== current.id) {
                   throw new Error(
                     "The selected plugin package is missing; remove its damaged record before reinstalling",
+                  );
+                }
+                if (current.activationPending) {
+                  throw new Error(
+                    "A plugin version is still being checked; wait for activation to finish before installing another update",
                   );
                 }
                 if (activeModule.manifest.version === pkg.manifest.version) {
@@ -645,9 +708,15 @@ export function createIndependentPluginRepository(
   async function switchVersion(
     id: string,
     direction: "candidate" | "previous",
+    snapshot: PluginDataSnapshot,
   ) {
     const before = await loadRecord(id);
     if (!before) throw new Error(`Plugin installation was not found: ${id}`);
+    if (before.activationPending)
+      throw new Error(`Plugin ${id} is still being activated`);
+    if (snapshot.digest !== before.activeDigest)
+      throw new Error("Plugin data snapshot does not match the active version");
+    validateDataSnapshot(id, before.activeDigest, snapshot);
     const activeModule = await readModule(before.activeDigest);
     if (
       !activeModule ||
@@ -722,6 +791,7 @@ export function createIndependentPluginRepository(
                 : current?.previousDigest;
             if (
               !current ||
+              current.activationPending ||
               current.activeDigest !== before.activeDigest ||
               currentTarget !== targetDigest
             ) {
@@ -731,6 +801,26 @@ export function createIndependentPluginRepository(
               transaction.abort();
               return;
             }
+            if (
+              direction === "previous" &&
+              !(current.storageSnapshots ?? []).some(
+                (item) => item.digest === targetDigest,
+              )
+            ) {
+              failure = new Error(
+                `Plugin ${id} cannot safely restore the previous version because its data snapshot is missing`,
+              );
+              transaction.abort();
+              return;
+            }
+            const snapshots = [
+              ...(current.storageSnapshots ?? []).filter(
+                (item) =>
+                  item.digest !== current.activeDigest &&
+                  item.digest === targetDigest,
+              ),
+              { ...snapshot, capturedAt: now() },
+            ];
             result = {
               ...current,
               activeDigest: targetDigest,
@@ -738,6 +828,15 @@ export function createIndependentPluginRepository(
               ...(direction === "candidate"
                 ? { candidateDigest: undefined }
                 : {}),
+              activationPending: true,
+              storageSnapshots: snapshots,
+              activationDataDigest: snapshots.some(
+                (item) => item.digest === targetDigest,
+              )
+                ? targetDigest
+                : current.activeDigest,
+              failedVersion: undefined,
+              lastFailure: undefined,
               updatedAt: now(),
             };
             try {
@@ -757,6 +856,157 @@ export function createIndependentPluginRepository(
       typeof navigator === "undefined" ? undefined : navigator.locks;
     if (!locks) return execute();
     return locks.request(`opencode-front:plugin-install:${id}`, execute);
+  }
+
+  async function markActivationHealthy(id: string) {
+    const before = await loadRecord(id);
+    if (!before?.activationPending) return false;
+    const db = await database;
+    return new Promise<boolean>((resolve, reject) => {
+      const transaction = db.transaction(INSTALLATIONS, "readwrite");
+      let changed = false;
+      let failure: Error | undefined;
+      transaction.addEventListener(
+        "complete",
+        () => {
+          if (changed) notify(id);
+          resolve(changed);
+        },
+        { once: true },
+      );
+      transaction.addEventListener(
+        "abort",
+        () => reject(storageFailure(failure ?? transaction.error)),
+        { once: true },
+      );
+      transaction.addEventListener(
+        "error",
+        () => reject(storageFailure(failure ?? transaction.error)),
+        { once: true },
+      );
+      const store = transaction.objectStore(INSTALLATIONS);
+      const request = store.get(id) as IDBRequest<
+        PluginInstallation | undefined
+      >;
+      request.addEventListener(
+        "success",
+        () => {
+          if (
+            !request.result?.activationPending ||
+            request.result.activeDigest !== before.activeDigest
+          )
+            return;
+          changed = true;
+          try {
+            store.put({
+              ...request.result,
+              activationPending: false,
+              activationDataDigest: undefined,
+              updatedAt: now(),
+            });
+          } catch (error) {
+            failure = error instanceof Error ? error : new Error(String(error));
+            transaction.abort();
+          }
+        },
+        { once: true },
+      );
+    });
+  }
+
+  async function rollbackActivation(id: string, detail: string) {
+    const before = await loadRecord(id);
+    if (!before?.activationPending) return false;
+    if (!before.previousDigest)
+      throw new Error(`Plugin ${id} has no previous version to restore`);
+    const previousSnapshot = before.storageSnapshots?.find(
+      (snapshot) => snapshot.digest === before.previousDigest,
+    );
+    if (!previousSnapshot)
+      throw new Error(
+        `Plugin ${id} cannot be safely rolled back because its previous data snapshot is missing`,
+      );
+    validateDataSnapshot(id, before.previousDigest, previousSnapshot);
+    const failed = await readModule(before.activeDigest);
+    const previous = await readModule(before.previousDigest);
+    if (
+      !failed ||
+      !(await verifyModule(failed, before.activeDigest)) ||
+      !previous ||
+      !(await verifyModule(previous, before.previousDigest)) ||
+      failed.manifest.id !== id ||
+      previous.manifest.id !== id
+    ) {
+      throw new Error(
+        `Plugin ${id} activation rollback data is missing or corrupt`,
+      );
+    }
+    const db = await database;
+    return new Promise<boolean>((resolve, reject) => {
+      const transaction = db.transaction([MODULES, INSTALLATIONS], "readwrite");
+      let changed = false;
+      let failure: Error | undefined;
+      transaction.addEventListener(
+        "complete",
+        () => {
+          if (changed) notify(id);
+          resolve(changed);
+        },
+        { once: true },
+      );
+      transaction.addEventListener(
+        "abort",
+        () => reject(storageFailure(failure ?? transaction.error)),
+        { once: true },
+      );
+      transaction.addEventListener(
+        "error",
+        () => reject(storageFailure(failure ?? transaction.error)),
+        { once: true },
+      );
+      const store = transaction.objectStore(INSTALLATIONS);
+      const request = store.get(id) as IDBRequest<
+        PluginInstallation | undefined
+      >;
+      request.addEventListener(
+        "success",
+        () => {
+          const current = request.result;
+          if (
+            !current?.activationPending ||
+            current.activeDigest !== before.activeDigest ||
+            current.previousDigest !== before.previousDigest
+          ) {
+            failure = new Error(
+              `Plugin ${id} changed in another window; rollback was cancelled`,
+            );
+            transaction.abort();
+            return;
+          }
+          changed = true;
+          try {
+            store.put({
+              ...current,
+              activeDigest: before.previousDigest!,
+              previousDigest: undefined,
+              activationPending: false,
+              activationDataDigest: undefined,
+              storageSnapshots: (current.storageSnapshots ?? []).filter(
+                (snapshot) => snapshot.digest === before.previousDigest,
+              ),
+              failedVersion: failed.manifest.version,
+              lastFailure: detail.slice(0, 500),
+              updatedAt: now(),
+            });
+            collectUnreferenced(transaction);
+          } catch (error) {
+            failure = error instanceof Error ? error : new Error(String(error));
+            transaction.abort();
+          }
+        },
+        { once: true },
+      );
+    });
   }
 
   return {
@@ -798,12 +1048,23 @@ export function createIndependentPluginRepository(
     },
     list,
     active,
-    activateCandidate(id: string) {
-      return switchVersion(id, "candidate");
+    activateCandidate(id: string, snapshot: PluginDataSnapshot) {
+      return switchVersion(id, "candidate", snapshot);
     },
-    restorePrevious(id: string) {
-      return switchVersion(id, "previous");
+    restorePrevious(id: string, snapshot: PluginDataSnapshot) {
+      return switchVersion(id, "previous", snapshot);
     },
+    dataSnapshot(id: string, digest: string) {
+      return loadRecord(id).then((record) => {
+        const snapshot = record?.storageSnapshots?.find(
+          (item) => item.digest === digest,
+        );
+        if (snapshot) validateDataSnapshot(id, digest, snapshot);
+        return snapshot;
+      });
+    },
+    markActivationHealthy,
+    rollbackActivation,
     async discardCandidate(id: string) {
       const db = await database;
       return new Promise<boolean>((resolve, reject) => {

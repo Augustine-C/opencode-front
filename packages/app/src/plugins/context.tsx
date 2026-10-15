@@ -125,6 +125,93 @@ function createPlugins() {
   let refreshQueue = Promise.resolve<PluginInstallationInfo[]>([])
   let openSettings: (() => void) | undefined
   let disposed = false
+  function capturePluginData(id: string, digest: string, version: number) {
+    const prefix = `opencode-front.plugin.${id}.`
+    const values: Array<[string, string]> = []
+    for (let index = 0; index < localStorage.length; index++) {
+      const key = localStorage.key(index)
+      if (!key?.startsWith(prefix)) continue
+      const value = localStorage.getItem(key)
+      if (value !== null) values.push([key, value])
+    }
+    const size = new TextEncoder().encode(JSON.stringify(values)).byteLength
+    if (size > 4 * 1024 * 1024)
+      throw new Error(
+        "Plugin data is too large for a safe update snapshot; export or reduce it before updating",
+      )
+    return {
+      digest,
+      storageVersion: version,
+      values,
+      capturedAt: Date.now(),
+    }
+  }
+  function restorePluginData(
+    id: string,
+    snapshot: { values: Array<[string, string]> },
+  ) {
+    const prefix = `opencode-front.plugin.${id}.`
+    for (let index = localStorage.length - 1; index >= 0; index--) {
+      const key = localStorage.key(index)
+      if (key?.startsWith(prefix)) localStorage.removeItem(key)
+    }
+    for (const [key, value] of snapshot.values) {
+      if (!key.startsWith(prefix))
+        throw new Error(
+          "Plugin data rollback snapshot contains another plugin key",
+        )
+      localStorage.setItem(key, value)
+    }
+  }
+  async function prepareIndependentActivationData(id: string) {
+    if (!repository) return
+    const installation = (await repository.list()).find(
+      (entry) => entry.id === id,
+    )
+    if (!installation?.activationPending) return
+    const snapshot = await repository.dataSnapshot(
+      id,
+      installation.activationDataDigest ?? installation.activeDigest,
+    )
+    if (!snapshot)
+      throw new Error(
+        `Plugin ${id} cannot start safely because its activation data snapshot is missing`,
+      )
+    restorePluginData(id, snapshot)
+  }
+  async function settleIndependentActivation(id: string) {
+    if (!repository) return
+    const installation = (await repository.list()).find(
+      (entry) => entry.id === id,
+    )
+    if (!installation?.activationPending) return
+    const status = host.state.statuses.find((entry) => entry.id === id)
+    if (status?.state === "enabled") {
+      await repository.markActivationHealthy(id)
+      return
+    }
+    if (status?.state !== "error" || !installation.previousDigest) return
+
+    const snapshot = await repository.dataSnapshot(
+      id,
+      installation.previousDigest,
+    )
+    await host.disable(id)
+    if (!snapshot)
+      throw new Error(
+        `Plugin ${id} cannot restore data safely because its previous snapshot is missing`,
+      )
+    restorePluginData(id, snapshot)
+    await repository.rollbackActivation(
+      id,
+      "Plugin setup failed; the previous package and saved data were restored",
+    )
+    await refreshIndependent()
+    const restored = independent.installations.find((entry) => entry.id === id)
+    const config = state.config.find((entry) => entry.id === id)
+    if (restored?.enabled && config?.enabled)
+      await host.enable(id, config.options)
+  }
   async function apply(
     entries: ResolvedPlugin[],
     options: { skipIndependent?: boolean } = {},
@@ -134,7 +221,24 @@ function createPlugins() {
     for (const entry of entries) {
       if (disposed) return
       if (options.skipIndependent && registered.has(entry.id)) continue
-      if (entry.enabled) await host.enable(entry.id, entry.options)
+      if (entry.enabled) {
+        if (registered.has(entry.id)) {
+          try {
+            await prepareIndependentActivationData(entry.id)
+          } catch (error) {
+            host.report(entry.id, error)
+            continue
+          }
+        }
+        await host.enable(entry.id, entry.options)
+        if (registered.has(entry.id)) {
+          try {
+            await settleIndependentActivation(entry.id)
+          } catch (error) {
+            host.report(entry.id, error)
+          }
+        }
+      }
     }
   }
 
@@ -259,7 +363,20 @@ function createPlugins() {
       }
       const status = host.state.statuses.find((value) => value.id === id)?.state
       if (installation.enabled) {
-        if (status === "disabled") await host.enable(id, entry.options)
+        if (status === "disabled") {
+          try {
+            await prepareIndependentActivationData(id)
+          } catch (error) {
+            host.report(id, error)
+            return
+          }
+          await host.enable(id, entry.options)
+          try {
+            await settleIndependentActivation(id)
+          } catch (error) {
+            host.report(id, error)
+          }
+        }
       } else if (status !== "disabled") {
         await host.disable(id)
       }
@@ -416,16 +533,34 @@ function createPlugins() {
     async activateIndependent(id: string) {
       if (!repository) throw new Error("Plugin storage is unavailable")
       await pending.catch(() => {})
+      const before = await repository.active(id)
+      if (!before?.record.candidateDigest)
+        throw new Error(`Plugin ${id} has no staged update`)
+      const snapshot = capturePluginData(
+        id,
+        before.record.activeDigest,
+        before.module.manifest.storageVersion ?? 1,
+      )
       await host.disable(id)
-      await repository.activateCandidate(id)
+      await repository.activateCandidate(id, snapshot)
+      await prepareIndependentActivationData(id)
       await refreshIndependent()
       await syncIndependent(id)
     },
     async restoreIndependent(id: string) {
       if (!repository) throw new Error("Plugin storage is unavailable")
       await pending.catch(() => {})
+      const before = await repository.active(id)
+      if (!before?.record.previousDigest)
+        throw new Error(`Plugin ${id} has no previous version to restore`)
+      const snapshot = capturePluginData(
+        id,
+        before.record.activeDigest,
+        before.module.manifest.storageVersion ?? 1,
+      )
       await host.disable(id)
-      await repository.restorePrevious(id)
+      await repository.restorePrevious(id, snapshot)
+      await prepareIndependentActivationData(id)
       await refreshIndependent()
       await syncIndependent(id)
     },

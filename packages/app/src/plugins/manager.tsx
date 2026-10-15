@@ -291,6 +291,44 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                           })}
                         </span>
                       </Show>
+                      <Show
+                        when={
+                          installation.previousStorageVersion !== undefined &&
+                          installation.storageVersion !==
+                            installation.previousStorageVersion
+                        }
+                      >
+                        <p role="note">
+                          {language.t(
+                            "plugins.package.storageMigrationWarning",
+                            {
+                              from: String(
+                                installation.previousStorageVersion ?? "",
+                              ),
+                              to: String(installation.storageVersion ?? ""),
+                            },
+                          )}
+                        </p>
+                      </Show>
+                      <Show when={installation.failedVersion}>
+                        <div role="status" class="break-words">
+                          <p>
+                            {language.t("plugins.package.failedActivation", {
+                              version: installation.failedVersion ?? "",
+                            })}
+                          </p>
+                          <Show when={installation.lastFailure}>
+                            <details>
+                              <summary>
+                                {language.t("plugins.package.failedDetails")}
+                              </summary>
+                              <pre class="whitespace-pre-wrap">
+                                {diagnostics(installation.lastFailure)}
+                              </pre>
+                            </details>
+                          </Show>
+                        </div>
+                      </Show>
                       <Show when={!installation.healthy}>
                         <div role="alert" class="break-words">
                           <p>{language.t("plugins.package.damaged")}</p>

@@ -292,8 +292,10 @@ test("plugin state is namespaced and persists across generations", async () => {
     },
   })
   const seen: unknown[] = []
+  const storageVersions: number[] = []
   host.register(
     plugin("first", (ctx) => {
+      storageVersions.push(ctx.storage.version)
       seen.push(ctx.storage.get("value"))
       ctx.storage.set("value", 7)
     }),
@@ -307,6 +309,7 @@ test("plugin state is namespaced and persists across generations", async () => {
   await host.enable("second")
   await host.enable("first")
   expect(seen).toEqual([undefined, undefined, 7])
+  expect(storageVersions).toEqual([1, 1])
   expect(storage.get("opencode-front.plugin.first.value")).toBe("7")
   await host.dispose()
 })

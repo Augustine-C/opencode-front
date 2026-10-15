@@ -23,6 +23,7 @@ test("independent entry imports through the shared Solid runtime and releases co
   const source = `
     const runtime = globalThis[Symbol.for("${PLUGIN_RUNTIME_SYMBOL}")].solid;
     export function setup(context) {
+      globalThis.__independentStorageVersion = context.storage.version;
       const [value, setValue] = runtime.createSignal(1);
       runtime.createEffect(() => { globalThis.__independentSolidValue = value(); });
       setValue(2);
@@ -45,6 +46,7 @@ test("independent entry imports through the shared Solid runtime and releases co
       entry: "main.js",
       assets: ["assets/icon.svg"],
       capabilities: ["commands.register", "assets.read"],
+      storageVersion: 4,
     },
     files: [
       { path: "main.js", bytes },
@@ -66,6 +68,7 @@ test("independent entry imports through the shared Solid runtime and releases co
   delete global.__independentSolidValue
   delete global.__independentModuleCleaned
   delete global.__independentAssetURL
+  delete global.__independentStorageVersion
   host.register(definition)
   try {
     await host.enable(definition.id)
@@ -76,6 +79,7 @@ test("independent entry imports through the shared Solid runtime and releases co
       "example.loader:hello",
     ])
     expect(global.__independentSolidValue).toBe(2)
+    expect(global.__independentStorageVersion).toBe(4)
     const assetURL = global.__independentAssetURL as string
     expect(await (await fetch(assetURL)).text()).toBe("asset data")
     await host.disable(definition.id)
@@ -87,6 +91,7 @@ test("independent entry imports through the shared Solid runtime and releases co
     delete global.__independentSolidValue
     delete global.__independentModuleCleaned
     delete global.__independentAssetURL
+    delete global.__independentStorageVersion
     Reflect.deleteProperty(globalThis, Symbol.for(PLUGIN_RUNTIME_SYMBOL))
   }
 })

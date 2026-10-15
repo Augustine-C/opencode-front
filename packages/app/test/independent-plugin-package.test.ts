@@ -2,7 +2,10 @@ import { expect, test } from "bun:test";
 import { deflateRawSync } from "node:zlib";
 import { IDBFactory, IDBObjectStore } from "fake-indexeddb";
 import { inspectPluginPackage } from "../src/plugins/independent/package";
-import { createIndependentPluginRepository } from "../src/plugins/independent/repository";
+import {
+  createIndependentPluginRepository,
+  type PluginDataSnapshot,
+} from "../src/plugins/independent/repository";
 
 type Entry = {
   path: string;
@@ -436,10 +439,16 @@ test("plugin versions can be promoted, restored, and discarded without losing th
       zip(
         packageEntries("export const setup = () => 'v2'", {
           version: "2.0.0",
+          storageVersion: 2,
         }),
       ),
     );
-    await store.activateCandidate(first.id);
+    await store.activateCandidate(first.id, {
+      digest: first.activeDigest,
+      storageVersion: 1,
+      values: [[`opencode-front.plugin.${first.id}.saved`, '"v1 data"']],
+      capturedAt: 1,
+    });
     expect((await store.active(first.id))?.module.manifest.version).toBe(
       "2.0.0",
     );
@@ -451,15 +460,26 @@ test("plugin versions can be promoted, restored, and discarded without losing th
       enabled: true,
       healthy: true,
     });
+    expect(
+      (await store.list()).find((entry) => entry.id === first.id)
+        ?.activationPending,
+    ).toBe(true);
+    await store.markActivationHealthy(first.id);
 
     const third = await store.install(
       zip(
         packageEntries("export const setup = () => 'v3'", {
           version: "3.0.0",
+          storageVersion: 3,
         }),
       ),
     );
-    await store.restorePrevious(first.id);
+    await store.restorePrevious(first.id, {
+      digest: second.candidateDigest!,
+      storageVersion: 2,
+      values: [[`opencode-front.plugin.${first.id}.saved`, '"v2 data"']],
+      capturedAt: 2,
+    });
     expect((await store.active(first.id))?.module.manifest.version).toBe(
       "1.2.3",
     );
@@ -472,6 +492,19 @@ test("plugin versions can be promoted, restored, and discarded without losing th
       candidateDigest: third.candidateDigest,
       enabled: true,
     });
+    await store.markActivationHealthy(first.id);
+    expect(
+      await store.dataSnapshot(first.id, first.activeDigest),
+    ).toMatchObject({
+      storageVersion: 1,
+      values: [[`opencode-front.plugin.${first.id}.saved`, '"v1 data"']],
+    });
+    expect(
+      await store.dataSnapshot(first.id, second.candidateDigest!),
+    ).toMatchObject({
+      storageVersion: 2,
+      values: [[`opencode-front.plugin.${first.id}.saved`, '"v2 data"']],
+    });
 
     expect(await store.discardCandidate(first.id)).toBe(true);
     expect(
@@ -479,6 +512,66 @@ test("plugin versions can be promoted, restored, and discarded without losing th
         ?.candidateDigest,
     ).toBeUndefined();
     await expect(store.module(third.candidateDigest!)).rejects.toThrow(
+      "missing or corrupt",
+    );
+  } finally {
+    await store.close();
+  }
+});
+
+test("failed candidate activation restores the previous package and its data snapshot", async () => {
+  const setup = repository();
+  const store = setup.create();
+  try {
+    const first = await store.install(zip(packageEntries()));
+    await store.setEnabled(first.id, true);
+    const second = await store.install(
+      zip(
+        packageEntries(
+          "export const setup = () => { throw new Error('broken') }",
+          {
+            version: "2.0.0",
+            storageVersion: 2,
+          },
+        ),
+      ),
+    );
+    const snapshot: PluginDataSnapshot = {
+      digest: first.activeDigest,
+      storageVersion: 1,
+      values: [[`opencode-front.plugin.${first.id}.saved`, '"before update"']],
+      capturedAt: 1,
+    };
+    await store.activateCandidate(first.id, snapshot);
+    await expect(
+      store.install(
+        zip(
+          packageEntries("export const setup = () => 'v3'", {
+            version: "3.0.0",
+          }),
+        ),
+      ),
+    ).rejects.toThrow("still being checked");
+    expect(await store.rollbackActivation(first.id, "setup failed")).toBe(true);
+    expect((await store.active(first.id))?.module.manifest.version).toBe(
+      "1.2.3",
+    );
+    expect(
+      (await store.list()).find((entry) => entry.id === first.id),
+    ).toMatchObject({
+      activeDigest: first.activeDigest,
+      enabled: true,
+      activationPending: false,
+      failedVersion: "2.0.0",
+      lastFailure: "setup failed",
+    });
+    expect(
+      await store.dataSnapshot(first.id, first.activeDigest),
+    ).toMatchObject({
+      storageVersion: 1,
+      values: snapshot.values,
+    });
+    await expect(store.module(second.candidateDigest!)).rejects.toThrow(
       "missing or corrupt",
     );
   } finally {

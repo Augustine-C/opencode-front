@@ -57,6 +57,7 @@ export type Context = {
   >
   data: { listen: (handler: (event: OpenCodeEvent) => void) => Cleanup }
   storage: {
+    version: number
     get<T>(key: string): T | undefined
     set(key: string, value: unknown): void
   }
