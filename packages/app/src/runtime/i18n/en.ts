@@ -1,6 +1,9 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "session.tab.group.filter": "Filter open sessions",
+  "session.tab.group.noResults": "No open sessions match this filter.",
+  "session.tab.group.context": "{{instance}} · {{project}}",
   "session.tab.group.status.attention": "Action needed in this group",
   "session.tab.group.status.offline": "Instance connection unavailable",
   "session.tab.group.status.running": "A session is working",

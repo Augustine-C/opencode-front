@@ -16,7 +16,7 @@ for (const size of [20, 100, 500]) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   const errors = []
   page.on("pageerror", (e) => errors.push(e.message))
-  await page.goto(`http://127.0.0.1:4445/?size=${size}`)
+  await page.goto(`${process.env.UX_FIXTURE_URL || "http://127.0.0.1:4445"}/?size=${size}`)
   const trigger = page.locator('[data-slot="tab-group-navigator-trigger"]')
   await trigger.waitFor()
   const cdp = await page.context().newCDPSession(page)

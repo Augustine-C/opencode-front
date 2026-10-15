@@ -18,7 +18,7 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 - [x] Fixture 20/100/500 open/select cycles, stable instance/project ownership, raw samples retained.
 - [x] Production connection recovery: invalid address, wrong credentials, network failure, cancel/retry and success with simulated HTTP boundaries.
 - [x] Folded group attention/running/unread indicators and keyboard descriptions.
-- [ ] Navigator filter, same-name ownership, IME, Escape, keyboard selection and preserved collapse preferences.
+- [x] Navigator filter, same-name ownership, IME, Escape, keyboard selection and preserved collapse preferences.
 - [ ] Historical search scope, pagination failure/cancellation and ownership isolation.
 - [ ] Plugin configuration preview, cancel, invalid configuration and retry.
 - [ ] Version provenance and current-service changes.
@@ -43,3 +43,9 @@ Instance/project headings aggregate native session-family permission/form attent
 The thin shell saves a versioned, separate normal rectangle and maximized flag in its application user-data directory. Move/resize writes are debounced for 250ms; close flushes immediately through an atomic rename. Restoration validates numeric bounds/minimum dimensions, picks the best-overlapping current display, and clamps geometry into its DIP work area. Removed monitors, changed work-area sizes, missing files and corrupt JSON fall back to visible geometry. Desktop staging includes the helper.
 
 `bun run check`: 52 tests passed, including geometry/monitor/corruption cases and a close-to-disk/read-back test proving maximized state does not overwrite normal bounds. Production/PWA build and desktop staging passed. Actual macOS/Windows maximization, monitor hotplug and scaling remain unverified; this Linux helper test is not an Electron platform test.
+
+## UX-04 — open-session filtering implemented
+
+The group popover now filters cached session title, project and instance labels with the native command palette's case-insensitive substring rule. Its matcher lives in a UI-heavy dialog module, so the adapter uses the same simple rule over a memoized local index rather than importing the entire command dialog. Results retain saved group order and show instance/project context. Filtering temporarily reveals matches without writing collapse state, removes drag targets, and never fetches transcripts. Keyboard navigation uses an active descendant while input focus stays in the query. IME composition does not select; Escape clears a query before closing; close restores trigger focus. Empty queries preserve current-session positioning.
+
+`bun run check`: 52 tests passed; production/PWA and production fixture builds passed. The extended groups browser keeper passed instance/project/Chinese filtering, no-results feedback, IME, arrow/Enter selection, two-stage Escape, focus restoration and collapse preferences, plus 390/320px and 640×450 (200% viewport equivalent) widths. No page errors or horizontal popover overflow. [Pre-index-optimization measurements](measurements/ux-04-ui.json) use the same 20/100/500 fixture; 500-session opening median 136.1ms, slowest 153.7ms. These are the comparison baseline for UX-06, not claimed gains over UX-00.
