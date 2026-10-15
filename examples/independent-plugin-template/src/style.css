@@ -1,4 +1,10 @@
 .hello-independent-plugin {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   color: var(--text-primary);
-  background-image: url("../public/hello.svg");
+}
+
+.hello-independent-plugin img {
+  flex: none;
 }

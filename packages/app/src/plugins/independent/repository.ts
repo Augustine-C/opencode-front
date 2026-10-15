@@ -650,7 +650,7 @@ export function createIndependentPluginRepository(
     setEnabled,
     async module(digest: string) {
       const stored = await readModule(digest);
-      if (!(await verifyModule(stored!, digest)))
+      if (!stored || !(await verifyModule(stored, digest)))
         throw new Error("Stored plugin module is missing or corrupt");
       return stored;
     },

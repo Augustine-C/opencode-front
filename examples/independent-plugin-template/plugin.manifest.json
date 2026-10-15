@@ -11,6 +11,7 @@
   "capabilities": [
     "commands.register",
     "panels.register",
+    "slots.register",
     "storage.read",
     "storage.write",
     "assets.read"
