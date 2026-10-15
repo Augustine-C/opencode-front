@@ -17,7 +17,7 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 - [x] Production connection screen and plugin manager render without page errors.
 - [x] Fixture 20/100/500 open/select cycles, stable instance/project ownership, raw samples retained.
 - [x] Production connection recovery: invalid address, wrong credentials, network failure, cancel/retry and success with simulated HTTP boundaries.
-- [ ] Folded group attention/running/unread indicators and keyboard descriptions.
+- [x] Folded group attention/running/unread indicators and keyboard descriptions.
 - [ ] Navigator filter, same-name ownership, IME, Escape, keyboard selection and preserved collapse preferences.
 - [ ] Historical search scope, pagination failure/cancellation and ownership isolation.
 - [ ] Plugin configuration preview, cancel, invalid configuration and retry.
@@ -31,3 +31,9 @@ The separate [tab reducer baseline](measurements/ux-00-tabs.json) has seven samp
 Interactive checks bypass shared health-cache promises and own a 30-second deadline, cancellation and immutable input snapshot. Cancelling or leaving the screen invalidates all late health/pairing results; it never saves a connection. Pairing redemption itself may finish in the background (its existing native five-second probes are unchanged). Authentication, invalid address, mixed content, network and timeout feedback are distinct. Retry reuses the form; edit focuses credentials/address; diagnostic help lists possible causes without dumping raw errors, passwords or tokens. Existing duplicate-URL registration and pairing/QR paths remain.
 
 The health hook is an explicitly declared service-attachment overlay. No health polling cadence or backend lifecycle changed. `bun run check`: 49 tests passed; production/PWA build passed. `node packages/app/performance/ux/connection.mjs` drives the production connection screen through invalid address, HTTP 401, credential focus, network failure, cancellation followed by late success, timeout (browser clock), successful registry insertion and HTTPS mixed-content rejection. All eight checks passed without page errors. HTTP responses are simulated; this is not a real backend test. Pairing and QR scanning retain native behavior but were not exercised against a live service.
+
+## UX-02 — grouped status implemented
+
+Instance/project headings aggregate native session-family permission/form attention, connection health, busy/pending and unread state, in that order. The native avatar-state hook now exposes its already computed `needsAttention` accessor through a declared overlay; no additional polling or message loading is introduced. Each heading displays at most one marker with an accessible reason in its label and tooltip. The marker belongs to the existing fold button; it does not introduce a second navigation action or alter drag semantics. Pure aggregation tests cover priority, clearing and cross-instance project isolation.
+
+`bun run check`: 50 tests passed; production/PWA build passed. `node packages/app/performance/ux/groups.mjs` drove the production adapter fixture: a folded instance retained its marker, keyboard-accessible reason and collapsed preference, then cleared the marker when attention was handled. No page errors. The fixture substitutes native status accessors; real permission delivery still requires a live service.

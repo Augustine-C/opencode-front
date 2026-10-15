@@ -221,7 +221,8 @@
         "packages/app/src/settings/model.tsx",
         "packages/app/src/shell/titlebar/tab-nav.tsx",
         "packages/app/src/shell/titlebar/tab-strip.tsx",
-        "packages/app/src/shell/titlebar/titlebar.tsx"
+        "packages/app/src/shell/titlebar/titlebar.tsx",
+        "packages/app/src/shell/layout/project-avatar-state.ts"
       ],
       "adapters": [
         "packages/app/src/extensions/project-tabs.tsx",

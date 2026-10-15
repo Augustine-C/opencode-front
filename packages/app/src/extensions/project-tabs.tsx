@@ -1,4 +1,4 @@
-import { createEffect, createMemo, on, Show, type Accessor } from "solid-js"
+import { createEffect, createMemo, mapArray, on, Show, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { ProjectAvatarStyle } from "@opencode/ui/project-avatar"
 import { useSettings } from "@/settings/model"
@@ -9,6 +9,8 @@ import { useLanguage } from "@/runtime/i18n/language"
 import { displayName, getProjectAvatarSource, getProjectAvatarVariant } from "@opencode/ui/project-avatar"
 import { pathKey } from "@/workspaces/path-key"
 import { groupInstanceTabs, moveTabGroup, orderedGroupKeys, tabProject } from "./project-tab-model"
+import { useSessionTabAvatarState } from "@/shell/layout/project-avatar-state"
+import { aggregateTabGroupStatus } from "./project-tab-model"
 import { sessionTabTitle } from "@/shell/titlebar/tab-title"
 import { TabGroupHeading } from "./tab-group-heading"
 import "./project-tabs.css"
@@ -65,6 +67,29 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
     )
   })
   const key = (tab: Tab) => groups().get(tabKey(tab))?.key ?? JSON.stringify([tab.server, null])
+  const sessionStates = mapArray(input.tabs, (tab) => {
+    const avatar = useSessionTabAvatarState(
+      () => tab.server,
+      () => (tab.type === "session" ? tab.sessionId : ""),
+      () => true,
+    )
+    return () => {
+      const health = global.servers.health[tab.server]
+      const status = avatar.needsAttention()
+        ? ("attention" as const)
+        : health && !health.healthy && !health.checking
+          ? ("offline" as const)
+          : avatar.loading()
+            ? ("running" as const)
+            : avatar.unread()
+              ? ("unread" as const)
+              : undefined
+      return { groups: [instanceKey(tab), key(tab)], status }
+    }
+  })
+  const statuses = createMemo(() =>
+    enabled() ? aggregateTabGroupStatus(sessionStates().map((read) => read())) : new Map(),
+  )
   const instanceOrder = () => [...settings.appearance.tabInstanceOrder(), ...connections().keys()]
   const projectOrder = (instance: string) => {
     const conn = connections().get(instance)
@@ -144,6 +169,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
         kind={group.kind}
         groupKey={group.key}
         label={label()}
+        status={statuses().get(group.key)}
         title={group.kind === "instance" ? label() : (project()?.title ?? "")}
         src={group.kind === "project" ? project()?.src : undefined}
         variant={group.kind === "project" ? project()?.variant : undefined}

@@ -88,3 +88,18 @@ export function moveTabGroup(
   let index = 0
   return [...new Set([...stored, ...visible])].map((key) => (available.has(key) ? moved[index++] : key))
 }
+
+export type TabGroupStatus = "attention" | "offline" | "running" | "unread"
+
+export function aggregateTabGroupStatus(entries: readonly { groups: readonly string[]; status?: TabGroupStatus }[]) {
+  const priority: Record<TabGroupStatus, number> = { attention: 0, offline: 1, running: 2, unread: 3 }
+  const result = new Map<string, TabGroupStatus>()
+  for (const entry of entries) {
+    if (!entry.status) continue
+    for (const key of entry.groups) {
+      const previous = result.get(key)
+      if (!previous || priority[entry.status] < priority[previous]) result.set(key, entry.status)
+    }
+  }
+  return result
+}

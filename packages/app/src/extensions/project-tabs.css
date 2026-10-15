@@ -333,3 +333,16 @@
     display: none;
   }
 }
+
+[data-slot="tab-group-status"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+[data-slot="tab-group-status"][data-status="attention"],
+[data-slot="tab-group-status"][data-status="offline"] {
+  color: var(--v2-state-fg-danger);
+}

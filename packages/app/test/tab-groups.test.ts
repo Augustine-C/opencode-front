@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import {
+  aggregateTabGroupStatus,
   groupInstanceTabs,
   groupTabs,
   moveTabGroup,
@@ -16,6 +17,24 @@ const projects = [
 ]
 
 describe("project tab groups", () => {
+  test("folded status prioritizes action over connection, running and unread within its own instance", () => {
+    const entries = [
+      { groups: ["local", "local/project"], status: "unread" as const },
+      { groups: ["local", "local/project"], status: "running" as const },
+      { groups: ["local", "local/project"], status: "offline" as const },
+      { groups: ["local", "local/project"], status: "attention" as const },
+      { groups: ["remote", "remote/project"], status: "unread" as const },
+    ]
+    expect([...aggregateTabGroupStatus(entries)]).toEqual([
+      ["local", "attention"],
+      ["local/project", "attention"],
+      ["remote", "unread"],
+      ["remote/project", "unread"],
+    ])
+    expect(aggregateTabGroupStatus(entries.slice(0, 3)).get("local")).toBe("offline")
+    expect(aggregateTabGroupStatus(entries.slice(0, 2)).get("local")).toBe("running")
+    expect(aggregateTabGroupStatus([]).size).toBe(0)
+  })
   test("keeps each instance contiguous and honors independent instance and project preferences", () => {
     const input = [
       { id: "local-a1", server: "local", project: "a" },

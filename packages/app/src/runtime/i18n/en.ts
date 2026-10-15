@@ -1,6 +1,11 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "session.tab.group.status.attention": "Action needed in this group",
+  "session.tab.group.status.offline": "Instance connection unavailable",
+  "session.tab.group.status.running": "A session is working",
+  "session.tab.group.status.unread": "Unread activity in this group",
+  "session.tab.group.statusLabel": "{{group}} — {{status}}",
   "server.connect.recovery.unauthorized": "The server rejected these credentials. Check the password or use a new pairing link.",
   "server.connect.recovery.network": "Could not reach the server. Check the address and connection, then retry.",
   "server.connect.recovery.timeout": "The connection check timed out. Check the address and retry.",
