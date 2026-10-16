@@ -43,7 +43,7 @@ await page
   .filter({ hasText: /rejected these credentials/ })
   .waitFor()
 await page.getByRole("button", { name: "Edit credentials", exact: true }).click()
-assert.equal(await page.locator("#server-connect-password").evaluate((el) => document.activeElement === el), true)
+await page.waitForFunction(() => document.activeElement === document.querySelector("#server-connect-password"))
 mode = "network"
 await page.getByRole("button", { name: "Retry connection", exact: true }).click()
 await page
@@ -75,10 +75,7 @@ await page.clock.resume()
 mode = "success"
 await page.getByRole("button", { name: "Retry connection", exact: true }).click()
 await page.locator('[data-component="connect-server"]').waitFor({ state: "detached" })
-assert.equal(
-  await page.evaluate(() => Object.values(localStorage).some((value) => value.includes("fixture.invalid"))),
-  true,
-)
+await page.waitForFunction(() => Object.values(localStorage).some((value) => value.includes("fixture.invalid")))
 const secure = await browser.newPage()
 await secure.route("https://secure.fixture/**", async (route) => {
   const url = new URL(route.request().url())
@@ -133,7 +130,7 @@ for (const method of ["link", "password"]) {
     "http://pairing.fixture:4096",
     `${method}: credential editing retains the resolved service address`,
   )
-  assert.equal(await paired.locator("#server-connect-password").evaluate((el) => document.activeElement === el), true)
+  await paired.waitForFunction(() => document.activeElement === document.querySelector("#server-connect-password"))
   await paired.locator("#server-connect-password").fill("corrected-pairing-password")
   assert.equal(await paired.getByRole("button", { name: "Connect", exact: true }).isEnabled(), true)
   await paired.getByRole("button", { name: "Connect", exact: true }).click()

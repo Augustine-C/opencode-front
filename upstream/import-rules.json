@@ -144,7 +144,8 @@
         "@tanstack%2Fvirtual-core@3.17.8.patch",
         "ghostty-web@0.3.0.patch",
         "solid-js@1.9.15.patch",
-        "vite@8.2.2.patch"
+        "vite@8.2.2.patch",
+        "@corvu%2Fdrawer@0.2.4.patch"
       ]
     },
     {

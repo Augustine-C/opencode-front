@@ -13,6 +13,7 @@ import { useGlobal, useServerCtx, type ServerCtx } from "@/runtime/server/runtim
 import { useLanguage } from "@/runtime/i18n/language"
 import { useCommand } from "@/shell/commands/command"
 import { useTabs } from "@/shell/tabs/tabs"
+import { useSessionTabAvatarState } from "@/shell/layout/project-avatar-state"
 import { createTabComposerState } from "@/composer/persistence"
 import { base64Encode } from "@opencode/util/encode"
 import { showToast } from "@/shell/notifications/toast"
@@ -34,6 +35,8 @@ function SessionTabSlot(props: {
   contextTitle?: string
   session: SessionInfo | undefined
   preparing: boolean
+  unread: boolean
+  loading: boolean
   fallbackTitle?: string
   onRename: (title: string) => Promise<void>
   onNavigate: (element: HTMLDivElement) => void
@@ -86,6 +89,8 @@ function SessionTabSlot(props: {
         server={props.tab.server}
         session={props.session}
         preparing={props.preparing}
+        unread={props.unread}
+        loading={props.loading}
         fallbackTitle={props.fallbackTitle}
         onRename={props.onRename}
         onNavigate={() => props.onNavigate(ref)}
@@ -112,6 +117,7 @@ function SessionTabEntry(props: {
   contextTitle?: string
   serverCtx: ServerCtx | undefined
   onVisibleChange: (visible: boolean) => void
+  onUnreadChange: (unread: boolean) => void
   onNavigate: (element: HTMLDivElement) => void
   onClose: () => void
 }) {
@@ -121,6 +127,15 @@ function SessionTabEntry(props: {
   const pending = createMemo(() => tabs.pendingSession(props.tab.server, props.tab.sessionId))
   const cachedSession = createMemo(() => props.serverCtx?.data.session.get(props.tab.sessionId))
   const persisted = createMemo(() => tabs.info[props.id])
+
+  const status = useSessionTabAvatarState(
+    () => props.tab.server,
+    () => props.tab.sessionId,
+    () => true,
+  )
+
+  // A busy session shows its progress indicator instead of the unread dot.
+  const unread = createMemo(() => status.unread() && !status.loading())
 
   const [loadedSession] = createResource(
     () => {
@@ -163,6 +178,7 @@ function SessionTabEntry(props: {
   }
 
   createEffect(() => props.onVisibleChange(visible()))
+  createEffect(() => props.onUnreadChange(unread()))
 
   createEffect(() => {
     const ctx = props.serverCtx
@@ -219,6 +235,8 @@ function SessionTabEntry(props: {
         contextTitle={props.contextTitle}
         session={session()}
         preparing={!!pending()}
+        unread={unread()}
+        loading={status.loading()}
         fallbackTitle={
           pending()
             ? language.t("session.tab.session")
@@ -316,6 +334,7 @@ export function TitlebarTabStrip(props: {
   const vertical = () => props.orientation === "vertical"
   let listRef!: HTMLDivElement
   const [visibility, setVisibility] = createStore<Record<string, boolean>>({})
+  const [unread, setUnread] = createStore<Record<string, boolean>>({})
   const projectGroups = useProjectTabGroups({ tabs: () => props.tabs, current: () => props.currentTab })
   const grouped = projectGroups.enabled
   const groupKey = projectGroups.key
@@ -341,11 +360,39 @@ export function TitlebarTabStrip(props: {
       hidden: true,
       onSelect: () => selectAdjacentTab(1),
     },
+    {
+      id: "session.previous",
+      category: language.t("command.category.session"),
+      title: language.t("command.session.previous"),
+      keybind: "alt+arrowup",
+      onSelect: () => selectAdjacentTab(-1),
+    },
+    {
+      id: "session.next",
+      category: language.t("command.category.session"),
+      title: language.t("command.session.next"),
+      keybind: "alt+arrowdown",
+      onSelect: () => selectAdjacentTab(1),
+    },
+    {
+      id: "session.previous.unseen",
+      category: language.t("command.category.session"),
+      title: language.t("command.session.previous.unseen"),
+      keybind: "shift+alt+arrowup",
+      onSelect: () => selectAdjacentTab(-1, (key) => !!unread[key]),
+    },
+    {
+      id: "session.next.unseen",
+      category: language.t("command.category.session"),
+      title: language.t("command.session.next.unseen"),
+      keybind: "shift+alt+arrowdown",
+      onSelect: () => selectAdjacentTab(1, (key) => !!unread[key]),
+    },
   ])
 
-  function selectAdjacentTab(offset: -1 | 1) {
+  function selectAdjacentTab(offset: -1 | 1, include?: (key: string) => boolean) {
     const current = props.currentTab
-    const key = adjacentTabKey(visibleTabIds(), current ? tabKey(current) : undefined, offset)
+    const key = adjacentTabKey(visibleTabIds(), current ? tabKey(current) : undefined, offset, include)
     const next = props.tabs.find((tab) => tabKey(tab) === key)
 
     if (next) navigateTab(next)
@@ -482,6 +529,7 @@ export function TitlebarTabStrip(props: {
                         contextTitle={grouped() && !vertical() ? projectGroups.tooltip(tab) : undefined}
                         serverCtx={serverCtx()}
                         onVisibleChange={(visible) => setVisibility(id, visible)}
+                        onUnreadChange={(value) => setUnread(id, value)}
                         onNavigate={(element) => {
                           ref = element
                           props.onNavigate(tab, element)
