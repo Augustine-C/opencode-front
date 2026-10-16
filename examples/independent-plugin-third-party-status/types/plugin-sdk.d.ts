@@ -1,6 +1,21 @@
 declare module "@opencode/frontend-plugin" {
   import type { Accessor, JSX } from "solid-js"
 
+  export type ConfigurationField = {
+    key: string
+    label: string
+    description?: string
+    required?: boolean
+  } & (
+    | { type: "string"; default?: string }
+    | { type: "number"; default?: number; min?: number; max?: number }
+    | { type: "boolean"; default?: boolean }
+    | { type: "select"; default?: string; options: Array<{ value: string; label: string }> }
+  )
+
+  export type PluginConfiguration = { fields: ConfigurationField[] }
+
+
   export type Cleanup = () => void | Promise<void>
   export type SlotMap = {
     app: Record<string, never>

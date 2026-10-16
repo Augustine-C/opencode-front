@@ -550,3 +550,61 @@ test("runtime gives plugins an explicit failure when no package resource owner e
   expect(host.state.statuses[0].state).toBe("enabled")
   await host.dispose()
 })
+
+test("declared options gate setup and resolve imported defaults without losing saved values", async () => {
+  const { resetConfiguration, resolveConfiguration } = await import("../src/configuration")
+  const seen: Readonly<Record<string, unknown>>[] = []
+  const definition = define({
+    ...plugin("configured", (ctx) => {
+      seen.push(ctx.options)
+    }),
+    configuration: {
+      fields: [
+        { key: "endpoint", type: "string", label: "Endpoint", required: true },
+        { key: "interval", type: "number", label: "Interval", default: 10, min: 5, max: 100 },
+        { key: "visible", type: "boolean", label: "Visible", default: true, required: true },
+        { key: "mode", type: "select", label: "Mode", default: "panel", options: [{ value: "panel", label: "Panel" }] },
+      ],
+    },
+  })
+  const host = createPluginHost({ context })
+  host.register(definition)
+  try {
+    for (const options of [
+      {},
+      { endpoint: " " },
+      { endpoint: 123 },
+      { endpoint: "ok", interval: "10" },
+      { endpoint: "ok", interval: 4 },
+      { endpoint: "ok", interval: 101 },
+      { endpoint: "ok", interval: NaN },
+      { endpoint: "ok", visible: null },
+      { endpoint: "ok", mode: "unknown" },
+      { endpoint: "ok", mode: "" },
+    ]) {
+      await host.enable(definition.id, options)
+      expect(host.state.statuses[0].state).toBe("configuration-required")
+    }
+    expect(seen).toEqual([])
+    const imported = adaptConfig(
+      { plugins: [{ package: definition.id, options: { endpoint: "ok", visible: false, extra: { keep: 1 } } }] },
+      [definition],
+    )
+    await host.enable(definition.id, imported.plugins[0].options)
+    expect(host.state.statuses[0].state).toBe("enabled")
+    expect(seen).toEqual([{ endpoint: "ok", interval: 10, visible: false, mode: "panel", extra: { keep: 1 } }])
+    const saved = { endpoint: "ok", interval: "old incompatible value", extra: { keep: 1 } }
+    const resolved = resolveConfiguration(definition.configuration, saved)
+    expect(resolved.issues).toEqual([{ key: "interval", code: "type" }])
+    expect(resolved.options.interval).toBe("old incompatible value")
+    expect(resetConfiguration(definition.configuration!, saved)).toEqual({
+      interval: 10,
+      visible: true,
+      mode: "panel",
+      extra: { keep: 1 },
+    })
+    expect(saved.interval).toBe("old incompatible value")
+  } finally {
+    await host.dispose()
+  }
+})

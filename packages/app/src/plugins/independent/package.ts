@@ -1,3 +1,4 @@
+import { validateConfiguration } from "@opencode/frontend-plugin/configuration"
 import { parse } from "acorn";
 import {
   PLUGIN_API_VERSION,
@@ -35,6 +36,7 @@ const manifestFields = new Set([
   "homepage",
   "license",
   "storageVersion",
+  "configuration",
 ]);
 const pluginID = /^[a-z0-9][a-z0-9-]*(?:\.[a-z0-9][a-z0-9-]*)+$/;
 const semver =
@@ -232,7 +234,9 @@ export function validatePluginManifest(
   ) {
     throw new Error("storageVersion must be a positive integer");
   }
+  const configuration = source.configuration === undefined ? undefined : validateConfiguration(source.configuration)
   return {
+    ...(configuration === undefined ? {} : { configuration }),
     formatVersion: 1,
     id,
     name,

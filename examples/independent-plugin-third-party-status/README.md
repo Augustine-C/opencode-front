@@ -25,7 +25,7 @@ Change `id`, `version`, or `capabilities` in `plugin.manifest.json` before publi
 
 ## Options
 
-Enable the plugin with a JSON or JSONC plugin configuration:
+Install the ZIP, choose **Configure** in **Settings → Frontend plugins**, edit the fields, then choose **Save and apply** and enable the plugin. No configuration file is needed for later edits. JSON/JSONC import remains available for existing workflows:
 
 ```json
 {

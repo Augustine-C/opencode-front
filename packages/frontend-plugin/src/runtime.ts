@@ -10,6 +10,7 @@ import type {
   SlotPath,
 } from "./index"
 import type { Claim } from "./structure"
+import { resolveConfiguration, validateConfiguration } from "./configuration"
 import { pluginStoragePrefix } from "./storage"
 
 export type Render = SlotClaim["render"]
@@ -24,7 +25,7 @@ const samePanel = (a: PluginPanel, b: PluginPanel) =>
   a.plugin === b.plugin && a.name === b.name && a.sessionID === b.sessionID
 export type PluginStatus = {
   id: string
-  state: "disabled" | "loading" | "enabled" | "error"
+  state: "disabled" | "loading" | "enabled" | "error" | "configuration-required"
   error?: string
 }
 export function createPluginHost(input: {
@@ -126,6 +127,11 @@ export function createPluginHost(input: {
     if (disposed || requests.get(id) !== request) return
     const plugin = definitions.get(id)
     if (!plugin) throw new Error(`Unknown frontend plugin: ${id}`)
+    const resolved = resolveConfiguration(plugin.configuration, options)
+    if (resolved.issues.length) {
+      status(id, "configuration-required")
+      return
+    }
     const generation = {
       abort: new AbortController(),
       cleanup: new Set<() => void | Promise<void>>(),
@@ -143,7 +149,7 @@ export function createPluginHost(input: {
     }
     const context: Context = {
       ...input.context,
-      options,
+      options: resolved.options,
       signal: generation.abort.signal,
       data: {
         listen(handler) {
@@ -372,6 +378,7 @@ export function createPluginHost(input: {
         throw new Error(`Unsupported plugin API: ${plugin.id}`)
       if (definitions.has(plugin.id))
         throw new Error(`Duplicate plugin: ${plugin.id}`)
+      if (plugin.configuration) validateConfiguration(plugin.configuration)
       definitions.set(plugin.id, plugin)
       setState("definitions", [...definitions.values()])
       status(plugin.id, "disabled")

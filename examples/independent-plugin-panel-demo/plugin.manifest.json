@@ -2,11 +2,13 @@
   "formatVersion": 1,
   "id": "example.panel-demo",
   "name": "Example panel",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "apiVersion": 1,
   "runtimeVersion": "solid-v1",
   "entry": "main.js",
-  "styles": ["styles/main.css"],
+  "styles": [
+    "styles/main.css"
+  ],
   "capabilities": [
     "session.read",
     "commands.register",
@@ -15,5 +17,38 @@
     "assets.read"
   ],
   "description": "A local-only sample session panel with a checklist, notes, and progress display.",
-  "license": "MIT"
+  "license": "MIT",
+  "configuration": {
+    "fields": [
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Panel title",
+        "default": "Project overview",
+        "required": true
+      },
+      {
+        "key": "presentation",
+        "type": "select",
+        "label": "Presentation",
+        "default": "panel",
+        "options": [
+          {
+            "value": "panel",
+            "label": "Side panel"
+          },
+          {
+            "value": "fullscreen",
+            "label": "Fullscreen"
+          }
+        ]
+      },
+      {
+        "key": "showLauncher",
+        "type": "boolean",
+        "label": "Show in Add tab menu",
+        "default": true
+      }
+    ]
+  }
 }
