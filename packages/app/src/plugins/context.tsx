@@ -138,13 +138,14 @@ function createPlugins() {
     if (!repository) return
     await prepareActivationData(repository, localStorage, id)
   }
-  async function settleIndependentActivation(id: string) {
+  async function settleIndependentActivation(id: string, restorePrevious = false) {
     if (!repository) return
     const result = await settleActivation({
       repository,
       storage: localStorage,
       host,
       id,
+      restorePrevious,
     })
     if (result !== "rolled-back") return
     await refreshIndependent()
@@ -511,6 +512,12 @@ function createPlugins() {
       const before = await repository.active(id)
       if (!before?.record.previousDigest)
         throw new Error(`Plugin ${id} has no previous version to restore`)
+      if (before.record.activationPending) {
+        // A cancelled setup has never validated the candidate or its partially migrated data.
+        // Restore the known version and snapshot instead of starting another version switch.
+        await settleIndependentActivation(id, true)
+        return
+      }
       const snapshot = capturePluginData(
         id,
         before.record.activeDigest,

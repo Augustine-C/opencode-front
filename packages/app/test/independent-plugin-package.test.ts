@@ -5,6 +5,7 @@ import type { Context } from "@opencode/frontend-plugin";
 import { PLUGIN_RUNTIME_SYMBOL } from "@opencode/frontend-plugin/independent";
 import { deflateRawSync } from "node:zlib";
 import { IDBFactory, IDBObjectStore } from "fake-indexeddb";
+import { createEffect, createRoot } from "solid-js"
 import { inspectPluginPackage } from "../src/plugins/independent/package";
 import {
   capturePluginData,
@@ -613,6 +614,90 @@ test("repeated development reloads replace one live module without accumulating 
     delete global.__developmentReloadCleanups;
   }
 });
+
+test("a cancelled candidate can restore its previous package and data without blocking later updates", async () => {
+  const store = repository().create()
+  const values = new Map<string, string>()
+  const storage: PluginDataStorage = {
+    get length() {
+      return values.size
+    },
+    key: (index) => [...values.keys()][index] ?? null,
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => {
+      values.set(key, value)
+    },
+    removeItem: (key) => {
+      values.delete(key)
+    },
+  }
+  const host = createPluginHost({
+    context: {
+      app: { version: "test", platform: "web" },
+      client: () => undefined,
+      sessionID: () => undefined,
+      connection: () => undefined,
+      data: { listen: () => () => {} },
+    },
+    storage,
+  })
+  let stopWatching = () => {}
+  exposeSharedPluginRuntime()
+  try {
+    const first = await store.install(zip(packageEntries()))
+    const key = `${pluginStoragePrefix(first.id)}saved`
+    values.set(key, '"before update"')
+    await store.setEnabled(first.id, true)
+    const second = await store.install(zip(packageEntries(`
+      export async function setup(context) {
+        context.storage.set("saved", "partial migration");
+        context.ui.command({ id: "pending", title: "Pending", run() {} });
+        await new Promise(() => {});
+      }
+    `, { version: "2.0.0", storageVersion: 2 })))
+    await store.activateCandidate(first.id, capturePluginData(storage, first.id, first.activeDigest, 1))
+    await prepareIndependentActivationData(store, storage, first.id)
+    host.register(createIndependentPluginDefinition({
+      repository: store,
+      id: first.id,
+      name: "Pending update",
+      digest: second.candidateDigest!,
+    }))
+    const started = new Promise<void>((resolve) => createRoot((dispose) => {
+      stopWatching = dispose
+      createEffect(() => {
+        if (host.state.commands.some((entry) => entry.id === `${first.id}:pending`)) resolve()
+      })
+    }))
+    const enabled = host.enable(first.id)
+    await started
+    stopWatching()
+    expect(values.get(key)).toBe('"partial migration"')
+    await host.disable(first.id)
+    await enabled
+    await store.setEnabled(first.id, false)
+    expect(await settleIndependentActivation({ repository: store, storage, host, id: first.id })).toBe("pending")
+    expect(await settleIndependentActivation({
+      repository: store, storage, host, id: first.id, restorePrevious: true,
+    })).toBe("rolled-back")
+    expect((await store.active(first.id))?.record).toMatchObject({
+      activeDigest: first.activeDigest,
+      activationPending: false,
+      enabled: false,
+    })
+    expect(values.get(key)).toBe('"before update"')
+    expect(host.state.statuses[0].state).toBe("disabled")
+    expect(host.state.commands).toHaveLength(0)
+    await expect(store.module(second.candidateDigest!)).rejects.toThrow("missing or corrupt")
+    const third = await store.install(zip(packageEntries("export function setup() {}", { version: "3.0.0" })))
+    expect(third.candidateDigest).toBeDefined()
+  } finally {
+    stopWatching()
+    await host.dispose()
+    await store.close()
+    Reflect.deleteProperty(globalThis, Symbol.for(PLUGIN_RUNTIME_SYMBOL))
+  }
+})
 
 test("plugin versions can be promoted, restored, and discarded without losing the active module", async () => {
   const setup = repository();

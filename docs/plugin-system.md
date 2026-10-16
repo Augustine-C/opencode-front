@@ -63,6 +63,8 @@ The earlier development format `opencode-front.plugin.<id>.<key>` is ambiguous. 
 
 Before switching an installed package, the host saves up to 4 MiB of that plugin's namespaced localStorage values in IndexedDB, keyed by package digest and schema version. When activating a package with a saved snapshot, the host restores that package's data first. Otherwise it restores the current package's snapshot before the new setup runs, so the new package can migrate from the previous schema. A setup failure restores the previous package pointer and its snapshot automatically; the manager records the failed version and recovery result. Manual restore follows the same snapshot rules. If the required snapshot is missing or invalid, activation or automatic rollback is refused rather than silently discarding data.
 
+If an update's setup never finishes, disable the plugin and choose **Restore previous version**. This cancels the pending activation and restores the previous package and its saved data without treating the incomplete candidate as healthy. The plugin stays disabled, and later updates can be staged normally.
+
 These guarantees cover only the host-managed plugin localStorage namespace. They cannot reverse writes to the connected OpenCode service, other network APIs, files, IndexedDB used directly by plugin code, or other external systems. Plugins must make those operations idempotent or provide their own compensating recovery. Staging an update still does not execute it.
 
 ## Slot contract

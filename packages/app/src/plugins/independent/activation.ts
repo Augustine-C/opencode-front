@@ -113,6 +113,7 @@ export async function settleIndependentActivation(input: {
   storage: PluginDataStorage
   host: ActivationHost
   id: string
+  restorePrevious?: boolean
 }) {
   const { repository, storage, host, id } = input
   const installation = (await repository.list()).find(
@@ -120,11 +121,14 @@ export async function settleIndependentActivation(input: {
   )
   if (!installation?.activationPending) return "none" as const
   const status = host.state.statuses.find((entry) => entry.id === id)
-  if (status?.state === "enabled") {
+  if (!input.restorePrevious && status?.state === "enabled") {
     await repository.markActivationHealthy(id)
     return "healthy" as const
   }
-  if (status?.state !== "error" || !installation.previousDigest)
+  if (
+    (!input.restorePrevious && status?.state !== "error") ||
+    !installation.previousDigest
+  )
     return "pending" as const
 
   const snapshot = await repository.dataSnapshot(
@@ -139,7 +143,9 @@ export async function settleIndependentActivation(input: {
   restorePluginData(storage, id, snapshot)
   await repository.rollbackActivation(
     id,
-    "Plugin setup failed; the previous package and saved data were restored",
+    input.restorePrevious
+      ? "Plugin activation was cancelled; the previous package and saved data were restored"
+      : "Plugin setup failed; the previous package and saved data were restored",
   )
   return "rolled-back" as const
 }
