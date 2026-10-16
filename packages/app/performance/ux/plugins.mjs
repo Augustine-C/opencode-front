@@ -9,7 +9,7 @@ const errors = []
 page.on("pageerror", (error) => errors.push(error.message))
 await page.goto("http://127.0.0.1:4444/")
 await page.getByRole("button", { name: "Frontend plugins", exact: true }).click()
-const input = page.locator('[data-component="plugin-manager"] input[type="file"]')
+const input = page.getByLabel("Import frontend or TUI plugin configuration (JSON or JSONC)", { exact: true })
 const upload = (value) =>
   input.setInputFiles({ name: "plugins.jsonc", mimeType: "application/json", buffer: Buffer.from(value) })
 const saved = () => page.evaluate(() => localStorage.getItem("opencode-front.plugins.v1"))

@@ -17,7 +17,7 @@
     },
     "packages/app": {
       "name": "@opencode/app",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@corvu/drawer": "catalog:",
         "@dnd-kit/abstract": "0.5.0",
@@ -81,7 +81,7 @@
     },
     "packages/client": {
       "name": "@opencode/client",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@opencode/protocol": "workspace:*",
         "@opencode/schema": "workspace:*",
@@ -132,7 +132,7 @@
     },
     "packages/gui-extensions": {
       "name": "@opencode/gui-extensions",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@betteroffice/docx": "0.4.3",
         "@betteroffice/fonts": "0.4.0",
@@ -181,7 +181,7 @@
     },
     "packages/plugin-browser": {
       "name": "@opencode/plugin-browser",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -189,7 +189,7 @@
     },
     "packages/protocol": {
       "name": "@opencode/protocol",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -204,7 +204,7 @@
     },
     "packages/schema": {
       "name": "@opencode/schema",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@standard-schema/spec": "catalog:",
         "effect": "catalog:",
@@ -218,7 +218,7 @@
     },
     "packages/session-ui": {
       "name": "@opencode/session-ui",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@kobalte/core": "catalog:",
         "@opencode/client": "workspace:*",
@@ -253,7 +253,7 @@
     },
     "packages/ui": {
       "name": "@opencode/ui",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@kitlangton/solid-motion": "0.2.2",
         "@kobalte/core": "catalog:",
@@ -289,7 +289,7 @@
     },
     "packages/util": {
       "name": "@opencode/util",
-      "version": "2.0.29",
+      "version": "2.0.31",
       "dependencies": {
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
@@ -336,6 +336,7 @@
     "@pierre/trees@1.0.0-beta.4": "patches/@pierre%2Ftrees@1.0.0-beta.4.patch",
     "@tanstack/virtual-core@3.17.8": "patches/@tanstack%2Fvirtual-core@3.17.8.patch",
     "ghostty-web@github:anomalyco/ghostty-web#83c0a07": "patches/ghostty-web@0.3.0.patch",
+    "@corvu/drawer@0.2.4": "patches/@corvu%2Fdrawer@0.2.4.patch",
     "@dnd-kit/dom@0.5.0": "patches/@dnd-kit%2Fdom@0.5.0.patch",
   },
   "overrides": {

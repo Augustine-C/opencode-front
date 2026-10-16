@@ -58,9 +58,8 @@ await page.keyboard.press("ArrowDown")
 assert.equal(await page.getByRole("combobox").evaluate((el) => document.activeElement === el), true)
 await page.keyboard.press("Enter")
 assert.equal(await page.locator("#selection").innerText(), "s30")
-assert.equal(
-  await page.locator('[data-slot="tab-group-navigator-trigger"]').evaluate((el) => document.activeElement === el),
-  true,
+await page.waitForFunction(
+  () => document.activeElement === document.querySelector('[data-slot="tab-group-navigator-trigger"]'),
 )
 await page.locator('[data-slot="tab-group-navigator-trigger"]').click()
 await page.keyboard.press("Escape")

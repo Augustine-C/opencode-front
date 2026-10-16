@@ -135,6 +135,13 @@ describe("project tab groups", () => {
         1,
       ),
     ).toBe("b1")
+    const order = result.map((tab) => tab.id)
+    const unread = (key: string) => key === "a1" || key === "remote-a"
+    expect(adjacentTabKey(order, "a2", 1, unread)).toBe("remote-a")
+    expect(adjacentTabKey(order, "a2", -1, unread)).toBe("a1")
+    expect(adjacentTabKey(order, "remote-a", 1, unread)).toBe("a1")
+    expect(adjacentTabKey(order, "a1", -1, unread)).toBe("remote-a")
+    expect(adjacentTabKey(order, "a1", 1, (key) => key === "a1")).toBeUndefined()
   })
 
   test("drafts and restored tabs resolve subdirectories and worktrees to a project", () => {

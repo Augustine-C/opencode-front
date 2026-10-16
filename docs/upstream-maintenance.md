@@ -89,3 +89,7 @@ The browser plugin bridge uses the native `MenuItem` registry and `ctx.layout` /
 The port now follows v2.0.28, including per-project permission defaults, server-backed unread state, prompt handoff and queued-input rendering fixes, media previews, and dialog focus restoration. Preserve the existing-service connection overlay when importing upstream server selection changes. Keep project-tab, floating-search, message-history, and plugin-panel adapters while merging changes to their upstream mount points. The native SDK remains compatible with the port-owned panel bridge and CodeArts extension. See [sync analysis](upstream-v2.0.28.md).
 
 Release tags use `<upstream version>.<port revision>`, starting with `2.0.28.0` for this baseline. The root/Electron package version is the equivalent valid SemVer `2.0.28+0`; retained upstream package versions stay pristine. The desktop staging script maps four-part release tags, and the workflow uses the Windows four-part file version and a three-part macOS bundle version. Run staging validation whenever changing this mapping.
+
+## v2.0.31 sync
+
+The frontend now follows v2.0.31. Preserve the project-group ordering and plugin/session mount points when merging the new unread-session navigation and side-panel animation changes. The root patch list and import policy include the upstream Corvu drawer patch. Changed-file turn summaries are optional and disabled by default; their data comes from the already connected service. See [sync analysis and validation](upstream-v2.0.31.md).
