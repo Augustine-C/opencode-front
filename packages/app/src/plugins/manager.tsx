@@ -8,6 +8,7 @@ import { useLanguage } from "@/runtime/i18n/language"
 import { SettingsList } from "@/settings/list"
 import { SettingsRow } from "@/settings/row"
 import type { IndependentPluginRepository } from "./independent/repository"
+import { PluginConfigurationForm } from "./configuration-form"
 import { pluginDiagnostic } from "./diagnostics"
 import { usePlugins, type PluginsApi } from "./context"
 
@@ -27,6 +28,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
       result: ReturnType<PluginsApi["previewConfig"]>
     }
     packagePreview?: { file: File; result: PackagePreview; enable: boolean }
+    configuring?: string
     removing?: string
     developmentReloadID?: string
     removeData: boolean
@@ -49,6 +51,27 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
     plugins.host
       .definitions()
       .filter((plugin) => !independentIDs().has(plugin.id))
+  const configurationButtons = new Map<string, HTMLButtonElement>()
+  const closeConfiguration = () => {
+    const id = state.configuring
+    setState("configuring", undefined)
+    queueMicrotask(() => id && configurationButtons.get(id)?.focus())
+  }
+  const configuring = () =>
+    plugins.host.definitions().find((entry) => entry.id === state.configuring && entry.configuration)
+  const configureButton = (id: string) => (
+    <Show when={plugins.host.definitions().find((entry) => entry.id === id)?.configuration?.fields.length}>
+      <Button
+        ref={(button: HTMLButtonElement) => configurationButtons.set(id, button)}
+        size="small"
+        variant="outline"
+        disabled={state.importing || !!state.preview || !!state.packagePreview}
+        onClick={() => setState("configuring", id)}
+      >
+        {language.t("plugins.options.configure")}
+      </Button>
+    </Show>
+  )
   const fail = (error: unknown, type: typeof state.error = "apply") =>
     setState({ error: type, detail: String(error) })
 
@@ -180,7 +203,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
     }
   }
 
-  return (
+  const Management = () => (
     <div
       class="settings-tab-body settings-tab-body--sectioned"
       data-component="plugin-manager"
@@ -223,6 +246,9 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                         </span>
                         <code>{plugin.id}</code>
                       </span>
+                      <Show when={status()?.state === "configuration-required"}>
+                        <p role="alert">{language.t("plugins.options.needsConfiguration")}</p>
+                      </Show>
                       <Show when={status()?.error}>
                         <div
                           class="text-v2-text-text-base break-words"
@@ -242,29 +268,32 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                     </div>
                   }
                 >
-                  <Switch
-                    hideLabel
-                    checked={
-                      plugins.state.config.find(
-                        (entry) => entry.id === plugin.id,
-                      )?.enabled ?? false
-                    }
-                    disabled={
-                      state.importing ||
-                      !!state.preview ||
-                      !!state.packagePreview
-                    }
-                    onChange={async (enabled) => {
-                      setState("error", "")
-                      try {
-                        await plugins.toggle(plugin.id, enabled)
-                      } catch (error) {
-                        fail(error)
+                  <div class="flex flex-wrap items-center justify-end gap-2">
+                    {configureButton(plugin.id)}
+                    <Switch
+                      hideLabel
+                      checked={
+                        plugins.state.config.find(
+                          (entry) => entry.id === plugin.id,
+                        )?.enabled ?? false
                       }
-                    }}
-                  >
-                    {plugin.name}
-                  </Switch>
+                      disabled={
+                        state.importing ||
+                        !!state.preview ||
+                        !!state.packagePreview
+                      }
+                      onChange={async (enabled) => {
+                        setState("error", "")
+                        try {
+                          await plugins.toggle(plugin.id, enabled)
+                        } catch (error) {
+                          fail(error)
+                        }
+                      }}
+                    >
+                      {plugin.name}
+                    </Switch>
+                  </div>
                 </SettingsRow>
               )
             }}
@@ -350,6 +379,9 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                           </pre>
                         </div>
                       </Show>
+                      <Show when={status()?.state === "configuration-required"}>
+                        <p role="alert">{language.t("plugins.options.needsConfiguration")}</p>
+                      </Show>
                       <Show when={status()?.error}>
                         <div
                           class="text-v2-text-text-base break-words"
@@ -419,6 +451,7 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
                   }
                 >
                   <div class="flex flex-wrap items-center justify-end gap-2">
+                    {configureButton(installation.id)}
                     <Switch
                       hideLabel
                       checked={installation.enabled}
@@ -890,6 +923,15 @@ function PluginSettingsBody(props: { plugins: PluginsApi }) {
         </Button>
       </div>
     </div>
+  )
+  return (
+    <Show when={configuring()} keyed fallback={<Management />}>
+      {(definition) => (
+        <div class="settings-tab-body settings-tab-body--sectioned" data-component="plugin-manager">
+          <PluginConfigurationForm definition={definition} plugins={plugins} onClose={closeConfiguration} />
+        </div>
+      )}
+    </Show>
   )
 }
 

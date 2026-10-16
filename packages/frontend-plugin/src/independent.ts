@@ -1,3 +1,5 @@
+import type { PluginConfiguration } from "./configuration"
+
 /** Stable compatibility contract shared by the host loader and independently built plugins. */
 export const PLUGIN_FORMAT_VERSION = 1 as const;
 export const PLUGIN_API_VERSION = 1 as const;
@@ -34,6 +36,7 @@ export type IndependentPluginManifest = {
   homepage?: string;
   license?: string;
   storageVersion?: number;
+  configuration?: PluginConfiguration;
 };
 
 export type IndependentPluginModule = {

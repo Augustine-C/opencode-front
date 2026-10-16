@@ -9,6 +9,39 @@ export function panelDemo() {
     id: "panel-demo",
     name: "Example panel",
     apiVersion: 1,
+    configuration: {
+      fields: [
+        {
+          key: "title",
+          type: "string",
+          label: "Panel title",
+          default: "Project overview",
+          required: true,
+        },
+        {
+          key: "presentation",
+          type: "select",
+          label: "Presentation",
+          default: "panel",
+          options: [
+            {
+              value: "panel",
+              label: "Side panel",
+            },
+            {
+              value: "fullscreen",
+              label: "Fullscreen",
+            },
+          ],
+        },
+        {
+          key: "showLauncher",
+          type: "boolean",
+          label: "Show in Add tab menu",
+          default: true,
+        },
+      ],
+    },
     setup(context) {
       const [state, setState] = createStore({ completed: [true, false, false], note: "" })
       const title = () =>

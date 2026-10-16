@@ -47,7 +47,7 @@ Import the adapter into `packages/app/src/plugins/catalog.ts` and add it to `cre
 
 ## Independent ZIP packages
 
-Independent plugin packages can now be installed from the Frontend plugins manager. The manager statically validates a ZIP, previews its manifest without running its code, and stores it in IndexedDB. New packages can be enabled immediately; updates stay staged until explicitly activated. The previous package can be restored manually, and uninstall can optionally remove the plugin's local data. The standalone template at [`examples/independent-plugin-template`](../examples/independent-plugin-template/README.md) produces a self-contained ZIP that is not included in the host build. See the [package format and compatibility plan](plans/independent-plugins-design.md).
+Independent plugin packages can now be installed from the Frontend plugins manager. The manager statically validates a ZIP, previews its manifest without running its code, and stores it in IndexedDB. Install a package, choose **Configure** if it declares settings, save the values, then enable it. Packages without settings can be enabled immediately; updates stay staged until explicitly activated. The previous package can be restored manually, and uninstall can optionally remove the plugin's local data. The standalone template at [`examples/independent-plugin-template`](../examples/independent-plugin-template/README.md) produces a self-contained ZIP that is not included in the host build. See the [package format and compatibility plan](plans/independent-plugins-design.md).
 
 Vite development builds also expose **Reload local plugin ZIP** for enabled packages. Rebuild the plugin ZIP, select it in the manager, and the host activates a fresh module instance without rebuilding itself. Production builds hide and reject this development path.
 
@@ -66,6 +66,32 @@ Before switching an installed package, the host saves up to 4 MiB of that plugin
 If an update's setup never finishes, disable the plugin and choose **Restore previous version**. This cancels the pending activation and restores the previous package and its saved data without treating the incomplete candidate as healthy. The plugin stays disabled, and later updates can be staged normally.
 
 These guarantees cover only the host-managed plugin localStorage namespace. They cannot reverse writes to the connected OpenCode service, other network APIs, files, IndexedDB used directly by plugin code, or other external systems. Plugins must make those operations idempotent or provide their own compensating recovery. Staging an update still does not execute it.
+
+## Declarative configuration
+
+A browser `Definition` or independent `manifest.json` can declare optional `configuration.fields`. The host generates a **Configure** form in **Settings → Frontend plugins**, including while the plugin is disabled. Install once, configure, save, and enable; later edits need no JSONC file or replacement ZIP. Viewing the form reads metadata only and never imports the entry module.
+
+```json
+{
+  "configuration": {
+    "fields": [
+      { "key": "endpoint", "type": "string", "label": "Status endpoint", "required": true },
+      { "key": "interval", "type": "number", "label": "Poll interval (ms)", "default": 60000, "min": 5000 },
+      { "key": "presentation", "type": "select", "label": "Presentation", "default": "panel",
+        "options": [{ "value": "panel", "label": "Side panel" }, { "value": "fullscreen", "label": "Fullscreen" }] },
+      { "key": "showLauncher", "type": "boolean", "label": "Show in Add tab menu", "default": true }
+    ]
+  }
+}
+```
+
+The shared SDK exports `PluginConfiguration` and `ConfigurationField`; `@opencode/frontend-plugin/configuration` owns declaration validation, defaults, and value validation. Keys are flat option names. Fields support `label`, optional `description`, `required`, and a correctly typed `default`; numbers also accept finite `min`/`max`, and selects require unique nonempty string values and labels. Declarations allow up to 100 fields and 100 options per select. Duplicate keys, unsafe object keys, unsupported declarations, and invalid defaults are rejected before installation. Labels are plain plugin-authored text, never HTML.
+
+**Save and apply** persists to the existing local frontend configuration and reinitializes only this plugin. Disabled plugins stay disabled. Setup completion is observed independently, so a hanging setup does not prevent saving again or disabling. **Cancel** discards the draft; **Restore defaults** resets declared fields in the draft and preserves undeclared options until explicitly saved. These settings are ordinary local preferences, not a credential vault; API keys and tokens have no dedicated input or secure storage in this version.
+
+`context.options` receives saved values with defaults filling missing keys. JSON/JSONC imports use the same resolution and runtime validation. An invalid or incomplete configuration remains editable and shows **Needs configuration** without executing `setup`, marking an activation healthy, or triggering a package rollback. Fix it through the form and save to retry. Plugins without declarations retain their existing behavior.
+
+On an update or restore, the form uses the active package's declaration. Existing option values, including unknown keys and values incompatible with the new declaration, are retained; missing fields receive defaults and incompatible fields require repair before execution. Settings are separate from the business-data snapshots used by package rollback. API v1 and package format v1 remain unchanged. Older hosts that reject unknown manifest fields cannot install a package declaring `configuration`; upgrade the host first.
 
 ## Slot contract
 

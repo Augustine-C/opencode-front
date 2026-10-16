@@ -9,6 +9,24 @@ export function thirdPartyStatus() {
     id: "third-party-status",
     name: "Third-party status",
     apiVersion: 1,
+    configuration: {
+      fields: [
+        {
+          key: "endpoint",
+          type: "string",
+          label: "Status endpoint",
+          description: "An HTTP endpoint returning label and value, with CORS enabled for the frontend.",
+          required: true,
+        },
+        {
+          key: "interval",
+          type: "number",
+          label: "Poll interval (milliseconds)",
+          default: 60000,
+          min: 5000,
+        },
+      ],
+    },
     setup(context) {
       const [state, setState] = createStore({ label: "", value: "", error: "", loading: false })
       const endpoint = typeof context.options.endpoint === "string" ? context.options.endpoint : undefined

@@ -21,6 +21,10 @@ The output goes to `examples/independent-plugin-template/dist/`. Install only ZI
 
 Change `id`, `version`, `capabilities`, `styles`, and `assets` in `plugin.manifest.json` before publishing. Published packages must use a new SemVer version whenever package contents change.
 
+## Configuration
+
+Install the ZIP, choose **Configure** in **Settings → Frontend plugins**, set the panel title, then choose **Save and apply** and enable the plugin. Later changes use the same form without another import. The `configuration.fields` declaration in `plugin.manifest.json` supplies the form; `setup` reads the resulting values from `context.options`. Viewing or editing the form does not execute plugin code.
+
 ## Reloading during host development
 
 When developing this plugin in the monorepo, run the host with `bun run dev` and build the standalone ZIP with `bun run --cwd examples/independent-plugin-template build`. In **Settings → Frontend plugins**, use **Reload local plugin ZIP** on an enabled plugin and select the new ZIP from `examples/independent-plugin-template/dist/`. The development host assigns a local build identifier, activates a fresh plugin instance, and cleans up the previous instance without rebuilding the host. Rebuild and reload as often as needed; published packages should still use a new SemVer version for every content change.

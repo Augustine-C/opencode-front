@@ -246,6 +246,35 @@ test("independent plugin package rejects unsupported, unsafe, and undeclared man
   );
 });
 
+test("package configuration is statically validated and retained without executing its entry", async () => {
+  const field = { key: "interval", type: "number", label: "Interval", default: 10, min: 5, max: 100 }
+  const configuration = { fields: [field, { key: "enabled", type: "boolean", label: "Enabled", default: false }] }
+  const inspected = await inspectPluginPackage(zip(packageEntries("throw new Error('must not run'); export function setup() {}", { configuration })))
+  expect(inspected.manifest.configuration).toEqual(configuration)
+  const invalid = [
+    null, {}, { fields: "bad" },
+    { fields: [field, field] },
+    { fields: [{ ...field, key: "__proto__" }] },
+    { fields: [{ ...field, type: "object" }] },
+    { fields: [{ ...field, label: " " }] },
+    { fields: [{ ...field, default: "10" }] },
+    { fields: [{ ...field, default: 4 }] },
+    { fields: [{ ...field, min: 101 }] },
+    { fields: [{ ...field, min: "5" }] },
+    { fields: [{ ...field, required: "yes" }] },
+    { fields: [{ ...field, description: 123 }] },
+    { fields: [{ ...field, typo: true }] },
+    { fields: [{ key: "title", type: "string", label: "Title", required: true, default: " " }] },
+    { fields: [{ key: "mode", type: "select", label: "Mode", options: [] }] },
+    { fields: [{ key: "mode", type: "select", label: "Mode", default: "missing", options: [{ value: "one", label: "One" }] }] },
+    { fields: [{ key: "mode", type: "select", label: "Mode", options: [{ value: "one", label: "One" }, { value: "one", label: "Again" }] }] },
+    { fields: Array.from({ length: 101 }, (_, index) => ({ ...field, key: `field${index}` })) },
+  ]
+  for (const configuration of invalid) {
+    await expect(inspectPluginPackage(zip(packageEntries(undefined, { configuration })))).rejects.toThrow()
+  }
+})
+
 test("independent plugin entry is valid self-contained JavaScript without static or dynamic imports", async () => {
   const valid = await inspectPluginPackage(
     zip(
@@ -696,6 +725,52 @@ test("a cancelled candidate can restore its previous package and data without bl
     await host.dispose()
     await store.close()
     Reflect.deleteProperty(globalThis, Symbol.for(PLUGIN_RUNTIME_SYMBOL))
+  }
+})
+
+test("a candidate requiring configuration stays pending until repaired and restores the old declaration", async () => {
+  const store = repository().create()
+  const values = new Map<string, string>()
+  const storage: PluginDataStorage = {
+    get length() { return values.size },
+    key: (index) => [...values.keys()][index] ?? null,
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => { values.set(key, value) },
+    removeItem: (key) => { values.delete(key) },
+  }
+  const host = createPluginHost({
+    context: {
+      app: { version: "test", platform: "web" },
+      client: () => undefined, sessionID: () => undefined, connection: () => undefined,
+      data: { listen: () => () => {} },
+    }, storage,
+  })
+  exposeSharedPluginRuntime()
+  try {
+    const first = await store.install(zip(packageEntries()))
+    const second = await store.install(zip(packageEntries(`export function setup(context) {
+      context.ui.command({ id: "configured", title: context.options.endpoint, run() {} });
+    }`, { version: "2.0.0", configuration: { fields: [{ key: "endpoint", type: "string", label: "Endpoint", required: true }] } })))
+    await store.activateCandidate(first.id, capturePluginData(storage, first.id, first.activeDigest, 1))
+    const active = (await store.active(first.id))!
+    host.register(createIndependentPluginDefinition({
+      repository: store, id: first.id, name: active.module.manifest.name,
+      digest: active.record.activeDigest, configuration: active.module.manifest.configuration,
+    }))
+    await host.enable(first.id)
+    expect(host.state.statuses[0].state).toBe("configuration-required")
+    expect(host.state.commands).toHaveLength(0)
+    expect(await settleIndependentActivation({ repository: store, storage, host, id: first.id })).toBe("pending")
+    expect((await store.active(first.id))?.record).toMatchObject({ activeDigest: second.candidateDigest, activationPending: true })
+    await host.enable(first.id, { endpoint: "Configured endpoint" })
+    expect(host.state.commands[0].title).toBe("Configured endpoint")
+    expect(await settleIndependentActivation({ repository: store, storage, host, id: first.id })).toBe("healthy")
+    await host.unregister(first.id)
+    await store.restorePrevious(first.id, capturePluginData(storage, first.id, second.candidateDigest!, 1))
+    expect((await store.active(first.id))?.module.manifest.configuration).toBeUndefined()
+  } finally {
+    await host.dispose()
+    await store.close()
   }
 })
 

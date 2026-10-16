@@ -1,5 +1,7 @@
 import type { Accessor, JSX } from "solid-js"
 import type { OpenCodeClient, OpenCodeEvent } from "@opencode/client"
+import type { PluginConfiguration } from "./configuration"
+export type { PluginConfiguration, ConfigurationField, ConfigurationIssue } from "./configuration"
 
 export type Cleanup = () => void | Promise<void>
 export type SlotMap = {
@@ -81,6 +83,7 @@ export type Definition = {
   id: string
   name: string
   apiVersion: 1
+  configuration?: PluginConfiguration
   defaultEnabled?: boolean
   // Maps exact TUI package identities to this explicitly authored browser adapter.
   tui?: readonly string[]

@@ -3,6 +3,7 @@ import { createSignal } from "solid-js"
 import "./style.css"
 
 export function setup(context: Context) {
+  const title = typeof context.options.title === "string" ? context.options.title : "Hello plugin"
   const [greetings, setGreetings] = createSignal(
     context.storage.get<number>("greetings") ?? 0,
   )
@@ -15,7 +16,7 @@ export function setup(context: Context) {
   })
   const removePanel = context.ui.panel.register({
     name: "hello",
-    title: "Hello plugin",
+    title,
   })
   const removeSlot = context.ui.slot({
     append: "session.panel",

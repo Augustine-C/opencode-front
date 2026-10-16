@@ -2,7 +2,7 @@ import * as solid from "solid-js"
 import * as solidWeb from "solid-js/web"
 import * as solidStore from "solid-js/store"
 import { createRoot, getOwner, runWithOwner } from "solid-js"
-import type { Context, Definition } from "@opencode/frontend-plugin"
+import type { Context, Definition, PluginConfiguration } from "@opencode/frontend-plugin"
 import { PLUGIN_RUNTIME_SYMBOL } from "@opencode/frontend-plugin/independent"
 import type { IndependentPluginRepository } from "./repository"
 import { createPluginResources } from "./resources"
@@ -37,11 +37,13 @@ export function createIndependentPluginDefinition(input: {
   id: string
   name: string
   digest: string
+  configuration?: PluginConfiguration
 }): Definition {
   return {
     id: input.id,
     name: input.name,
     apiVersion: 1,
+    configuration: input.configuration,
     async setup(context) {
       const owner = getOwner()
       const module = await input.repository.module(input.digest)

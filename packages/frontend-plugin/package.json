@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./host": "./src/runtime.ts",
     "./config": "./src/config.ts",
+    "./configuration": "./src/configuration.ts",
     "./structure": "./src/structure.ts",
     "./storage": "./src/storage.ts",
     "./independent": "./src/independent.ts"

@@ -1,4 +1,5 @@
 import { parse, printParseErrorCode, type ParseError } from "jsonc-parser"
+import { resolveConfiguration } from "./configuration"
 import type { Definition } from "./index"
 
 export type PluginConfig = { plugins?: Array<string | { package: string; options?: Record<string, unknown> }> }
@@ -20,7 +21,15 @@ export function adaptConfig(value: unknown, available: readonly Definition[]): C
   const plugins = new Map<string, ResolvedPlugin>(
     available
       .filter((plugin) => plugin.defaultEnabled)
-      .map((plugin) => [plugin.id, { id: plugin.id, package: plugin.id, options: {}, enabled: true }]),
+      .map((plugin) => [
+        plugin.id,
+        {
+          id: plugin.id,
+          package: plugin.id,
+          options: resolveConfiguration(plugin.configuration, {}).options,
+          enabled: true,
+        },
+      ]),
   )
   const unsupported: string[] = []
   for (const item of entries) {
@@ -49,7 +58,7 @@ export function adaptConfig(value: unknown, available: readonly Definition[]): C
       plugins.set(plugin.id, {
         id: plugin.id,
         package: previous?.package ?? source,
-        options: entry.options ?? previous?.options ?? {},
+        options: resolveConfiguration(plugin.configuration, entry.options ?? previous?.options ?? {}).options,
         enabled,
       })
     }

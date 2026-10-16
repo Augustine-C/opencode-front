@@ -1,3 +1,4 @@
+import { resolveConfiguration } from "@opencode/frontend-plugin/configuration"
 import { resolveSlots } from "@opencode/frontend-plugin/structure"
 import {
   createContext,
@@ -166,12 +167,14 @@ function createPlugins() {
   }
   async function apply(
     entries: ResolvedPlugin[],
-    options: { skipIndependent?: boolean } = {},
+    options: { skipIndependent?: boolean; only?: string } = {},
   ) {
     if (disposed) return
-    for (const plugin of host.definitions()) await host.disable(plugin.id)
+    for (const plugin of host.definitions())
+      if (!options.only || plugin.id === options.only) await host.disable(plugin.id)
     for (const entry of entries) {
       if (disposed) return
+      if (options.only && entry.id !== options.only) continue
       if (options.skipIndependent && registered.has(entry.id)) continue
       if (entry.enabled) {
         if (registered.has(entry.id)) {
@@ -217,6 +220,7 @@ function createPlugins() {
               id: entry.id,
               name: active.module.manifest.name,
               digest: active.record.activeDigest,
+              configuration: active.module.manifest.configuration,
             })
             host.register(definition)
             registered.set(entry.id, {
@@ -329,10 +333,12 @@ function createPlugins() {
   }
   // Serialize persisted preferences, without waiting for third-party setup.
   let pending = Promise.resolve()
-  function save(entries: ResolvedPlugin[]) {
+  function save(update: (current: ResolvedPlugin[]) => ResolvedPlugin[], only?: string) {
     pending = pending
       .catch(() => {})
       .then(async () => {
+        if (disposed) return
+        const entries = update(state.config)
         if (repository) {
           const installations = await repository.list()
           for (const installed of installations) {
@@ -347,7 +353,7 @@ function createPlugins() {
         }
         persistConfig(entries)
         setState("config", entries)
-        await apply(entries)
+        await apply(entries, { only })
       })
     return pending
   }
@@ -444,14 +450,24 @@ function createPlugins() {
     toggle(id: string, enabled: boolean) {
       if (disposed) return
       if (!enabled) void host.disable(id)
-      const existing = state.config.find((entry) => entry.id === id)
-      return save(
-        existing
-          ? state.config.map((entry) =>
-              entry.id === id ? { ...entry, enabled } : entry,
-            )
-          : [...state.config, { id, package: id, options: {}, enabled }],
-      )
+      return save((current) => {
+        const existing = current.find((entry) => entry.id === id)
+        return existing
+          ? current.map((entry) => entry.id === id ? { ...entry, enabled } : entry)
+          : [...current, { id, package: id, options: {}, enabled }]
+      }, id)
+    },
+    saveOptions(id: string, options: Record<string, unknown>) {
+      return save((current) => {
+        const definition = host.definitions().find((entry) => entry.id === id)
+        if (!definition) throw new Error(`Unknown frontend plugin: ${id}`)
+        const resolved = resolveConfiguration(definition.configuration, options)
+        if (resolved.issues.length) throw new Error("Invalid plugin configuration")
+        const existing = current.find((entry) => entry.id === id)
+        return existing
+          ? current.map((entry) => entry.id === id ? { ...entry, options: resolved.options } : entry)
+          : [...current, { id, package: id, options: resolved.options, enabled: false }]
+      }, id)
     },
     previewConfig(value: unknown) {
       return previewConfig(value, available(), state.config)
@@ -459,7 +475,7 @@ function createPlugins() {
     importConfig(value: unknown) {
       const result = adaptConfig(value, available())
       setState("unsupported", result.unsupported)
-      return save(result.plugins)
+      return save(() => result.plugins)
     },
     async installIndependent(file: Blob) {
       if (!repository) throw new Error("Plugin storage is unavailable")
