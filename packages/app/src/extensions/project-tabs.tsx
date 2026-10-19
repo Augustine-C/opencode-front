@@ -18,6 +18,7 @@ import "./project-tabs.css"
 type Group = { kind: "instance" | "project"; key: string; instance: string }
 type ProjectGroup = {
   key: string
+  directory?: string
   label: string
   title: string
   conversation: string
@@ -58,6 +59,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
           tabKey(tab),
           {
             key: JSON.stringify([tab.server, root ? pathKey(root) : null]),
+            directory: root,
             label,
             conversation,
             search: [
@@ -187,7 +189,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
     const conn = connections().get(instance)
     return conn ? serverName(conn) : language.t("session.tab.group.unknownInstance")
   }
-  function heading(group: Group, tab: Tab, visible: Accessor<readonly Tab[]>) {
+  function heading(group: Group, tab: Tab, visible: Accessor<readonly Tab[]>, onCreate?: () => void) {
     const project = () => groups().get(tabKey(tab))
     const label = () => (group.kind === "instance" ? instanceLabel(group.instance) : (project()?.label ?? ""))
     return (
@@ -208,6 +210,16 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
         dropTarget={state.target === group.key ? state.placement : undefined}
         toggle={() =>
           settings.appearance.setTabGroupCollapsed(group.key, !settings.appearance.tabGroupCollapsed(group.key))
+        }
+        createSession={
+          group.kind === "project" && project()?.directory && connections().has(group.instance)
+            ? () => {
+                const directory = project()?.directory
+                if (!directory || !settings.ready() || !connections().has(group.instance)) return
+                onCreate?.()
+                void tabs.newDraft({ server: tab.server, directory })
+              }
+            : undefined
         }
         drag={{
           start(event) {
@@ -260,7 +272,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
     index(tab: Tab, visible: readonly Tab[]) {
       return enabled() ? indexFor(visible).groupIndex.get(tabKey(tab)) : undefined
     },
-    heading(tab: Tab, visible: Accessor<readonly Tab[]>) {
+    heading(tab: Tab, visible: Accessor<readonly Tab[]>, onCreate?: () => void) {
       return (
         <>
           <Show when={enabled() && indexFor(visible()).instanceFirst.get(instanceKey(tab)) === tabKey(tab)}>
@@ -271,7 +283,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
               enabled() && !instanceCollapsed(tab) && indexFor(visible()).projectFirst.get(key(tab)) === tabKey(tab)
             }
           >
-            {heading({ kind: "project", key: key(tab), instance: instanceKey(tab) }, tab, visible)}
+            {heading({ kind: "project", key: key(tab), instance: instanceKey(tab) }, tab, visible, onCreate)}
           </Show>
         </>
       )

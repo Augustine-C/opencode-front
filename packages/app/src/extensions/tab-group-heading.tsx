@@ -18,6 +18,7 @@ export function TabGroupHeading(props: {
   ready: boolean
   dropTarget?: "before" | "after"
   toggle: () => void
+  createSession?: () => void
   drag: {
     start: JSX.EventHandler<HTMLButtonElement, DragEvent>
     over: JSX.EventHandler<HTMLDivElement, DragEvent>
@@ -65,7 +66,12 @@ export function TabGroupHeading(props: {
             </span>
           }
         >
-          <ProjectAvatar fallback={props.label} src={props.src} variant={props.variant} aria-hidden="true" />
+          <span data-slot="tab-project-group-icon" aria-hidden="true">
+            <ProjectAvatar fallback={props.label} src={props.src} variant={props.variant} />
+            <span data-slot="tab-project-group-chevron">
+              <Icon name="chevron-down" size="small" />
+            </span>
+          </span>
         </Show>
         <span data-slot="tab-project-group-title">{props.label}</span>
         <Show when={props.status}>
@@ -91,10 +97,25 @@ export function TabGroupHeading(props: {
             </Show>
           </span>
         </Show>
-        <span data-slot="tab-project-group-chevron" aria-hidden="true">
-          <Icon name="chevron-down" size="small" />
-        </span>
+        <Show when={props.kind === "instance"}>
+          <span data-slot="tab-project-group-chevron" aria-hidden="true">
+            <Icon name="chevron-down" size="small" />
+          </span>
+        </Show>
       </button>
+      <Show when={props.kind === "project" && props.createSession}>
+        <button
+          type="button"
+          data-slot="tab-project-group-create"
+          class="[app-region:no-drag]"
+          aria-label={language.t("session.tab.group.newSession", { project: props.label })}
+          title={language.t("session.tab.group.newSession", { project: props.label })}
+          disabled={!props.ready}
+          onClick={() => props.createSession?.()}
+        >
+          <Icon name="plus" size="small" />
+        </button>
+      </Show>
     </div>
   )
 }

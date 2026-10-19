@@ -44,7 +44,7 @@ The **Build client** GitHub Action runs upstream boundary checks, type checks, a
 
 Ad hoc macOS builds disable hardened runtime through the signing tool's per-file options so the app and its helpers can load the bundled Electron libraries without a Team ID. Before uploading, the workflow extracts the release archive, verifies every Mach-O signature, rejects hardened runtime and explicit library validation flags, and checks that the app starts a renderer helper.
 
-See the [2.0.32.0 release notes](docs/releases/2.0.32.0.md) and [OpenCode v2.0.32 sync details](docs/upstream-v2.0.32.md).
+See the [2.0.32.1 release notes](docs/releases/2.0.32.1.md) and [OpenCode v2.0.32 sync details](docs/upstream-v2.0.32.md).
 
 ## Organize session tabs
 
@@ -53,6 +53,8 @@ In **Settings → General**, enable **Group tabs by project** beside the **Tabs*
 Drag an instance heading with the mouse to reorder instance blocks, or a project heading to reorder projects within its instance. There are no ordering menus or keyboard ordering commands. These preferences persist across reloads and layout changes. Temporarily closed projects and instances retain their saved ordering, and newly opened groups append after known groups.
 
 Click an instance or project heading to collapse or expand it. Collapse state is independent at both levels and saved across reloads. Selecting or opening a session, including through a keyboard shortcut, expands its instance and project; you can also fold the current group while continuing to use the session. Vertical headings stay visible while scrolling.
+
+Hover or focus a project heading to reveal **+**. It opens a new session tab with that project's instance and root directory already selected, including when the project is folded. The button stays visible on touch devices. Grouped layouts use compact headings, conversation rows and spacing.
 
 Horizontal layout uses one compact **Browse conversations** entry showing the current instance/project, rather than separate wide headings in the tab row. Open it to browse the grouped conversation list, collapse groups, drag their headings, or select a conversation. Escape or a click outside closes the list. The horizontal row keeps all conversation tabs available, with light spacing between groups; sidebar collapse preferences do not hide those tabs.
 
