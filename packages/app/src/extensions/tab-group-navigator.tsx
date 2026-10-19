@@ -206,7 +206,7 @@ export function TabGroupNavigator(props: {
               <For each={results()}>
                 {(tab) => (
                   <>
-                    <Show when={!query()}>{props.groups.heading(tab, props.tabs)}</Show>
+                    <Show when={!query()}>{props.groups.heading(tab, props.tabs, () => setOpen(false))}</Show>
                     <Show when={query() || !props.groups.collapsed(tab)}>
                       <button
                         id={resultID(tab)}

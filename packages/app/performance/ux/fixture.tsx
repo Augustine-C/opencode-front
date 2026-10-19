@@ -23,6 +23,7 @@ function App() {
         onNavigate={(tab) => setState("current", tab)}
       />
       <p id="selection">{state.current.sessionId}</p>
+      <output id="created-draft">{JSON.stringify(state.createdDraft)}</output>
       <button id="attention" onClick={() => setState("attention", !state.attention)}>
         Toggle attention
       </button>

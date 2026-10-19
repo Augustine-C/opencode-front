@@ -13,6 +13,7 @@ export const [state, setState] = createStore({
   unread: false,
   attention: false,
   offline: false,
+  createdDraft: undefined as { server: string; directory: string } | undefined,
 })
 const connections = Array.from({ length: 4 }, (_, i) => ({
   type: "http",
@@ -30,7 +31,7 @@ const session = (id: string) => {
     id,
     title: `Conversation ${i} 同名会话`,
     projectID: `p${i % 5}`,
-    location: { directory: `/code/project-${i % 5}` },
+    location: { directory: `/code/project-${i % 5}${i % 5 === 1 ? "/worktrees/feature" : ""}` },
   }
 }
 const data = {
@@ -64,7 +65,11 @@ export const useServerCtx = () => () => ({ data, notification: { session: { unre
 export const ServerConnection = { key: (conn) => conn.http.url }
 export const serverName = (conn) => conn.displayName
 export const tabKey = (tab) => `${tab.server}\n${tab.sessionId}`
-export const useTabs = () => ({ info: {}, pendingSession: () => undefined })
+export const useTabs = () => ({
+  info: {},
+  pendingSession: () => undefined,
+  newDraft: async (draft) => setState("createdDraft", draft),
+})
 export const projectSettingsKey = () => "fixture"
 export const useSettings = () => ({
   ready: () => true,

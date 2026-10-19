@@ -40,6 +40,7 @@ export const dict = {
   "session.navigation.stopSearching": "Stop after this page",
   "session.navigation.searchLimit": "Loads up to five earlier pages, stopping when a new match is found. Stopping does not cancel the page already loading.",
   "session.tab.group.filter": "Filter open sessions",
+  "session.tab.group.newSession": "New session in {{project}}",
   "session.tab.group.noResults": "No open sessions match this filter.",
   "session.tab.group.context": "{{instance}} · {{project}}",
   "session.tab.group.status.attention": "Action needed in this group",

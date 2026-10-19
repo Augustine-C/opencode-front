@@ -64,6 +64,58 @@ await page.waitForFunction(
 await page.locator('[data-slot="tab-group-navigator-trigger"]').click()
 await page.keyboard.press("Escape")
 assert.equal(await page.locator('[data-slot="tab-group-navigator"]').count(), 0)
+
+// The real group adapter must bind creation to the clicked project and connection,
+// including folded groups and worktree sessions, rather than the current tab.
+await page.goto(`${process.env.UX_FIXTURE_URL || "http://127.0.0.1:4446"}/?size=100`)
+const open = () => page.locator('[data-slot="tab-group-navigator-trigger"]').click()
+const project = (server, directory) =>
+  page.locator('[data-slot="tab-project-group"]').filter({
+    has: page.locator(`[data-slot="tab-project-group-toggle"][title*="${directory}"][title*="Instance ${server}"]`),
+  })
+const target = project(1, "/code/project-1")
+const toggle = target.locator('[data-slot="tab-project-group-toggle"]')
+const create = target.getByRole("button", { name: "New session in Project 1", exact: true })
+await open()
+assert.equal(await page.locator('[data-slot="tab-instance-group"] [data-slot="tab-project-group-create"]').count(), 0)
+await page.getByRole("searchbox").hover()
+assert.equal(await create.evaluate((el) => getComputedStyle(el).opacity), "0")
+await target.hover()
+assert.equal(await create.evaluate((el) => getComputedStyle(el).opacity), "1")
+await toggle.click()
+assert.equal(await toggle.getAttribute("aria-expanded"), "false")
+await create.click()
+await page.locator('[data-slot="tab-group-navigator"]').waitFor({ state: "detached" })
+assert.deepEqual(JSON.parse(await page.locator("#created-draft").innerText()), {
+  server: "server-1",
+  directory: "/code/project-1",
+})
+assert.equal(await page.locator("#selection").innerText(), "s0")
+await open()
+assert.equal(await toggle.getAttribute("aria-expanded"), "false")
+await create.focus()
+assert.equal(await create.evaluate((el) => getComputedStyle(el).opacity), "1")
+await page.keyboard.press("Enter")
+await page.locator('[data-slot="tab-group-navigator"]').waitFor({ state: "detached" })
+await open()
+await project(0, "/code/project-1").hover()
+await project(0, "/code/project-1").getByRole("button", { name: "New session in Project 1", exact: true }).click()
+assert.deepEqual(JSON.parse(await page.locator("#created-draft").innerText()), {
+  server: "server-0",
+  directory: "/code/project-1",
+})
+await open()
+await project(2, "/code/project-3").hover()
+await project(2, "/code/project-3").getByRole("button", { name: "New session in Project 3", exact: true }).click()
+assert.deepEqual(JSON.parse(await page.locator("#created-draft").innerText()), {
+  server: "server-2",
+  directory: "/code/project-3",
+})
+assert.deepEqual(errors, [])
+console.log(
+  JSON.stringify({ projectCreation: true, connectionIsolation: true, worktreeRoot: true, foldedCreation: true }),
+)
+
 for (const viewport of [
   { width: 390, height: 844 },
   { width: 320, height: 640 },
@@ -77,6 +129,17 @@ for (const viewport of [
   await page.keyboard.press("Escape")
   await page.keyboard.press("Escape")
 }
+const touch = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+await touch.goto(`${process.env.UX_FIXTURE_URL || "http://127.0.0.1:4446"}/?size=20`)
+await touch.locator('[data-slot="tab-group-navigator-trigger"]').tap()
+const touchCreate = touch.getByRole("button", { name: "New session in Project 0", exact: true }).first()
+assert.equal(await touchCreate.evaluate((el) => getComputedStyle(el).opacity), "1")
+await touchCreate.tap()
+assert.deepEqual(JSON.parse(await touch.locator("#created-draft").innerText()), {
+  server: "server-0",
+  directory: "/code/project-0",
+})
+await touch.close()
 assert.deepEqual(errors, [])
 console.log(
   JSON.stringify({
