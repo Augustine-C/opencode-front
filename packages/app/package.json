@@ -1,6 +1,6 @@
 {
   "name": "@opencode/app",
-  "version": "2.0.32",
+  "version": "2.1.1",
   "description": "",
   "type": "module",
   "exports": {
@@ -12,7 +12,7 @@
     "./index.css": "./src/index.css"
   },
   "scripts": {
-    "typecheck": "tsgo --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview"
@@ -25,7 +25,7 @@
     "@tailwindcss/vite": "4.3.3",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
+    "@typescript/native": "catalog:",
     "diff": "catalog:",
     "fake-indexeddb": "6.2.5",
     "ghostty-web": "github:anomalyco/ghostty-web#83c0a07b8628b748aed073b232cb4b52a6ca11c1",

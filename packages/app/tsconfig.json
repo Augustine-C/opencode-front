@@ -22,7 +22,12 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "types": [
+      "bun",
+      "node"
+    ],
+    "rootDir": ".."
   },
   "include": [
     "src",
