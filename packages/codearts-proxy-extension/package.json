@@ -17,6 +17,6 @@
     "@opencode/ui": "workspace:*"
   },
   "scripts": {
-    "typecheck": "tsgo --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   }
 }

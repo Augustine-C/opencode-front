@@ -1,5 +1,7 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { chromium } from "playwright"
+const upstream = JSON.parse(readFileSync(new URL("../../../../docs/upstream.json", import.meta.url), "utf8"))
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
   args: ["--no-sandbox"],
@@ -11,7 +13,7 @@ await page.goto(`${process.env.UX_FIXTURE_URL || "http://127.0.0.1:4446"}/?versi
 const info = page.getByRole("region", { name: "Version information" })
 await info.waitFor()
 assert.match(await info.innerText(), /unreleased build/)
-assert.match(await info.innerText(), /2\.0\.29/)
+assert.ok((await info.innerText()).includes(upstream.version))
 assert.match(await info.innerText(), /2\.0\.20/)
 await info.getByRole("combobox", { name: "Instance" }).selectOption("server-1")
 assert.match(await info.innerText(), /2\.0\.21/)
