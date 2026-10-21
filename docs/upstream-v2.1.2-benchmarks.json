@@ -1,0 +1,710 @@
+{
+  "baseline": {
+    "version": "2.1.1",
+    "commit": "ba546ec1598a70db2570e9c6258028d955ba8f58"
+  },
+  "candidate": {
+    "version": "2.1.2",
+    "commit": "a517687fde98a7329ada3ae644a01a9fc6c4e99e"
+  },
+  "before": {
+    "history": {
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "Production native search controller and history adapter; mock data provider, 20 loaded messages then 10 earlier messages",
+      "workload": "Initial zero matches to the first page of matches; two animation frames included",
+      "warmup": 1,
+      "samples": [
+        {
+          "durationMs": 27.600000001490116,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.19999999552965,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 24.5,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 28.799999997019768,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.80000000447035,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.299999997019768,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.799999997019768,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.100000001490116,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.100000001490116,
+          "count": "1/10"
+        }
+      ],
+      "medianMs": 26.050000000745058,
+      "slowestMs": 28.799999997019768,
+      "errors": []
+    },
+    "groups": {
+      "date": "2026-10-21T08:02:57.295Z",
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "production adapters, simulated connections and cached session titles",
+      "results": [
+        {
+          "size": 20,
+          "errors": [],
+          "samples": [
+            {
+              "open": 31.299999997019768,
+              "filter": 32.400000005960464,
+              "select": 33.29999999701977,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.5,
+              "filter": 34.20000000298023,
+              "select": 33.29999999701977,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.100000001490116,
+              "filter": 34,
+              "select": 33.79999999701977,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.399999998509884,
+              "filter": 33.20000000298023,
+              "select": 34.29999999701977,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.399999998509884,
+              "filter": 34.20000000298023,
+              "select": 33.29999999701977,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.5,
+              "filter": 34,
+              "select": 33.5,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.700000002980232,
+              "filter": 33.79999999701977,
+              "select": 33.399999998509884,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.100000001490116,
+              "filter": 33.20000000298023,
+              "select": 33.79999999701977,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.80000000447035,
+              "filter": 32.399999998509884,
+              "select": 34.600000001490116,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.600000001490116,
+              "filter": 32.600000001490116,
+              "select": 32.899999998509884,
+              "longTasks": [],
+              "selected": "s1"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2096820
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 2405
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3243776
+            }
+          ]
+        },
+        {
+          "size": 100,
+          "errors": [],
+          "samples": [
+            {
+              "open": 18,
+              "filter": 33.400000005960464,
+              "select": 32.899999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.899999998509884,
+              "filter": 34.5,
+              "select": 33.30000000447035,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.5,
+              "filter": 34.30000000447035,
+              "select": 32.899999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.29999999701977,
+              "filter": 34.600000001490116,
+              "select": 32.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 34.599999994039536,
+              "select": 33.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.100000001490116,
+              "filter": 34.599999994039536,
+              "select": 32.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.19999999552965,
+              "filter": 34.600000001490116,
+              "select": 33.20000000298023,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.19999999552965,
+              "filter": 34.5,
+              "select": 31.600000001490116,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.30000000447035,
+              "filter": 33.79999999701977,
+              "select": 33.70000000298023,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.299999997019768,
+              "filter": 34.600000001490116,
+              "select": 33.20000000298023,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2150520
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 3317
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3356012
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "errors": [],
+          "samples": [
+            {
+              "open": 32.30000000447035,
+              "filter": 33.899999998509884,
+              "select": 32.600000001490116,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.5,
+              "filter": 33.600000001490116,
+              "select": 32.100000001490116,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.80000000447035,
+              "filter": 34.399999998509884,
+              "select": 32.79999999701977,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 34.29999999701977,
+              "select": 33.399999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31,
+              "filter": 34.79999999701977,
+              "select": 32.600000001490116,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 33.100000001490116,
+              "select": 34.899999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.69999999552965,
+              "filter": 35.100000001490116,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.400000005960464,
+              "filter": 32.80000000447035,
+              "select": 34.29999999701977,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 32.79999999701977,
+              "select": 34.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.299999997019768,
+              "filter": 34.5,
+              "select": 32.399999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2515348
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 8117
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3946584
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "after": {
+    "history": {
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "Production native search controller and history adapter; mock data provider, 20 loaded messages then 10 earlier messages",
+      "workload": "Initial zero matches to the first page of matches; two animation frames included",
+      "warmup": 1,
+      "samples": [
+        {
+          "durationMs": 25.5,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.399999998509884,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.299999997019768,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 23.80000000447035,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.5,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.19999999552965,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 27.099999994039536,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.19999999552965,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 27.599999994039536,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.799999997019768,
+          "count": "1/10"
+        }
+      ],
+      "medianMs": 26.24999999627471,
+      "slowestMs": 27.599999994039536,
+      "errors": []
+    },
+    "groups": {
+      "date": "2026-10-21T08:04:55.861Z",
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "production adapters, simulated connections and cached session titles",
+      "results": [
+        {
+          "size": 20,
+          "errors": [],
+          "samples": [
+            {
+              "open": 21.299999997019768,
+              "filter": 32.29999999701977,
+              "select": 32.80000000447035,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.29999999701977,
+              "filter": 34.600000001490116,
+              "select": 32.600000001490116,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 28.799999997019768,
+              "filter": 35.100000001490116,
+              "select": 33.30000000447035,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.100000001490116,
+              "filter": 33.5,
+              "select": 33.30000000447035,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.29999999701977,
+              "filter": 32.79999999701977,
+              "select": 32.30000000447035,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 33.899999998509884,
+              "filter": 33.19999999552965,
+              "select": 31.700000002980232,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 34,
+              "filter": 33.29999999701977,
+              "select": 33.30000000447035,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.399999998509884,
+              "filter": 35.29999999701977,
+              "select": 33.20000000298023,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.5,
+              "filter": 33.20000000298023,
+              "select": 35.100000001490116,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.5,
+              "filter": 33.899999998509884,
+              "select": 31.80000000447035,
+              "longTasks": [],
+              "selected": "s1"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2096820
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 2405
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3242408
+            }
+          ]
+        },
+        {
+          "size": 100,
+          "errors": [],
+          "samples": [
+            {
+              "open": 18.30000000447035,
+              "filter": 32,
+              "select": 34.69999999552965,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.899999998509884,
+              "filter": 32.80000000447035,
+              "select": 34.79999999701977,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.5,
+              "filter": 34.20000000298023,
+              "select": 34,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.600000001490116,
+              "filter": 34.29999999701977,
+              "select": 33.29999999701977,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.5,
+              "filter": 34.29999999701977,
+              "select": 33.29999999701977,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.600000001490116,
+              "filter": 32.5,
+              "select": 35.099999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.399999998509884,
+              "filter": 33.399999998509884,
+              "select": 32,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.80000000447035,
+              "filter": 33.79999999701977,
+              "select": 34.79999999701977,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.19999999552965,
+              "filter": 32.70000000298023,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.80000000447035,
+              "filter": 34.19999999552965,
+              "select": 33.399999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2150612
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 3317
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3357264
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "errors": [],
+          "samples": [
+            {
+              "open": 32.5,
+              "filter": 33.19999999552965,
+              "select": 33.80000000447035,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.5,
+              "filter": 33,
+              "select": 33.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.399999998509884,
+              "filter": 33.80000000447035,
+              "select": 32.599999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 34.20000000298023,
+              "filter": 32.599999994039536,
+              "select": 34.20000000298023,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.099999994039536,
+              "filter": 33.900000005960464,
+              "select": 34,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.5,
+              "filter": 33.20000000298023,
+              "select": 33.100000001490116,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.20000000298023,
+              "filter": 33.399999998509884,
+              "select": 34.19999999552965,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.600000001490116,
+              "filter": 32.79999999701977,
+              "select": 33.80000000447035,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.20000000298023,
+              "filter": 32.599999994039536,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 34.099999994039536,
+              "filter": 32.900000005960464,
+              "select": 32.899999998509884,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2515580
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 8117
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3961020
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
