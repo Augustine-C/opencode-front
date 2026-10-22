@@ -29,6 +29,9 @@
         "component-tests/**",
         "src/storybook/**",
         "test-browser/**"
+      ],
+      "keep": [
+        "test/solid-jsx.ts"
       ]
     },
     {

@@ -1,0 +1,707 @@
+{
+  "upstream": {
+    "version": "2.1.3",
+    "commit": "bb25a2f4a3f3f04d7c344bec0c0574ea3510b3b1"
+  },
+  "scope": "Production search/history and project-group adapters with synthetic data; not full transcript or desktop performance",
+  "history": {
+    "before": {
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "Production native search controller and history adapter; mock data provider, 20 loaded messages then 10 earlier messages",
+      "workload": "Initial zero matches to the first page of matches; two animation frames included",
+      "warmup": 1,
+      "samples": [
+        {
+          "durationMs": 27.30000001192093,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.200000017881393,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.5,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 24.100000023841858,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.299999982118607,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 28.599999994039536,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.19999998807907,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.599999994039536,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 28,
+          "count": "1/10"
+        }
+      ],
+      "medianMs": 26.099999994039536,
+      "slowestMs": 28.599999994039536,
+      "errors": []
+    },
+    "after": {
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "Production native search controller and history adapter; mock data provider, 20 loaded messages then 10 earlier messages",
+      "workload": "Initial zero matches to the first page of matches; two animation frames included",
+      "warmup": 1,
+      "samples": [
+        {
+          "durationMs": 25.30000001192093,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.899999976158142,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 23.799999982118607,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 27.400000005960464,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.69999998807907,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 24.19999998807907,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 27.5,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.299999982118607,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 25.900000005960464,
+          "count": "1/10"
+        },
+        {
+          "durationMs": 26.30000001192093,
+          "count": "1/10"
+        }
+      ],
+      "medianMs": 26.099999994039536,
+      "slowestMs": 27.5,
+      "errors": []
+    }
+  },
+  "groups": {
+    "before": {
+      "date": "2026-10-22T16:07:37.749Z",
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "production adapters, simulated connections and cached session titles",
+      "results": [
+        {
+          "size": 20,
+          "errors": [],
+          "samples": [
+            {
+              "open": 18.400000005960464,
+              "filter": 34.599999994039536,
+              "select": 33.80000001192093,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 29.600000023841858,
+              "filter": 31.599999994039536,
+              "select": 35.099999994039536,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.30000001192093,
+              "filter": 34.19999998807907,
+              "select": 34.400000005960464,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.400000005960464,
+              "filter": 35.19999998807907,
+              "select": 31.5,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.70000001788139,
+              "filter": 34.79999998211861,
+              "select": 33.5,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.20000001788139,
+              "filter": 33.29999998211861,
+              "select": 33.30000001192093,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.30000001192093,
+              "filter": 31.69999998807907,
+              "select": 35,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 31.5,
+              "filter": 32.80000001192093,
+              "select": 34.599999994039536,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.799999982118607,
+              "filter": 34,
+              "select": 32.900000005960464,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 33.80000001192093,
+              "filter": 33.39999997615814,
+              "select": 33.30000001192093,
+              "longTasks": [],
+              "selected": "s1"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2096820
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 2405
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3243556
+            }
+          ]
+        },
+        {
+          "size": 100,
+          "errors": [],
+          "samples": [
+            {
+              "open": 18,
+              "filter": 33.20000001788139,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 33.599999994039536,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.80000001192093,
+              "filter": 35,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.599999994039536,
+              "filter": 35.10000002384186,
+              "select": 32.39999997615814,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.80000001192093,
+              "filter": 34,
+              "select": 32.099999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 34.900000005960464,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.80000001192093,
+              "filter": 34.400000005960464,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.400000005960464,
+              "filter": 33.5,
+              "select": 31.799999982118607,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.70000001788139,
+              "filter": 33.599999994039536,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.20000001788139,
+              "filter": 33.599999994039536,
+              "select": 31.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2150624
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 3317
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3360484
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "errors": [],
+          "samples": [
+            {
+              "open": 27.900000005960464,
+              "filter": 24.099999994039536,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.599999994039536,
+              "filter": 33.70000001788139,
+              "select": 33.79999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.400000005960464,
+              "filter": 33.099999994039536,
+              "select": 33.599999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31,
+              "filter": 33.19999998807907,
+              "select": 35.19999998807907,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 32.599999994039536,
+              "select": 34.599999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.099999994039536,
+              "filter": 33.099999994039536,
+              "select": 34.099999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31,
+              "filter": 33.29999998211861,
+              "select": 33.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 34.099999994039536,
+              "filter": 33,
+              "select": 33.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.69999998807907,
+              "filter": 35.20000001788139,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.80000001192093,
+              "filter": 33.099999994039536,
+              "select": 33.5,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2515564
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 8117
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3948432
+            }
+          ]
+        }
+      ]
+    },
+    "after": {
+      "date": "2026-10-22T16:10:17.895Z",
+      "browser": "155.0.8059.85",
+      "viewport": "1280x900",
+      "fixture": "production adapters, simulated connections and cached session titles",
+      "results": [
+        {
+          "size": 20,
+          "errors": [],
+          "samples": [
+            {
+              "open": 23,
+              "filter": 33.400000005960464,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 29.900000005960464,
+              "filter": 31.80000001192093,
+              "select": 34.79999998211861,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.900000005960464,
+              "filter": 33.30000001192093,
+              "select": 34.69999998807907,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.30000001192093,
+              "filter": 32.29999998211861,
+              "select": 34.400000005960464,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 30.400000005960464,
+              "filter": 34,
+              "select": 33.80000001192093,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32,
+              "filter": 32.69999998807907,
+              "select": 35,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.400000005960464,
+              "filter": 31.900000005960464,
+              "select": 34.5,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.30000001192093,
+              "filter": 31.599999994039536,
+              "select": 34.400000005960464,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 33,
+              "filter": 31.799999982118607,
+              "select": 34.900000005960464,
+              "longTasks": [],
+              "selected": "s1"
+            },
+            {
+              "open": 32.400000005960464,
+              "filter": 31.799999982118607,
+              "select": 34.80000001192093,
+              "longTasks": [],
+              "selected": "s1"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2096820
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 2405
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3242592
+            }
+          ]
+        },
+        {
+          "size": 100,
+          "errors": [],
+          "samples": [
+            {
+              "open": 18.30000001192093,
+              "filter": 33.900000005960464,
+              "select": 31.599999994039536,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33,
+              "filter": 34.29999998211861,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.200000017881393,
+              "filter": 33.89999997615814,
+              "select": 33.900000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.599999994039536,
+              "filter": 34.099999994039536,
+              "select": 33.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 30.69999998807907,
+              "filter": 33.400000005960464,
+              "select": 33.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.30000001192093,
+              "filter": 34.19999998807907,
+              "select": 31.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33,
+              "filter": 34.400000005960464,
+              "select": 33.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.400000005960464,
+              "filter": 34.5,
+              "select": 33.29999998211861,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.099999994039536,
+              "filter": 34.5,
+              "select": 33.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.19999998807907,
+              "filter": 34.599999994039536,
+              "select": 33.10000002384186,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2150520
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 3317
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3357808
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "errors": [],
+          "samples": [
+            {
+              "open": 28.099999994039536,
+              "filter": 23.19999998807907,
+              "select": 32.80000001192093,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.599999994039536,
+              "filter": 33.099999994039536,
+              "select": 32.20000001788139,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32,
+              "filter": 34.900000005960464,
+              "select": 33.400000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 31.200000017881393,
+              "filter": 34.69999998807907,
+              "select": 32.30000001192093,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.900000005960464,
+              "filter": 31.400000005960464,
+              "select": 34.900000005960464,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 32.60000002384186,
+              "filter": 33.29999998211861,
+              "select": 32.30000001192093,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.099999994039536,
+              "filter": 33.69999998807907,
+              "select": 31.80000001192093,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 33.900000005960464,
+              "filter": 33.599999994039536,
+              "select": 31.80000001192093,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 34.10000002384186,
+              "filter": 33.29999998211861,
+              "select": 31.5,
+              "longTasks": [],
+              "selected": "s10"
+            },
+            {
+              "open": 34.30000001192093,
+              "filter": 32.099999994039536,
+              "select": 33,
+              "longTasks": [],
+              "selected": "s10"
+            }
+          ],
+          "before": [
+            {
+              "name": "Nodes",
+              "value": 443
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 2515780
+            }
+          ],
+          "after": [
+            {
+              "name": "Nodes",
+              "value": 8117
+            },
+            {
+              "name": "JSHeapUsedSize",
+              "value": 3948232
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
