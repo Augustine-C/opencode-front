@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "@opencode/plugin-browser",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "OpenCode's desktop browser plugin",
   "type": "module",
   "private": true,

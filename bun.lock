@@ -10,14 +10,14 @@
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "@typescript/native": "catalog:",
-        "electron": "44.4.5",
+        "electron": "44.9.1",
         "solid-js": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/app": {
       "name": "@opencode/app",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@corvu/drawer": "catalog:",
         "@dnd-kit/abstract": "0.5.0",
@@ -81,7 +81,7 @@
     },
     "packages/client": {
       "name": "@opencode/client",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@opencode/protocol": "workspace:*",
         "@opencode/schema": "workspace:*",
@@ -132,7 +132,7 @@
     },
     "packages/gui-extensions": {
       "name": "@opencode/gui-extensions",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@betteroffice/docx": "0.4.3",
         "@betteroffice/fonts": "0.4.0",
@@ -173,7 +173,7 @@
         "@types/node": "catalog:",
         "@typescript/native": "catalog:",
         "devtools-protocol": "0.0.1687809",
-        "electron": "44.4.5",
+        "electron": "44.9.1",
         "electron-updater": "6.8.9",
         "lighthouse": "13.4.1",
         "vite": "catalog:",
@@ -181,7 +181,7 @@
     },
     "packages/plugin-browser": {
       "name": "@opencode/plugin-browser",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -189,7 +189,7 @@
     },
     "packages/protocol": {
       "name": "@opencode/protocol",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -204,7 +204,7 @@
     },
     "packages/schema": {
       "name": "@opencode/schema",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@standard-schema/spec": "catalog:",
         "effect": "catalog:",
@@ -218,7 +218,7 @@
     },
     "packages/session-ui": {
       "name": "@opencode/session-ui",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@kobalte/core": "catalog:",
         "@opencode/client": "workspace:*",
@@ -253,7 +253,7 @@
     },
     "packages/ui": {
       "name": "@opencode/ui",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@kitlangton/solid-motion": "0.2.2",
         "@kobalte/core": "catalog:",
@@ -289,7 +289,7 @@
     },
     "packages/util": {
       "name": "@opencode/util",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "dependencies": {
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
@@ -1613,7 +1613,7 @@
 
     "ejs": ["ejs@3.1.10", "", { "dependencies": { "jake": "^10.8.5" }, "bin": { "ejs": "bin/cli.js" } }, "sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA=="],
 
-    "electron": ["electron@44.4.5", "", { "dependencies": { "@electron-internal/extract-zip": "^1.0.1", "@electron/get": "^5.0.0", "@types/node": "^24.9.0" }, "bin": { "electron": "cli.js", "install-electron": "install.js" } }, "sha512-SjgoaeYsSWZfJzubgQU7juvuXMTvn6/e1gAHdGFA/yuMbpF+I+skYqIJ6DdXBXHeWbkbpNpmwZCTpiivtlWZSw=="],
+    "electron": ["electron@44.9.1", "", { "dependencies": { "@electron-internal/extract-zip": "^1.0.1", "@electron/get": "^5.0.0", "@types/node": "^24.9.0" }, "bin": { "electron": "cli.js", "install-electron": "install.js" } }, "sha512-x/tECFFDa2OFNjMObFH0EGKWrCnFZPOR1wP2iMIVt0STecGl8FmDXdaiaryY0kf8mtw9kSLP2yK8dfdaWkfDmw=="],
 
     "electron-to-chromium": ["electron-to-chromium@1.5.443", "", {}, "sha512-TDJG36L9A3CWWwZ97HKaE+Iz1sW80pNp6sAU0owzCIV3Zc9eVyRqZK8Vz6NKuMIU8WjP0pIkoqCa0VRf/yFD0Q=="],
 

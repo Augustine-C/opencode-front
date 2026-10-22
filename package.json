@@ -1,6 +1,6 @@
 {
   "name": "opencode-front",
-  "version": "2.1.1+0",
+  "version": "2.1.2+0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -99,7 +99,7 @@
     "@types/node": "catalog:",
     "@typescript/native": "catalog:",
     "typescript": "catalog:",
-    "electron": "44.4.5",
+    "electron": "44.9.1",
     "solid-js": "catalog:"
   },
   "trustedDependencies": [

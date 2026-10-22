@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/anomalyco/opencode",
-  "commit": "ba546ec1598a70db2570e9c6258028d955ba8f58",
-  "version": "2.1.1",
+  "commit": "a517687fde98a7329ada3ae644a01a9fc6c4e99e",
+  "version": "2.1.2",
   "packages": [
     "app",
     "ui",
