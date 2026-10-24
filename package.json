@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "packageManager": "bun@1.3.14",
+  "packageManager": "bun@1.4.4",
   "workspaces": {
     "packages": [
       "packages/*"
@@ -84,7 +84,7 @@
     "build": "bun run --cwd packages/app build",
     "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck && bun run --cwd packages/codearts-proxy-extension typecheck && bun run typecheck:upstream && bun run typecheck:examples",
     "typecheck:examples": "tsc --noEmit -p examples/frontend-plugins/tsconfig.json",
-    "test": "bun test --conditions=browser packages/frontend-plugin/test packages/app/test scripts/upstream/test packages/codearts-proxy-extension/test scripts/desktop/test scripts/build/test",
+    "test": "bun test --conditions=browser --preload ./packages/ui/test/solid-jsx.ts packages/frontend-plugin/test packages/app/test scripts/upstream/test packages/codearts-proxy-extension/test scripts/desktop/test scripts/build/test",
     "check": "bun run upstream:check && bun run typecheck && bun run test",
     "desktop": "bun run scripts/desktop.ts",
     "upstream:check": "bun run scripts/upstream/check.ts check",

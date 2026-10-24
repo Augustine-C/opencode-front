@@ -16,7 +16,7 @@ Read applicable package-level `AGENTS.md` files before editing.
 
 ## Build, Test, and Development Commands
 
-Use Bun 1.3.14 or later, from the repository root:
+Use the Bun version pinned in `package.json` (currently 1.4.4), from the repository root:
 
 - `bun install`: install workspace dependencies.
 - `bun run dev -- --host 127.0.0.1 --port 4444`: serve the web frontend.
