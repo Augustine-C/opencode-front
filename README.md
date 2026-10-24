@@ -12,7 +12,7 @@ The production web build used by both web and desktop includes `LICENSE` and `NO
 
 ## Run the web frontend
 
-Requires Bun 1.3.14 or later (validated with 1.3.14).
+Use Bun 1.4.4, matching the version pinned in `package.json` and used by CI and release builds.
 
 ```sh
 bun install
