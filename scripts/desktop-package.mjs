@@ -1,3 +1,5 @@
+import { createRequire } from "node:module"
+const require = createRequire(import.meta.url)
 import { packager } from "@electron/packager"
 
 const [platform, arch, buildVersion] = process.argv.slice(2)
@@ -13,7 +15,7 @@ await packager({
   name: "OpenCode-Front",
   platform,
   arch,
-  electronVersion: "44.4.5",
+  electronVersion: require("../package.json").devDependencies.electron,
   buildVersion,
   out: "dist/desktop",
   asar: true,

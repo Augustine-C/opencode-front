@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": [
+        "../app/src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/front",
+    "src/main/plugin",
+    "src/main/storage",
+    "src/main/native",
+    "src/shared",
+    "src/renderer/plugins.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts"
+  ]
+}

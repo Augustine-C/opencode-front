@@ -135,7 +135,8 @@
       "target": "packages/plugin-browser",
       "only": [
         "package.json",
-        "src/rpc.ts"
+        "src/rpc.ts",
+        "src/proxy.ts"
       ]
     },
     {
@@ -194,6 +195,37 @@
     {
       "source": "packages/plugin/src/rpc.ts",
       "target": "packages/plugin/src/rpc.ts"
+    },
+    {
+      "source": "packages/desktop",
+      "target": "packages/desktop",
+      "only": [
+        "AGENTS.md",
+        "src/main/plugin/host.ts",
+        "src/main/plugin/module.ts",
+        "src/main/plugin/lifecycle.ts",
+        "src/main/plugin/lifecycle.test.ts",
+        "src/main/plugin/storage.ts",
+        "src/main/plugin/storage.test.ts",
+        "src/main/plugin/manager.ts",
+        "src/main/plugin/manager.test.ts",
+        "src/main/plugin/enable-state.ts",
+        "src/main/plugin/error.ts",
+        "src/main/plugin/embeds.ts",
+        "src/main/native/corners.ts",
+        "src/main/native/translations.ts",
+        "src/main/storage/database.ts",
+        "src/main/storage/migration.ts",
+        "src/main/storage/migration.gen.ts",
+        "src/main/storage/schema.ts",
+        "src/main/storage/state.ts",
+        "src/main/storage/write-behind.ts",
+        "src/main/storage/store.ts",
+        "src/main/storage/keys.ts",
+        "src/shared/ipc-rpc/plugins.ts",
+        "src/shared/ipc-rpc/events.ts",
+        "src/renderer/plugins.ts"
+      ]
     }
   ],
   "overlays": [
@@ -309,6 +341,31 @@
       "adapters": [
         "packages/app/src/extensions/native.ts"
       ]
+    },
+    {
+      "id": "native-desktop-connection",
+      "reason": "Reuse the official main host, lifecycle, storage, embeds and renderer bridge. Adapt native shell transport and the existing configured backend, without launching a sidecar.",
+      "files": [
+        "packages/desktop/src/main/plugin/host.ts",
+        "packages/desktop/src/renderer/plugins.ts",
+        "packages/app/src/runtime/plugin/plugins.tsx",
+        "packages/app/src/runtime/plugin/root.tsx",
+        "packages/app/src/settings/providers/extensions.tsx",
+        "packages/app/src/entry.tsx"
+      ],
+      "adapters": [
+        "packages/desktop/src/front/main.ts",
+        "packages/desktop/src/front/windows.ts",
+        "packages/desktop/src/front/renderer-api.ts",
+        "packages/desktop/src/front/menu.ts",
+        "packages/desktop/src/front/connection.ts",
+        "packages/desktop/src/front/constants.ts",
+        "packages/desktop/src/front/renderer-ipc.ts",
+        "packages/desktop/src/front/events.ts",
+        "packages/desktop/src/front/builtins.ts",
+        "packages/app/src/extensions/desktop-platform.ts",
+        "packages/app/src/extensions/desktop-plugin-connection.tsx"
+      ]
     }
   ],
   "local": [
@@ -331,8 +388,6 @@
     },
     {
       "patterns": [
-        "packages/frontend-plugin/**",
-        "packages/app/src/plugins/**",
         "packages/app/src/extensions/**",
         "packages/app/test/**",
         "packages/app/performance/**",
@@ -348,6 +403,15 @@
         "packages/codearts-proxy-extension/**"
       ],
       "reason": "Portable native OpenCode v2 CodeArts Proxy GUI extension."
+    },
+    {
+      "patterns": [
+        "packages/desktop/package.json",
+        "packages/desktop/tsconfig.json",
+        "packages/desktop/src/front/**",
+        "packages/desktop/test/**"
+      ],
+      "reason": "Native Electron connection and IPC transport adapters around the imported official plugin host."
     }
   ]
 }

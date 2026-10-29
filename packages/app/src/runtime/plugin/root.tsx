@@ -1,3 +1,4 @@
+import { DesktopPluginConnection } from "@/extensions/desktop-plugin-connection"
 import { batch, createMemo, createSignal, lazy, onCleanup, Show, Suspense, type ParentProps } from "solid-js"
 import { pluginEnabled, runsOn, type Bridge, type Entry } from "@opencode/plugin/gui/host"
 import { builtins } from "./builtins"
@@ -136,6 +137,7 @@ export function PluginAttachment(props: ParentProps) {
     <PluginAttachmentProvider value={attachment}>
       <PluginCommands />
       <PluginServerEndpoints />
+      <DesktopPluginConnection />
       <Show when={plugins}>{(value) => <PluginGuiLoader bridge={value().bridge} onChange={value().set} />}</Show>
       <Show when={host.ready()}>
         <MountedInterface attach={attachment.attach} />

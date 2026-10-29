@@ -7,10 +7,11 @@ This Bun workspace ports the OpenCode frontend and connects to an existing servi
 - `packages/app/src`: SolidJS application; `extensions/` contains port-owned adapters; `runtime/plugin/` is the official GUI host.
 - `packages/codearts-proxy-extension`: portable native GUI renderer extension; uses the upstream SDK directly.
 - `packages/plugin/src/gui`: official GUI plugin SDK.
-- `packages/gui-plugins`: upstream native panel features and SDK; this port loads renderer exports only.
+- `packages/gui-plugins`: upstream native panel features and SDK; the desktop loads official renderer and main entries.
 - `packages/ui`, `session-ui`: shared components, rendering, and assets. `client`, `schema`, `protocol`, and `util` retain upstream contracts/utilities.
 - Tests live in `packages/app/test`, `packages/codearts-proxy-extension/test`, and `scripts/upstream/test`.
-- `scripts/desktop*`: thin Electron shell. `upstream/` records import policy and inventory; `docs/` documents architecture and validation.
+- `packages/desktop`: imported official plugin main host, lifecycle, storage, embeds and renderer bridge; `src/front` adapts native transport and configured services.
+- `scripts/desktop*`: Electron shell and native/renderer packaging. `upstream/` records import policy and inventory; `docs/` documents architecture and validation.
 
 Read applicable package-level `AGENTS.md` files before editing.
 
