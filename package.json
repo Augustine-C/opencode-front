@@ -1,6 +1,6 @@
 {
   "name": "opencode-front",
-  "version": "2.1.4+0",
+  "version": "2.2.0+0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -20,9 +20,9 @@
       "@octokit/rest": "22.0.0",
       "@hono/standard-validator": "0.2.0",
       "@hono/zod-validator": "0.4.2",
-      "@opentui/core": "0.6.8",
-      "@opentui/keymap": "0.6.8",
-      "@opentui/solid": "0.6.8",
+      "@opentui/core": "0.7.0",
+      "@opentui/keymap": "0.7.0",
+      "@opentui/solid": "0.7.0",
       "@tanstack/solid-virtual": "3.13.37",
       "@standard-schema/spec": "1.1.0",
       "ulid": "3.0.1",
@@ -46,6 +46,7 @@
       "drizzle-kit": "1.0.0-rc.5-ab785fc",
       "drizzle-orm": "1.0.0-rc.5-169397b",
       "effect": "4.0.1",
+      "fast-check": "4.9.0",
       "ai": "6.0.168",
       "cross-spawn": "7.0.6",
       "hono": "4.10.7",
@@ -55,11 +56,10 @@
       "luxon": "3.6.1",
       "marked": "18.0.11",
       "marked-shiki": "1.2.1",
-      "remend": "1.3.1",
       "@playwright/test": "1.60.0",
       "semver": "7.7.4",
       "typescript": "npm:@typescript/typescript6@6.0.2",
-      "@typescript/native": "npm:typescript@7.0.2",
+      "@typescript/native": "npm:typescript@7.1.0-beta",
       "zod": "4.1.8",
       "remeda": "2.26.0",
       "sst": "4.13.1",
@@ -82,9 +82,8 @@
   "scripts": {
     "dev": "bun run --cwd packages/app dev",
     "build": "bun run --cwd packages/app build",
-    "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/frontend-plugin typecheck && bun run --cwd packages/codearts-proxy-extension typecheck && bun run typecheck:upstream && bun run typecheck:examples",
-    "typecheck:examples": "tsc --noEmit -p examples/frontend-plugins/tsconfig.json",
-    "test": "bun test --conditions=browser --preload ./packages/ui/test/solid-jsx.ts packages/frontend-plugin/test packages/app/test scripts/upstream/test packages/codearts-proxy-extension/test scripts/desktop/test scripts/build/test",
+    "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/codearts-proxy-extension typecheck && bun run typecheck:upstream",
+    "test": "bun test --conditions=browser --preload ./packages/ui/test/solid-jsx.ts packages/app/test scripts/upstream/test packages/codearts-proxy-extension/test scripts/desktop/test scripts/build/test",
     "check": "bun run upstream:check && bun run typecheck && bun run test",
     "desktop": "bun run scripts/desktop.ts",
     "upstream:check": "bun run scripts/upstream/check.ts check",
@@ -93,7 +92,6 @@
     "upstream:record": "bun run scripts/upstream/check.ts record"
   },
   "devDependencies": {
-    "@opencode/frontend-plugin": "workspace:*",
     "@electron/packager": "19.0.1",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
@@ -113,10 +111,9 @@
   "patchedDependencies": {
     "@dnd-kit/dom@0.5.0": "patches/@dnd-kit%2Fdom@0.5.0.patch",
     "solid-js@1.9.15": "patches/solid-js@1.9.15.patch",
-    "@pierre/trees@1.0.0-beta.4": "patches/@pierre%2Ftrees@1.0.0-beta.4.patch",
     "@tanstack/virtual-core@3.17.8": "patches/@tanstack%2Fvirtual-core@3.17.8.patch",
-    "ghostty-web@github:anomalyco/ghostty-web#83c0a07": "patches/ghostty-web@0.3.0.patch",
     "vite@8.2.2": "patches/vite@8.2.2.patch",
-    "@corvu/drawer@0.2.4": "patches/@corvu%2Fdrawer@0.2.4.patch"
+    "@corvu/drawer@0.2.4": "patches/@corvu%2Fdrawer@0.2.4.patch",
+    "@pierre/trees@1.0.0-beta.6": "patches/@pierre%2Ftrees@1.0.0-beta.6.patch"
   }
 }

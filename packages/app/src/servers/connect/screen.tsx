@@ -1,8 +1,5 @@
-import { usePlugins } from "@/plugins/context"
 import { lazy, onCleanup, Show, Suspense } from "solid-js"
 import { createStore } from "solid-js/store"
-import { IconButton } from "@opencode/ui/icon-button"
-import { Icon } from "@opencode/ui/icon"
 import { Button } from "@opencode/ui/button"
 import { TextInput } from "@opencode/ui/text-input"
 import { Wordmark } from "@opencode/ui/wordmark"
@@ -21,7 +18,6 @@ const PairingScanner = lazy(() => import("./scanner").then((module) => ({ defaul
 
 export function ConnectServerScreen(props: { url?: string } = {}) {
   const language = useLanguage()
-  const plugins = usePlugins()
   const platform = usePlatform()
   const servers = useServers()
   const check = useCheckServerHealth()
@@ -142,16 +138,6 @@ export function ConnectServerScreen(props: { url?: string } = {}) {
 
   return (
     <main data-component="connect-server" aria-labelledby="server-connect-title">
-      <div class="server-connect-settings">
-        <IconButton
-          icon={<Icon name="settings-gear" />}
-          variant="ghost-muted"
-          size="normal"
-          aria-label={language.t("plugins.title")}
-          title={language.t("plugins.title")}
-          onClick={plugins.open}
-        />
-      </div>
       <div class="server-connect-content">
         <div class="server-connect-brand" role="img" aria-label="OpenCode">
           <Wordmark />

@@ -1,20 +1,19 @@
+import { onIdle, BuiltinPanel } from "@opencode/plugin/gui/builtin"
 import { lazy, onCleanup, Suspense } from "solid-js"
 import {
   Command,
   createKeyed,
   MenuItem,
-  onIdle,
-  Panel,
   SettingsPage,
   Style,
   type PanelTab,
-  type Setup,
-} from "@opencode/gui-extensions/sdk"
+  Plugin,
+} from "@opencode/plugin/gui"
 import type definition from "./index"
 import { createOverview } from "./model"
 import css from "./style.css?inline"
 
-const setup: Setup<typeof definition> = (ctx) => {
+const setup: Plugin.Setup<typeof definition> = (ctx) => {
   const Page = lazy(() => import("./page"))
   const Settings = lazy(() => import("./settings"))
   onCleanup(
@@ -62,7 +61,7 @@ const setup: Setup<typeof definition> = (ctx) => {
         const session = ctx.sessions.current()
         if (session) ctx.layout.open(`${ctx.id}:overview`, session, ctx.layout.narrow() ? undefined : { tab: "select" })
       }
-      ctx.add(Panel, {
+      ctx.add(BuiltinPanel, {
         id: "overview",
         region: "side",
         transient: true,

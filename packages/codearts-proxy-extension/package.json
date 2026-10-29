@@ -4,17 +4,18 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./renderer": "./src/renderer.tsx"
   },
   "peerDependencies": {
-    "@opencode/gui-extensions": ">=2.0.24",
-    "@opencode/ui": ">=2.0.24",
-    "effect": "4.0.0-rc.112",
-    "solid-js": ">=1.9.0"
+    "@opencode/ui": ">=2.2.0",
+    "effect": "4.0.1",
+    "solid-js": ">=1.9.0",
+    "@opencode/plugin": ">=2.2.0"
   },
   "devDependencies": {
-    "@opencode/gui-extensions": "workspace:*",
-    "@opencode/ui": "workspace:*"
+    "@opencode/ui": "workspace:*",
+    "@opencode/plugin": "workspace:*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

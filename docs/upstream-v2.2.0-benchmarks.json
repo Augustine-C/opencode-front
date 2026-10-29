@@ -1,0 +1,419 @@
+{
+  "runtime": "Bun 1.4.4",
+  "sessionTabsBefore": {
+    "iterations": 20000,
+    "samples": [
+      {
+        "durationMs": 5.305041000000003,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 4.154374999999995,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 3.753999999999998,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 3.7989999999999995,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 3.3790830000000014,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 3.4953339999999997,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 3.626374999999996,
+        "checksum": 720000
+      }
+    ],
+    "medianMs": 3.753999999999998
+  },
+  "sessionTabsAfter": {
+    "iterations": 20000,
+    "samples": [
+      {
+        "durationMs": 5.732332999999999,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 5.815583,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 5.324375000000003,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 5.345499999999994,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 5.463583,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 5.335291000000005,
+        "checksum": 720000
+      },
+      {
+        "durationMs": 5.341124999999998,
+        "checksum": 720000
+      }
+    ],
+    "medianMs": 5.345499999999994
+  },
+  "groupingAfter": {
+    "date": "2026-10-29T02:58:49.888Z",
+    "browser": "155.0.8059.86",
+    "viewport": "1280x900",
+    "fixture": "production adapters, simulated connections and cached session titles",
+    "results": [
+      {
+        "size": 20,
+        "errors": [],
+        "samples": [
+          {
+            "open": 28.700000047683716,
+            "filter": 33.299999952316284,
+            "select": 32.90000009536743,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 31.199999928474426,
+            "filter": 33.40000009536743,
+            "select": 31.799999952316284,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 33.799999952316284,
+            "filter": 31.899999976158142,
+            "select": 34.700000047683716,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 31.100000023841858,
+            "filter": 34.5,
+            "select": 33.299999952316284,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 32.5,
+            "filter": 33.200000047683716,
+            "select": 32.39999997615814,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 33.299999952316284,
+            "filter": 33.300000071525574,
+            "select": 32.199999928474426,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 33.699999928474426,
+            "filter": 33.299999952316284,
+            "select": 33.200000047683716,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 32.39999997615814,
+            "filter": 33.300000071525574,
+            "select": 33.299999952316284,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 32.39999997615814,
+            "filter": 32.700000047683716,
+            "select": 32.39999997615814,
+            "longTasks": [],
+            "selected": "s1"
+          },
+          {
+            "open": 33.799999952316284,
+            "filter": 33.40000009536743,
+            "select": 32.09999990463257,
+            "longTasks": [],
+            "selected": "s1"
+          }
+        ],
+        "before": [
+          {
+            "name": "Nodes",
+            "value": 661
+          },
+          {
+            "name": "JSHeapUsedSize",
+            "value": 2181648
+          }
+        ],
+        "after": [
+          {
+            "name": "Nodes",
+            "value": 2623
+          },
+          {
+            "name": "JSHeapUsedSize",
+            "value": 3320028
+          }
+        ]
+      },
+      {
+        "size": 100,
+        "errors": [],
+        "samples": [
+          {
+            "open": 17.5,
+            "filter": 34.10000002384186,
+            "select": 33.39999997615814,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 30.5,
+            "filter": 35,
+            "select": 32.09999990463257,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 33.39999997615814,
+            "filter": 33.300000071525574,
+            "select": 33,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 33,
+            "filter": 33.200000047683716,
+            "select": 33.39999997615814,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.39999997615814,
+            "filter": 33.300000071525574,
+            "select": 33.299999952316284,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.5,
+            "filter": 33.39999997615814,
+            "select": 31.5,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.89999997615814,
+            "filter": 34.60000002384186,
+            "select": 33.39999997615814,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.5,
+            "filter": 32.700000047683716,
+            "select": 34,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.39999997615814,
+            "filter": 32.10000002384186,
+            "select": 34.39999997615814,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.60000002384186,
+            "filter": 33.300000071525574,
+            "select": 33.299999952316284,
+            "longTasks": [],
+            "selected": "s10"
+          }
+        ],
+        "before": [
+          {
+            "name": "Nodes",
+            "value": 661
+          },
+          {
+            "name": "JSHeapUsedSize",
+            "value": 2246052
+          }
+        ],
+        "after": [
+          {
+            "name": "Nodes",
+            "value": 3535
+          },
+          {
+            "name": "JSHeapUsedSize",
+            "value": 3469596
+          }
+        ]
+      },
+      {
+        "size": 500,
+        "errors": [],
+        "samples": [
+          {
+            "open": 30.100000023841858,
+            "filter": 32.200000047683716,
+            "select": 34.90000009536743,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.5,
+            "filter": 33,
+            "select": 32.5,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 31.700000047683716,
+            "filter": 35.199999928474426,
+            "select": 33.200000047683716,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 31.100000023841858,
+            "filter": 34.799999952316284,
+            "select": 31.700000047683716,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.10000002384186,
+            "filter": 35.299999952316284,
+            "select": 33.300000071525574,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 31.300000071525574,
+            "filter": 34,
+            "select": 33.89999997615814,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.300000071525574,
+            "filter": 33.5,
+            "select": 33.60000002384186,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.5,
+            "filter": 33.299999952316284,
+            "select": 33.40000009536743,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 49.10000002384186,
+            "filter": 33.39999997615814,
+            "select": 33.299999952316284,
+            "longTasks": [],
+            "selected": "s10"
+          },
+          {
+            "open": 32.60000002384186,
+            "filter": 33.299999952316284,
+            "select": 33.299999952316284,
+            "longTasks": [],
+            "selected": "s10"
+          }
+        ],
+        "before": [
+          {
+            "name": "Nodes",
+            "value": 661
+          },
+          {
+            "name": "JSHeapUsedSize",
+            "value": 2619348
+          }
+        ],
+        "after": [
+          {
+            "name": "Nodes",
+            "value": 8335
+          },
+          {
+            "name": "JSHeapUsedSize",
+            "value": 4080000
+          }
+        ]
+      }
+    ]
+  },
+  "historyAfter": {
+    "browser": "155.0.8059.86",
+    "viewport": "1280x900",
+    "fixture": "Production native search controller and history adapter; mock data provider, 20 loaded messages then 10 earlier messages",
+    "workload": "Initial zero matches to the first page of matches; two animation frames included",
+    "warmup": 1,
+    "samples": [
+      {
+        "durationMs": 26.5,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 26.100000023841858,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 25.700000047683716,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 25.399999976158142,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 25.90000009536743,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 26,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 25.799999952316284,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 25.600000023841858,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 25.700000047683716,
+        "count": "1/10"
+      },
+      {
+        "durationMs": 26.5,
+        "count": "1/10"
+      }
+    ],
+    "medianMs": 25.850000023841858,
+    "slowestMs": 26.5,
+    "errors": []
+  }
+}

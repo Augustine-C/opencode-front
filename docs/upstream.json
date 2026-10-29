@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/anomalyco/opencode",
-  "commit": "68bc26b7da1990ce10ffecfbc1e09eb13aa5d824",
-  "version": "2.1.4",
+  "commit": "1097e2668b1e08ad63bdf0b1c4860b9bc01e420c",
+  "version": "2.2.0",
   "packages": [
     "app",
     "ui",
@@ -10,16 +10,17 @@
     "schema",
     "protocol",
     "util",
-    "gui-extensions",
-    "plugin-browser"
+    "gui-plugins",
+    "plugin-browser",
+    "plugin",
+    "patchmark"
   ],
-  "note": "Frontend sources, GUI extension renderers/SDK, and protocol/client schemas; no server, core, CLI, or managed sidecar. Imported GUI main entries are dormant and are not loaded by this port.",
+  "note": "Frontend sources, official GUI plugin SDK and built-in renderers, markdown parser, and protocol/client schemas; no server, core, CLI, or managed desktop shell. Imported GUI main entries are dormant.",
   "license": "MIT",
   "copyright": "Copyright (c) 2025 opencode",
   "licenseFile": "LICENSE",
   "attributionFile": "NOTICE",
   "modifications": [
-    "Browser plugin SDK and host",
     "Thin Electron desktop shell",
     "Service project discovery",
     "Optional project tab grouping",
@@ -28,6 +29,9 @@
   "partialPackages": {
     "plugin-browser": [
       "src/rpc.ts"
+    ],
+    "plugin": [
+      "src/gui"
     ]
   },
   "importRules": "upstream/import-rules.json",

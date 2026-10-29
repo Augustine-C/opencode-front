@@ -1,4 +1,3 @@
-import { PluginSlot } from "@/plugins/slot"
 import { ScrollView } from "@opencode/ui/scroll-view"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Show } from "solid-js"
@@ -38,7 +37,6 @@ export function Home() {
         thumbHoverTarget={scroll.viewport.hoverTarget()}
         viewportRef={scroll.viewport.setViewport}
         onScroll={(event) => scroll.viewport.update(event.currentTarget.scrollTop)}
-        onWheel={scroll.viewport.containOuterWheel}
       >
         <div
           class={`
@@ -52,9 +50,6 @@ export function Home() {
           <HomeSessions sessions={sessions} search={search} scroll={scroll} />
         </div>
       </ScrollView>
-      <PluginSlot path="home.footer" input={{}}>
-        <PluginSlot path="home.footer.status" input={{}} />
-      </PluginSlot>
       <div class="hidden shrink-0 px-3 py-2 md:block lg:hidden">
         <HomeUtilityNav
           class="flex"

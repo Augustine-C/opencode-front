@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@opencode/plugin",
+  "version": "2.2.0",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./gui": "./src/gui/index.ts",
+    "./gui/main": "./src/gui/main.ts",
+    "./gui/host": "./src/gui/host.ts",
+    "./gui/builtin": "./src/gui/builtin.ts",
+    "./gui/file": "./src/gui/file.ts",
+    "./gui/review": "./src/gui/review.ts",
+    "./gui/browser": "./src/gui/browser.ts",
+    "./gui/updater": "./src/gui/updater.ts",
+    "./gui/vite": "./src/gui/vite.ts",
+    "./gui/*": null,
+    "./rpc": "./src/rpc.ts"
+  },
+  "imports": {
+    "#plugin-source": {
+      "bun": "./src/source.bun.ts",
+      "node": "./src/source.node.ts",
+      "default": "./src/source.node.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@ai-sdk/provider": "3.0.8",
+    "@opencode/client": "workspace:*",
+    "@opencode/protocol": "workspace:*",
+    "@opencode/schema": "workspace:*",
+    "@opencode/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "electron": "*",
+    "solid-js": ">=1.9.0",
+    "vite": ">=6",
+    "vite-plugin-solid": ">=2.11"
+  },
+  "peerDependenciesMeta": {
+    "electron": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "vite-plugin-solid": {
+      "optional": true
+    }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anomalyco/opencode.git",
+    "directory": "packages/plugin"
+  }
+}

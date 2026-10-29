@@ -7,6 +7,12 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 const errors = []
 page.on("pageerror", (error) => errors.push(error.message))
+await page.addInitScript(() => {
+  const key = "opencode.global.dat:extension.codearts-proxy.preferences"
+  if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({
+    enabled: false, endpoint: "http://gateway.fixture:8787", interval: 15000,
+  }))
+})
 await page.goto("http://127.0.0.1:4444/")
 await page.getByRole("button", { name: "Use password", exact: true }).click()
 await page.locator("#server-connect-url").fill("ftp://invalid.example")
@@ -76,6 +82,20 @@ mode = "success"
 await page.getByRole("button", { name: "Retry connection", exact: true }).click()
 await page.locator('[data-component="connect-server"]').waitFor({ state: "detached" })
 await page.waitForFunction(() => Object.values(localStorage).some((value) => value.includes("fixture.invalid")))
+// Drive the real official plugin host and its persisted native-store migration.
+await page.goto("http://127.0.0.1:4444/settings?tab=codearts-proxy")
+const proxy = page.locator('[data-component="codearts-proxy-settings"]')
+await proxy.waitFor()
+assert.equal(await proxy.getByLabel("Proxy address").inputValue(), "http://gateway.fixture:8787")
+assert.equal(await proxy.getByLabel("Refresh interval (seconds)").inputValue(), "15")
+await proxy.getByLabel("Proxy address").fill("http://gateway.fixture:9876")
+await proxy.getByText("Enable CodeArts Proxy overview", { exact: true }).click()
+await page.reload()
+await proxy.waitFor()
+assert.equal(await proxy.getByLabel("Proxy address").inputValue(), "http://gateway.fixture:9876")
+assert.equal(await proxy.getByRole("switch").isChecked(), true)
+assert.equal(await page.getByRole("link", { name: "Frontend plugins", exact: true }).count(), 0)
+assert.equal(await page.evaluate(() => localStorage.getItem("opencode.global.dat:extension.codearts-proxy.preferences") !== null), true)
 const secure = await browser.newPage()
 await secure.route("https://secure.fixture/**", async (route) => {
   const url = new URL(route.request().url())
@@ -148,6 +168,9 @@ console.log(
     cancelledLateSuccessIgnored: true,
     timeout: true,
     successfulRegistration: true,
+    officialCodeArtsSettings: true,
+    nativeStoreMigration: true,
+    pluginPreferencesSurviveReload: true,
     mixedContent: true,
     pairingCredentialRecovery: ["link", "password"],
     pageErrors: errors,

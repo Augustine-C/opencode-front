@@ -115,16 +115,10 @@ jobs:
           pattern: client-*
           merge-multiple: true
           path: artifacts
-      - name: Archive frontend plugin examples
+      - name: Archive official CodeArts GUI plugin sources
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: zip -qr "artifacts/opencode-front-example-plugins-${RELEASE_TAG}.zip" examples/frontend-plugins
-      - name: Build example plugin packages
-        run: |
-          for example in examples/independent-plugin-panel-demo examples/independent-plugin-third-party-status; do
-            (cd "$example" && bun install && bun run build)
-            cp "$example"/dist/*.zip artifacts/
-          done
+        run: zip -qr "artifacts/opencode-front-codearts-plugin-${RELEASE_TAG}.zip" packages/codearts-proxy-extension
       - name: Create release and upload builds
         env:
           GH_TOKEN: ${{ github.token }}
@@ -152,9 +146,7 @@ jobs:
                 case "$name" in
                   *macos-arm64*) platform="macOS Apple Silicon" ;;
                   *windows-x64*) platform="Windows x64" ;;
-                  *example-plugins*) platform="Example plugin source modules" ;;
-                  example.panel-demo-*) platform="Example plugin package: session side panel" ;;
-                  example.third-party-status-*) platform="Example plugin package: status footer" ;;
+                  *codearts-plugin*) platform="Official CodeArts GUI plugin sources" ;;
                   *) platform="Release asset" ;;
                 esac
                 printf '| [%s](%s) | %s | %s bytes | `%s` |\n' "$name" "$url" "$platform" "$bytes" "$digest"

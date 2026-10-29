@@ -1,15 +1,33 @@
 {
-  "license": "MIT",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@opencode/plugin-browser",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "OpenCode's desktop browser plugin",
   "type": "module",
-  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anomalyco/opencode.git",
+    "directory": "packages/plugin-browser"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
   "exports": {
     "./rpc": "./src/rpc.ts"
   },
   "dependencies": {
+    "@opencode/plugin": "workspace:*",
     "@opencode/schema": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native": "catalog:",
+    "typescript": "catalog:"
   }
 }

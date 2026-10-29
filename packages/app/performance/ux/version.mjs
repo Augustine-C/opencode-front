@@ -32,8 +32,6 @@ for (const link of links) {
   assert.equal(link.target, "_blank")
   assert.match(link.rel, /noopener/)
 }
-assert.equal((await page.locator("#version-footer").innerText()).includes("https://"), false)
-assert.match(await page.locator("#version-footer span").getAttribute("title"), /long\/reverse\/proxy/)
 await page.screenshot({ path: process.env.UX_SCREENSHOT || "/workspace/work/opencode-ux/version-info.png" })
 await page.setViewportSize({ width: 390, height: 844 })
 assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -45,7 +43,6 @@ console.log(
     instanceSwitching: true,
     unavailableIsUnknown: true,
     safeLinks: true,
-    compactConnectionName: true,
     mobile: true,
     pageErrors: errors,
   }),

@@ -1,9 +1,9 @@
-import { useExtension } from "@opencode/gui-extensions/sdk"
+import { usePlugin } from "@opencode/plugin/gui"
 import { Switch } from "@opencode/ui/switch"
 import type definition from "./index"
 
 export default function ProxySettings() {
-  const ctx = useExtension<typeof definition>()
+  const ctx = usePlugin<typeof definition>()
   const preferences = ctx.stores.preferences
   return (
     <section data-component="codearts-proxy-settings">

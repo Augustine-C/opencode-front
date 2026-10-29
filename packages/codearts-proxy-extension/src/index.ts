@@ -1,15 +1,14 @@
-import { Extension, Store } from "@opencode/gui-extensions/sdk"
+import { Plugin } from "@opencode/plugin/gui"
+import { BuiltinStore } from "@opencode/plugin/gui/builtin"
 import { defaults, legacyPreferences, Preferences } from "./preferences"
 import en from "./i18n/en"
 
-export default Extension.define({
-  id: "codearts-proxy",
+export default Plugin.define({
   stores: {
-    preferences: Store.global(Preferences, defaults, {
+    preferences: BuiltinStore.global(Preferences, defaults, {
       key: "opencode-front.plugins.v1",
       pick: legacyPreferences,
     }),
   },
   i18n: { en },
-  renderer: () => import("./renderer"),
 })

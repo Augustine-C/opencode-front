@@ -116,8 +116,8 @@
       ]
     },
     {
-      "source": "packages/gui-extensions",
-      "target": "packages/gui-extensions",
+      "source": "packages/gui-plugins",
+      "target": "packages/gui-plugins",
       "exclude": [
         "**/*.test.*",
         "**/*.spec.*",
@@ -143,9 +143,8 @@
       "target": "patches",
       "only": [
         "@dnd-kit%2Fdom@0.5.0.patch",
-        "@pierre%2Ftrees@1.0.0-beta.4.patch",
+        "@pierre%2Ftrees@1.0.0-beta.6.patch",
         "@tanstack%2Fvirtual-core@3.17.8.patch",
-        "ghostty-web@0.3.0.patch",
         "solid-js@1.9.15.patch",
         "vite@8.2.2.patch",
         "@corvu%2Fdrawer@0.2.4.patch"
@@ -154,6 +153,47 @@
     {
       "source": "LICENSE",
       "target": "LICENSE"
+    },
+    {
+      "source": "packages/plugin",
+      "target": "packages/plugin",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "test/**",
+        "tests/**",
+        "script/**"
+      ],
+      "only": [
+        "package.json"
+      ]
+    },
+    {
+      "source": "packages/plugin/src/gui",
+      "target": "packages/plugin/src/gui",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*"
+      ]
+    },
+    {
+      "source": "packages/patchmark",
+      "target": "packages/patchmark",
+      "exclude": [
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/*.stories.*",
+        "test/**",
+        "tests/**",
+        "e2e/**",
+        "component-tests/**",
+        "src/storybook/**",
+        "test-browser/**"
+      ]
+    },
+    {
+      "source": "packages/plugin/src/rpc.ts",
+      "target": "packages/plugin/src/rpc.ts"
     }
   ],
   "overlays": [
@@ -161,7 +201,8 @@
       "id": "session-navigation",
       "reason": "Responsive search controls and message-history rail reuse native virtualized reveal operations; cancel stale search scrolling on query and session changes.",
       "files": [
-        "packages/app/src/session/timeline/search-controller.ts"
+        "packages/app/src/session/timeline/search-controller.ts",
+        "packages/app/src/session/screen.tsx"
       ],
       "adapters": [
         "packages/app/src/extensions/session-navigation.ts",
@@ -174,11 +215,11 @@
       "id": "port-localization",
       "reason": "Merge port-owned project tab and frontend plugin translations into the shared language dictionary while retaining pristine upstream locale files.",
       "files": [
-        "packages/app/src/runtime/i18n/language.tsx"
+        "packages/app/src/runtime/i18n/language.tsx",
+        "packages/app/src/runtime/i18n/en.ts"
       ],
       "adapters": [
-        "packages/app/src/extensions/project-tab-i18n.ts",
-        "packages/app/src/extensions/plugin-i18n.ts"
+        "packages/app/src/extensions/project-tab-i18n.ts"
       ]
     },
     {
@@ -197,24 +238,6 @@
         "packages/app/public/social-share.png",
         "packages/app/public/web-app-manifest-192x192.png",
         "packages/app/public/web-app-manifest-512x512.png"
-      ]
-    },
-    {
-      "id": "session-panels",
-      "reason": "Register native GUI examples and bridge browser plugin panels to the upstream GUI extension host, preserving session ownership and fullscreen geometry.",
-      "files": [
-        "packages/app/src/session/screen-layout.ts",
-        "packages/app/src/session/screen.tsx",
-        "packages/app/src/runtime/extension/root.tsx",
-        "packages/app/src/runtime/extension/side-region.tsx"
-      ],
-      "adapters": [
-        "packages/app/src/extensions/session-panel-state.ts",
-        "packages/app/src/extensions/session-panels.tsx",
-        "packages/app/src/plugins/panel-model.ts",
-        "packages/app/src/plugins/panel.tsx",
-        "packages/app/src/extensions/plugin-panels.ts",
-        "packages/app/src/extensions/plugin-panel-host.tsx"
       ]
     },
     {
@@ -238,20 +261,6 @@
       ]
     },
     {
-      "id": "plugin-settings",
-      "reason": "Expose frontend plugin management in the existing client settings routes.",
-      "files": [
-        "packages/app/src/runtime/i18n/en.ts",
-        "packages/app/src/settings/pages.ts",
-        "packages/app/src/settings/route.ts",
-        "packages/app/src/settings/search-catalog.ts",
-        "packages/app/src/settings/shell.tsx"
-      ],
-      "adapters": [
-        "packages/app/src/plugins/manager.tsx"
-      ]
-    },
-    {
       "id": "service-attachment",
       "reason": "Connect to an existing service and discover its projects without managing a backend.",
       "files": [
@@ -262,23 +271,7 @@
         "packages/app/src/servers/connect/screen.tsx",
         "packages/app/src/runtime/server/health.ts"
       ],
-      "adapters": [
-        "packages/app/src/extensions/project-inventory.ts"
-      ]
-    },
-    {
-      "id": "plugin-slots",
-      "reason": "Mount the frontend provider and named slot boundaries around upstream content.",
-      "files": [
-        "packages/app/src/app.tsx",
-        "packages/app/src/composer/composer.tsx",
-        "packages/app/src/home/route.tsx",
-        "packages/app/src/shell/shell.tsx"
-      ],
-      "adapters": [
-        "packages/app/src/plugins/context.tsx",
-        "packages/app/src/plugins/slot.tsx"
-      ]
+      "adapters": []
     },
     {
       "id": "frontend-tooling",
@@ -291,7 +284,8 @@
         "packages/app/vite.config.ts",
         "packages/app/vite.icons.ts",
         "packages/client/package.json",
-        "packages/plugin-browser/package.json"
+        "packages/plugin-browser/package.json",
+        "packages/plugin/package.json"
       ]
     },
     {
@@ -304,6 +298,16 @@
         "packages/app/src/extensions/build-info.ts",
         "packages/app/src/extensions/version-info.tsx",
         "packages/app/src/extensions/version-info.css"
+      ]
+    },
+    {
+      "id": "custom-gui-plugin",
+      "reason": "Register the CodeArts Proxy plugin with the official GUI host.",
+      "files": [
+        "packages/app/src/runtime/plugin/builtins.ts"
+      ],
+      "adapters": [
+        "packages/app/src/extensions/native.ts"
       ]
     }
   ],
