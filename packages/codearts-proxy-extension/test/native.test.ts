@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { createRoot } from "solid-js"
-import type { SetupContext } from "@opencode/gui-extensions/sdk"
+import type { SetupContext } from "@opencode/plugin/gui"
 import type definition from "../src/index"
 import { defaults, legacyPreferences } from "../src/preferences"
 import { createOverview } from "../src/model"

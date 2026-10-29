@@ -1,12 +1,12 @@
 import { For, Show, onCleanup, onMount } from "solid-js"
 import { Button } from "@opencode/ui/button"
-import { useExtension } from "@opencode/gui-extensions/sdk"
+import { usePlugin } from "@opencode/plugin/gui"
 import type definition from "./index"
 import type { Usage } from "./api"
 import type { OverviewModel } from "./model"
 
 export default function OverviewPage(props: { model: OverviewModel }) {
-  const ctx = useExtension<typeof definition>()
+  const ctx = usePlugin<typeof definition>()
   const model = props.model
   const state = model.state
   const unknown = () => ctx.t("unknown")

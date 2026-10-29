@@ -1,6 +1,6 @@
 import { onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { SetupContext } from "@opencode/gui-extensions/sdk"
+import type { SetupContext } from "@opencode/plugin/gui"
 import type definition from "./index"
 import { fetchOverview, type Overview } from "./api"
 

@@ -1,8 +1,8 @@
 # OpenCode Front
 
-A frontend-only port of OpenCode v2 with a shared web/desktop UI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
+A frontend-only port of OpenCode v2 with the official OpenCode GUI plugin system. It attaches to an existing local or remote OpenCode service and preserves the upstream session, composer, review, file, model, permission, and terminal interface.
 
-This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.1.4**, commit [`68bc26b`](https://github.com/anomalyco/opencode/tree/68bc26b7da1990ce10ffecfbc1e09eb13aa5d824). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the browser plugin system, thin desktop shell, project discovery, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
+This repository is an independently maintained frontend-only port of [OpenCode v2](https://github.com/anomalyco/opencode), based on **2.2.0**, commit [`1097e26`](https://github.com/anomalyco/opencode/tree/1097e2668b1e08ad63bdf0b1c4860b9bc01e420c). Upstream frontend code, shared client/protocol/schema code, assets, utilities, and dependency patches are retained; the CodeArts Proxy GUI plugin, thin desktop shell, and project tab grouping are additions in this port. See [source provenance](docs/upstream.json) and [attribution notice](NOTICE).
 
 ## License and attribution
 
@@ -40,7 +40,7 @@ OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 
 Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
 
-The **Build client** GitHub Action runs upstream boundary checks, type checks, and tests for pull requests without building or uploading artifacts. New commits to a pull request cancel its older check run. Branch pushes do not trigger the workflow. Release tags build and package macOS Apple Silicon (arm64) and Windows (x64) apps. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.1.4.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.1.4+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives, a separate `opencode-front-example-plugins-<version>.zip` source module, and the two independently installable example plugin packages built from `examples/independent-plugin-*`. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
+The **Build client** GitHub Action runs upstream boundary checks, type checks, and tests for pull requests without building or uploading artifacts. New commits to a pull request cancel its older check run. Branch pushes do not trigger the workflow. Release tags build and package macOS Apple Silicon (arm64) and Windows (x64) apps. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.2.0.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.2.0+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives, the `opencode-front-codearts-plugin-<version>.zip` source archive. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
 
 Ad hoc macOS builds disable hardened runtime through the signing tool's per-file options so the app and its helpers can load the bundled Electron libraries without a Team ID. Before uploading, the workflow extracts the release archive, verifies every Mach-O signature, rejects hardened runtime and explicit library validation flags, and checks that the app starts a renderer helper.
 
@@ -62,23 +62,17 @@ Grouped session tabs omit repeated project icons; running sessions retain their 
 
 ## Customize the interface
 
-Open **Settings → Frontend plugins** to enable installed plugins or import a frontend/TUI JSON or JSONC configuration. The command palette opens the same settings page. Before connecting a service, the small settings icon on the connection screen opens the plugin controls.
+The frontend uses the official v2.2.0 `@opencode/plugin/gui` SDK and plugin host. CodeArts Proxy is bundled through that host and contributes settings, commands and a session panel. Open **Settings → CodeArts Proxy** to configure it. Its existing native preferences and older browser-plugin configuration migrate once; gateway keys remain in memory. See [CodeArts Proxy](packages/codearts-proxy-extension/README.md).
 
-Two frontend plugin examples are published as a separate source module for reference, rather than bundled into the desktop app. See [examples/frontend-plugins](examples/frontend-plugins/README.md) for the panel and third-party status adapters, setup steps, and sample configurations.
+The previous browser SDK, JSONC configuration importer, named slots, ZIP plugin loader and demo packages have been removed. Their manifests and archives cannot be installed in the official system. The old configuration is retained only as a source for CodeArts preferences migration.
 
-The plugin SDK provides typed named slots, commands, session panels, the current service client, event subscriptions, persistent plugin storage, setup/cleanup, and render error isolation. A connection status plugin is enabled by default. The optional third-party status and session panel adapters are source examples available in the separate release module.
-
-TUI configuration can select explicitly installed browser adapters and reuse their options. Terminal JSX needs a browser renderer; arbitrary TUI packages cannot execute unchanged in the browser. Unsupported packages are reported. See the [plugin API and adapter guide](docs/plugin-system.md).
+Official external GUI bundles are discovered by the upstream desktop main-process bridge from the connected service. This frontend's web-based thin shell does not implement that main-process bridge; bundled GUI plugins run in both web and desktop. It does not claim external bundle installation or activate upstream main-process plugins.
 
 ## Search and browse conversation history
 
 Click the search icon in an existing conversation, or press **Ctrl/Cmd+F**, to open a floating search box. On narrow screens the icon is in the floating controls above the composer. Matches in user and assistant text are highlighted; use the result buttons, Enter / Shift+Enter, or the arrow keys to switch matches. Escape, the close button, or a click outside dismisses search. Search covers loaded messages; **Load earlier messages** in the search box extends the searchable history without loading everything at once.
 
 Short ticks in the conversation's left margin preview a sent prompt and its response on hover. Click the preview or click/drag the ticks to reveal that prompt; touch dragging works on narrow screens. When focused, the rail supports Up / Down, Home / End, and Page Up / Page Down. The history icon hides or shows the rail. The existing transcript control returns to the latest content. Navigation uses the virtualized timeline and excludes reverted prompts; toggling history or search keeps header controls in place.
-
-## Independent plugin modules roadmap
-
-The [independent plugin module plan](docs/plans/independent-plugins.md) describes installing separately built frontend plugins without rebuilding the host. This is planned functionality; current configuration imports still select already installed adapters.
 
 ## UX improvement roadmap
 
@@ -93,12 +87,14 @@ bun run build
 
 The production static web files are in `packages/app/dist`. Serve them with an SPA fallback to `index.html`; hosting this frontend does not host an OpenCode service. The inherited PWA caches the static UI. Large syntax-highlighting chunks and CSS highlight warnings currently come from upstream.
 
-The frontend and plugin SDK are type-checked. Focused tests cover lifecycle cleanup, interrupted setup, setup failure isolation, contribution resolution, configuration adaptation, and panel ownership. Live backend connectivity requires a compatible running service.
+The frontend and CodeArts plugin are type-checked. Focused tests cover gateway request disposal, legacy preferences, project identity migration, tab grouping and history navigation. Live backend connectivity requires a compatible running service.
 
 ## Layout
 
-- `packages/app`: upstream Solid application with frontend plugin host integration.
-- `packages/frontend-plugin`: browser SDK, configuration adaptation, lifecycle, and slot resolution.
+- `packages/app`: upstream Solid application and official GUI plugin host.
+- `packages/plugin`: frontend-only official GUI SDK and RPC exports.
+- `packages/gui-plugins`: upstream built-in GUI plugins.
+- `packages/codearts-proxy-extension`: custom CodeArts Proxy plugin on the official SDK.
 - `packages/session-ui`, `packages/ui`: upstream rendering and shared UI.
 - `packages/client`, `packages/schema`, `packages/protocol`: shared v2 contract and generated client; no backend execution.
 - `packages/util`: shared upstream utility sources used by the frontend.
@@ -107,6 +103,6 @@ The frontend and plugin SDK are type-checked. Focused tests cover lifecycle clea
 
 Upstream imports are declared in [import rules](upstream/import-rules.json) and pinned by a per-file [inventory](upstream/inventory.json). `bun run check` audits this boundary. Plugin panels and project grouping use the port-owned `packages/app/src/extensions` adapter layer. See the [maintenance workflow](docs/upstream-maintenance.md) for the read-only upgrade report and inventory recording commands.
 
-The imported source is pinned to the upstream Git commit in `docs/upstream.json`. Future upstream ports should preserve `@opencode/client` generated files and update the app/UI/protocol snapshot together. The frontend plugin API has its own version independent of the service version.
+The imported source is pinned to the upstream Git commit in `docs/upstream.json`. Future upstream ports should preserve `@opencode/client` generated files and update the app/UI/protocol snapshot together. GUI plugins use the official upstream SDK version.
 
 The [CodeArts Proxy example](packages/codearts-proxy-extension/README.md) is a standard OpenCode v2 GUI renderer extension. Configure it under **Settings → CodeArts Proxy**; its panels and commands use the upstream extension SDK directly.

@@ -5,7 +5,6 @@ import type { SettingsRootTab } from "./surface"
 export const pageIcons = {
   general: "sliders",
   appearance: "appearance",
-  "frontend-plugins": "extensions",
   notifications: "notifications",
   shortcuts: "keyboard",
   projects: "folder",
@@ -15,14 +14,12 @@ export const pageIcons = {
   extensions: "extensions",
   servers: "server",
   experimental: "flask",
-  "gui-extensions": "extensions",
   about: "info",
 } as const satisfies Record<SettingsRootTab, IconProps["name"]>
 
 export const pageLabels = {
   general: "settings.tab.preferences",
   appearance: "settings.general.section.appearance",
-  "frontend-plugins": "plugins.title",
   notifications: "settings.tab.notifications",
   shortcuts: "settings.shortcuts.title",
   projects: "settings.tab.projects",
@@ -32,6 +29,5 @@ export const pageLabels = {
   extensions: "settings.tab.extensions",
   servers: "settings.section.server",
   experimental: "settings.tab.experimental",
-  "gui-extensions": "settings.guiExtensions.title",
   about: "settings.tab.about",
 } as const satisfies Record<SettingsRootTab, Parameters<ReturnType<typeof useLanguage>["t"]>[0]>
