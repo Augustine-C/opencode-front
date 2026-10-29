@@ -145,8 +145,8 @@
         "@dnd-kit%2Fdom@0.5.0.patch",
         "@pierre%2Ftrees@1.0.0-beta.6.patch",
         "@tanstack%2Fvirtual-core@3.17.8.patch",
-        "solid-js@1.9.15.patch",
-        "vite@8.2.2.patch",
+        "solid-js@1.9.17.patch",
+        "vite@8.2.4.patch",
         "@corvu%2Fdrawer@0.2.4.patch"
       ]
     },
