@@ -10,6 +10,7 @@ export default Plugin.define({
     const stored = ctx.storage.store("count", { schema: Schema.Number, initial: 0 })
     const provider = ctx.provide(NativeCounter, {
       state: () => stored.value,
+      cliVersion: () => ctx.cli.version,
       wait(_input, caller) {
         return new Promise((_resolve, reject) => {
           caller.signal.addEventListener("abort", () => reject(new Error("cancelled fixture call")), { once: true })

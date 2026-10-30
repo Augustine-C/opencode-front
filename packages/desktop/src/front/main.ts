@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron"
+import upstream from "../../../../docs/upstream.json"
 import { createHash } from "node:crypto"
 import { mkdirSync } from "node:fs"
 import path from "node:path"
@@ -82,7 +83,7 @@ function select(connection?: Connection) {
         subscriptions,
         servers,
         cli: {
-          version: "2.2.1",
+          version: upstream.version,
           command: [process.env.OPENCODE_FRONT_CLI ?? "opencode"],
           binary: process.env.OPENCODE_FRONT_CLI,
           development: false,
