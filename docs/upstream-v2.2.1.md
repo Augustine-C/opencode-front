@@ -1,6 +1,6 @@
 # OpenCode v2.2.1 sync
 
-This document records the released snapshot. The subsequent, unpublished [native GUI plugin adaptation](native-gui-plugins.md) replaces its renderer-only desktop limitation.
+This document records the released snapshot. The subsequent [native GUI plugin adaptation](native-gui-plugins.md) replaces its renderer-only desktop limitation.
 
 Upstream `v2.2.1`, exact commit `3ebcf9a32c7b28f658cfee80775448929361727a`. Port version `2.2.1+0`, release `2.2.1.0`. Bun remains exactly 1.4.4 for project, CI and release jobs.
 
