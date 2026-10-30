@@ -1,5 +1,7 @@
 # OpenCode v2.2.0 GUI plugin migration
 
+This document records the released snapshot. The subsequent [native GUI plugin adaptation](native-gui-plugins.md) replaces its renderer-only desktop limitation.
+
 Pinned upstream: `1097e2668b1e08ad63bdf0b1c4860b9bc01e420c` (`v2.2.0`). Root version: `2.2.0+0`; release mapping: `2.2.0.0`. Project, CI and release runtime: Bun 1.4.4.
 
 ## Result

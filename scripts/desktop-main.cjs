@@ -8,6 +8,8 @@ const root = path.resolve(__dirname, "../packages/app/dist")
 app.setName("OpenCode Front")
 app.setPath("userData", path.join(app.getPath("appData"), "opencode-front"))
 app.whenReady().then(() => {
+  const plugins = require("../dist/native/desktop-plugins.cjs")
+  plugins.installPluginHost()
   protocol.handle("oc", createRendererHandler(root, net))
   function open() {
     const file = path.join(app.getPath("userData"), "window-state.json")
@@ -23,8 +25,15 @@ app.whenReady().then(() => {
       minWidth: 640,
       minHeight: 480,
       title: "OpenCode Front",
-      webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+        preload: path.join(__dirname, "desktop-preload.cjs"),
+        additionalArguments: ["--opencode-window=main", ...(app.isPackaged ? ["--opencode-packaged"] : [])],
+      },
     })
+    plugins.attachPluginWindow(window)
     if (saved.maximized) window.maximize()
     trackWindowState(window, file)
     const dev = process.env.OPENCODE_FRONT_DEV_URL

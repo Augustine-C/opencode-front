@@ -1,0 +1,30 @@
+{
+  "name": "@opencode/desktop",
+  "version": "2.2.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./plugins": "./src/renderer/plugins.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@opencode/app": "workspace:*",
+    "@opencode/gui-plugins": "workspace:*",
+    "@opencode/plugin": "workspace:*",
+    "@opencode/client": "workspace:*",
+    "@opencode/schema": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "electron-updater": "6.8.9",
+    "lighthouse": "13.4.1",
+    "@opencode-front/codearts-proxy-extension": "workspace:*"
+  },
+  "devDependencies": {
+    "electron": "44.9.1",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:"
+  }
+}

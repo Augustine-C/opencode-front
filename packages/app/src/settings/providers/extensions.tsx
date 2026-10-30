@@ -1,3 +1,4 @@
+import { desktopPluginServer } from "@/extensions/desktop-plugin-connection"
 import { Predicate } from "effect"
 import { Component, For, Show, createEffect, createMemo, createResource, type JSX } from "solid-js"
 import { useDialog } from "@opencode/ui/context/dialog"
@@ -75,7 +76,7 @@ export const SettingsExtensions: Component<{
   )
 
   // The desktop window runs the GUIs of its own server's plugins, so only that server's rows control them.
-  const own = () => !!platform.plugins && ServerConnection.builtin(serverSdk.server)
+  const own = () => !!platform.plugins && (ServerConnection.builtin(serverSdk.server) || ServerConnection.key(serverSdk.server) === desktopPluginServer())
 
   createEffect(() => {
     if (serverSdk.connection.status() !== "connected") return

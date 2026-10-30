@@ -13,25 +13,37 @@
     "gui-plugins",
     "plugin-browser",
     "plugin",
-    "patchmark"
+    "patchmark",
+    "desktop"
   ],
-  "note": "Frontend sources, official GUI plugin SDK and built-in renderers, markdown parser, and protocol/client schemas; no server, core, CLI, or managed desktop shell. Imported GUI main entries are dormant.",
+  "note": "Frontend sources, official GUI SDK and desktop main host/lifecycle/IPC/storage/embeds, built-in renderer and main entries, markdown parser and protocol/client schemas. Connects to an existing service; no server, core or CLI implementation is bundled.",
   "license": "MIT",
   "copyright": "Copyright (c) 2025 opencode",
   "licenseFile": "LICENSE",
   "attributionFile": "NOTICE",
   "modifications": [
-    "Thin Electron desktop shell",
+    "Electron existing-service connection and official GUI bridge adapter",
     "Service project discovery",
     "Optional project tab grouping",
     "Native CodeArts Proxy GUI extension"
   ],
   "partialPackages": {
     "plugin-browser": [
-      "src/rpc.ts"
+      "src/rpc.ts",
+      "src/proxy.ts"
     ],
     "plugin": [
-      "src/gui"
+      "src/gui",
+      "src/rpc.ts"
+    ],
+    "desktop": [
+      "src/main/plugin",
+      "src/main/storage",
+      "src/main/native/corners.ts",
+      "src/main/native/translations.ts",
+      "src/shared/ipc-rpc/plugins.ts",
+      "src/shared/ipc-rpc/events.ts",
+      "src/renderer/plugins.ts"
     ]
   },
   "importRules": "upstream/import-rules.json",

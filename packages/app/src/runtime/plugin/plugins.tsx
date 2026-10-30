@@ -1,3 +1,4 @@
+import { desktopPluginServer, desktopPluginReady } from "@/extensions/desktop-plugin-connection"
 import { createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js"
 import type { PluginOptions } from "@opencode/plugin/gui"
 import type { Bridge, BridgePluginGui, BridgePluginGuis, Entry } from "@opencode/plugin/gui/host"
@@ -38,7 +39,12 @@ export function PluginGuiLoader(props: {
   const global = useGlobal()
 
   const controller = createMemo(() => {
-    const conn = global.servers.list().find(ServerConnection.builtin)
+    const conn = global.servers
+      .list()
+      .find(
+        (connection) =>
+          ServerConnection.builtin(connection) || ServerConnection.key(connection) === desktopPluginServer(),
+      )
 
     return conn ? global.serverCtx(ServerConnection.key(conn)) : undefined
   })
@@ -58,20 +64,28 @@ export function PluginGuiLoader(props: {
     () => undefined,
   )
 
-  const [found] = createResource(guis, async (input) => {
-    const plugins = await Promise.all(input.plugins.map((plugin) => load(plugin, cache)))
-    const ids = new Set(plugins.map((plugin) => plugin.id))
-    cache.forEach((_, id) => {
-      if (!ids.has(id)) cache.delete(id)
-    })
+  const [found] = createResource(
+    () => ({ input: guis(), source: desktopPluginServer() }),
+    async ({ input, source }) => {
+      if (!input) return { plugins: [], reserved: [], source }
+      const plugins = await Promise.all(input.plugins.map((plugin) => load(plugin, cache)))
+      const ids = new Set(plugins.map((plugin) => plugin.id))
+      cache.forEach((_, id) => {
+        if (!ids.has(id)) cache.delete(id)
+      })
 
-    return { plugins, reserved: input.reserved }
-  })
+      return { plugins, reserved: input.reserved, source }
+    },
+  )
 
   // Syncs the loaded plugins out to the plugin host.
   createEffect(() => {
-    const latest = found.latest
+    const latest = found.state === "ready" || found.state === "refreshing" ? found.latest : undefined
 
+    if (!desktopPluginReady() || latest?.source !== desktopPluginServer()) {
+      props.onChange([], [])
+      return
+    }
     if (!latest) return
     // The server that runs the plugin, read each time: it is a new client after that server restarts.
     const client = () => controller()?.sdk.api

@@ -17,7 +17,8 @@
     "dist"
   ],
   "exports": {
-    "./rpc": "./src/rpc.ts"
+    "./rpc": "./src/rpc.ts",
+    "./proxy": "./src/proxy.ts"
   },
   "dependencies": {
     "@opencode/plugin": "workspace:*",

@@ -1,5 +1,10 @@
 // @refresh reload
 
+import { usePluginServers } from "@/runtime/plugin/servers"
+import type { ParentProps } from "solid-js"
+import { invokeNative } from "@opencode/desktop/plugins"
+import { withDesktopPlatform } from "@/extensions/desktop-platform"
+
 import "@/runtime/polyfills"
 import { init } from "@sentry/solid"
 import { render } from "solid-js/web"
@@ -50,8 +55,9 @@ const clearAuthToken = () => {
 }
 
 const web = createWebPlatform(pkg.version)
+const platform = withDesktopPlatform(web.platform)
 
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+if (import.meta.env.PROD && !window.electron && "serviceWorker" in navigator) {
   window.addEventListener("load", () => void navigator.serviceWorker.register("/sw.js"), { once: true })
 }
 
@@ -98,19 +104,38 @@ if (root instanceof HTMLElement && root.dataset.opencodeMounted === undefined) {
 
     render(
       () => (
-        <PlatformProvider value={web.platform}>
-          <AppBaseProviders locale={locale}>
-            <AppInterface
+        <PlatformProvider value={platform}>
+          <AppBaseProviders
+            locale={locale}
+            onNativeTranslations={(bundle) => {
+              if (window.electron) void invokeNative("NativeTranslations", bundle).catch(console.error)
+            }}
+          >
+            <ConnectedInterface
               canonicalLocalServer={server ? ServerConnection.key(server) : undefined}
               servers={server ? [server] : []}
             >
               <KeyboardInsets />
               {standalone && <PwaRoutePersistence />}
-            </AppInterface>
+            </ConnectedInterface>
           </AppBaseProviders>
         </PlatformProvider>
       ),
       root,
     )
   })
+}
+
+function ConnectedInterface(
+  props: ParentProps<{ canonicalLocalServer?: ServerConnection.Key; servers: ServerConnection.Any[] }>,
+) {
+  const plugins = usePluginServers()
+  return (
+    <AppInterface
+      canonicalLocalServer={props.canonicalLocalServer}
+      servers={[...props.servers, ...(window.electron ? plugins.list() : [])]}
+    >
+      {props.children}
+    </AppInterface>
+  )
 }

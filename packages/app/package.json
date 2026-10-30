@@ -67,6 +67,7 @@
     "fuzzysort": "catalog:",
     "qr-scanner": "1.4.2",
     "solid-js": "catalog:",
-    "@opencode-front/codearts-proxy-extension": "workspace:*"
+    "@opencode-front/codearts-proxy-extension": "workspace:*",
+    "@opencode/desktop": "workspace:*"
   }
 }

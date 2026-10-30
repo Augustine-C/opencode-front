@@ -23,7 +23,7 @@ Open `http://127.0.0.1:4444`. Enter the running service's address and password i
 
 Optional initial service URL: copy `packages/app/.env.example` to `packages/app/.env.local` and set `VITE_OPENCODE_SERVER_URL`. Keep credentials out of environment files and URLs; enter them in the connection screen. Browser server settings, including its connection credential, use the upstream local persistence implementation. Do not share the browser profile.
 
-For remote connections, use the service's reachable HTTPS address. The service must allow the web frontend's origin through its CORS configuration. An HTTPS-hosted web frontend cannot connect to a plain HTTP service because of browser mixed-content restrictions; use HTTPS or a locally accessible tunnel. SSH/native browser integration is not implemented in this thin shell; an externally managed SSH port forward can expose a remote service as a local HTTP endpoint. Service compatibility checks and authentication behavior come from upstream v2.
+For remote connections, use the service's reachable HTTPS address. The service must allow the web frontend's origin through its CORS configuration. An HTTPS-hosted web frontend cannot connect to a plain HTTP service because of browser mixed-content restrictions; use HTTPS or a locally accessible tunnel. The desktop uses the official native GUI plugin main host and bridge for SSH/native browser contributions; the web app can use an externally managed SSH port forward. Service compatibility checks and authentication behavior come from upstream v2.
 
 ## Run the desktop frontend
 
@@ -38,7 +38,7 @@ For desktop development while Vite is running:
 OPENCODE_FRONT_DEV_URL=http://127.0.0.1:4444 bun run desktop
 ```
 
-Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It has no bundled backend, sidecar, service manager, native SSH transport, native browser tooling, or auto-updater.
+Electron loads the same web build using `oc://renderer`, an origin already permitted by the v2 service. It uses a separate `opencode-front` profile, context isolation, and a sandboxed renderer. It connects to an existing service and hosts official GUI plugins in both the main process and renderer, including native IPC, storage and embedded pages. It has no bundled backend or automatic service lifecycle. Upstream binary auto-update is disabled for this separately distributed app.
 
 The **Build client** GitHub Action runs upstream boundary checks, type checks, and tests for pull requests without building or uploading artifacts. New commits to a pull request cancel its older check run. Branch pushes do not trigger the workflow. Release tags build and package macOS Apple Silicon (arm64) and Windows (x64) apps. Release tags follow `<OpenCode version>.<port revision>`, for example **`2.2.1.0`**; the last number increments for port fixes on the same upstream version. Electron's package version uses the equivalent SemVer **`2.2.1+0`**, while Windows file metadata keeps the four-part version. Pushing a release tag creates a GitHub release with the app archives, the `opencode-front-codearts-plugin-<version>.zip` source archive. Extract the app archive and launch `OpenCode-Front.app` on macOS or `OpenCode-Front.exe` on Windows. macOS builds are ad hoc signed and are not notarized. Gatekeeper may block first launch; after verifying the download came from this repository, clear its quarantine in Terminal with `xattr -dr com.apple.quarantine "/path/to/OpenCode-Front.app"`.
 
@@ -66,7 +66,7 @@ The frontend uses the official v2.2.1 `@opencode/plugin/gui` SDK and plugin host
 
 The previous browser SDK, JSONC configuration importer, named slots, ZIP plugin loader and demo packages have been removed. Their manifests and archives cannot be installed in the official system. The old configuration is retained only as a source for CodeArts preferences migration.
 
-Official external GUI bundles are discovered by the upstream desktop main-process bridge from the connected service. This frontend's web-based thin shell does not implement that main-process bridge; bundled GUI plugins run in both web and desktop. It does not claim external bundle installation or activate upstream main-process plugins.
+The desktop discovers official `./gui-experimental` bundles from the selected configured HTTP service through `plugin.list` and `plugin.gui`, follows `plugin.updated`, runs their `main` entries with the upstream desktop host, and sends the same revisions to the official renderer host. Configure packages in the service's `opencode.json`; use the official Extensions controls to disable, enable or reload GUI entries. Switching configured services cleans up the old host; main-process plugin storage is scoped per service. Plugin-contributed SSH/WSL servers keep their owning host alive. Bundled CodeArts works in web and desktop; external native bundles load only on desktop. See [native plugin adaptation](docs/native-gui-plugins.md) for validation and limits.
 
 ## Search and browse conversation history
 
@@ -99,7 +99,8 @@ The frontend and CodeArts plugin are type-checked. Focused tests cover gateway r
 - `packages/client`, `packages/schema`, `packages/protocol`: shared v2 contract and generated client; no backend execution.
 - `packages/util`: shared upstream utility sources used by the frontend.
 - `packages/plugin-browser`: only the browser RPC schema referenced by the frontend.
-- `scripts/desktop*`: thin Electron shell.
+- `packages/desktop`: official GUI main host and native connection/transport adapters.
+- `scripts/desktop*`: Electron shell and packaging.
 
 Upstream imports are declared in [import rules](upstream/import-rules.json) and pinned by a per-file [inventory](upstream/inventory.json). `bun run check` audits this boundary. Plugin panels and project grouping use the port-owned `packages/app/src/extensions` adapter layer. See the [maintenance workflow](docs/upstream-maintenance.md) for the read-only upgrade report and inventory recording commands.
 
