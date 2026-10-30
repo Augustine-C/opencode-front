@@ -48,7 +48,7 @@ def verify_signatures(app):
 def smoke_launch(app):
     executable = app / "Contents/MacOS/OpenCode-Front"
     with tempfile.TemporaryFile() as output:
-        process = subprocess.Popen([str(executable)], stdout=output, stderr=output, start_new_session=True)
+        process = subprocess.Popen([str(executable), "--remote-debugging-port=0"], stdout=output, stderr=output, start_new_session=True)
         try:
             deadline = time.monotonic() + 15
             while time.monotonic() < deadline:
@@ -71,6 +71,15 @@ def smoke_launch(app):
                 sys.stderr.write(output.read().decode(errors="replace"))
                 raise SystemExit("Electron did not start a renderer helper in the app's process group")
             print("Archived app launched successfully with a renderer helper", flush=True)
+            output.seek(0)
+            logs = output.read().decode(errors="replace")
+            endpoint = re.search(r"DevTools listening on (ws://127\.0\.0\.1:\d+/devtools/browser/[^\s]+)", logs)
+            if endpoint is None:
+                raise SystemExit(f"Archived app did not expose its disposable CDP endpoint:\n{logs}")
+            subprocess.run(
+                ["node", str(pathlib.Path(__file__).with_name("desktop-verify-native.mjs")), endpoint.group(1)],
+                check=True, timeout=120,
+            )
         finally:
             try:
                 os.killpg(process.pid, signal.SIGTERM)

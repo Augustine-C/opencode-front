@@ -1,6 +1,6 @@
-# Official native GUI plugin adaptation (unpublished)
+# Official native GUI plugin adaptation
 
-This follow-up is based on OpenCode v2.2.1 at `3ebcf9a32c7b28f658cfee80775448929361727a`. It replaces the renderer-only desktop limitation recorded in the v2.2.0/v2.2.1 release notes. The user requested no publication: no PR, merge, release tag, release workflow or uploaded assets have been created for this change.
+This follow-up is based on OpenCode v2.2.1 at `3ebcf9a32c7b28f658cfee80775448929361727a`. It replaces the renderer-only desktop limitation recorded in the v2.2.0/v2.2.1 release notes. The follow-up is included in port version `2.2.1+1` (release `2.2.1.1`).
 
 ## Architecture
 
@@ -32,4 +32,4 @@ The upstream binary updater main entry is omitted because this distribution has 
 
 Reproduce the integration keepers with [the fixture instructions](../packages/app/performance/service-gui/README.md). Local logs are under the worktree's ignored `work/native-migration/` folder. The side-panel check used the exact upstream v2.2.1 session-host fixture, with provider order adapted to standalone mounting; that one-off harness is retained in `work/gui-harness/` for review.
 
-No real third-party package was installed on the user's service. Real Electron native compositing, dialogs and OS permission behavior, full provider sessions, live SSH/WSL and signed macOS/Windows archive launch remain unverified for this unpublished change. The existing archived-app smoke check remains in release CI, which was not dispatched. No user backend, gateway or running app was started, stopped, upgraded or restarted. The primary checkout's unrelated `bun.lock` remains untouched.
+No real third-party package was installed on the user's service. Real Electron native compositing, dialogs and OS permission behavior, full provider sessions, live SSH/WSL and signed macOS/Windows archive launch remain unverified by local validation. CI builds both desktop platforms before merge and verifies the archived macOS signatures, actual preload, GUI discovery and GUI→main state updates with an independently built plugin and a disposable service. No user backend, gateway or running app was started, stopped, upgraded or restarted. The primary checkout's unrelated `bun.lock` remains untouched.
