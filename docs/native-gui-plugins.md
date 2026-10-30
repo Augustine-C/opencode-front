@@ -18,7 +18,7 @@ Project grouping, clicked-project draft creation, history navigation/search and 
 
 The sandboxed renderer receives the official GUI bridge through a context-isolated preload. Node integration remains off. The native host is bundled separately from the web build and staged with its resource-bearing Lighthouse dependency graph. Packaging uses the same exact Electron pin as development (44.9.1); Bun remains 1.4.4. There is no bundled OpenCode backend.
 
-The upstream binary updater main entry is omitted because this distribution has its own release artifacts. Other main entries and the external plugin APIs remain present. CLI-dependent native features use an installed `opencode` executable (target v2.2.1); `OPENCODE_FRONT_CLI` can specify its path. This change does not install or upgrade that executable. An actual CLI installation and live SSH/WSL acceptance are separate from the GUI-host integration checks.
+The upstream binary updater main entry is omitted because this distribution has its own release artifacts. Other main entries and the external plugin APIs remain present. CLI-dependent native features use an installed `opencode` executable (targeting the exact version in `docs/upstream.json`); `OPENCODE_FRONT_CLI` can specify its path. This change does not install or upgrade that executable. An actual CLI installation and live SSH/WSL acceptance are separate from the GUI-host integration checks.
 
 ## Validation
 

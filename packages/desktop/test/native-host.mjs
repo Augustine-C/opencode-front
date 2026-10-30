@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { setTimeout as delay } from "node:timers/promises"
 import { createNativeFixture } from "./native-fixture.mjs"
 const fixture = await createNativeFixture()
@@ -15,6 +16,10 @@ try {
   await eventually(async () => (await request("PluginList")).some((plugin) => plugin.id === "third-party-sidebar"))
   const call = () => request("PluginCall", { ipc: "third-party-sidebar.native", method: "increment", input: 1 })
   await eventually(async () => (await request("PluginSubscribe", { ipc: "third-party-sidebar.native" })).available)
+  assert.equal(
+    await request("PluginCall", { ipc: "third-party-sidebar.native", method: "cliVersion" }),
+    JSON.parse(readFileSync(new URL("../../../docs/upstream.json", import.meta.url), "utf8")).version,
+  )
   assert.equal(await call(), 1)
   assert.equal(await call(), 2)
   const waiting = new Promise((resolve) =>

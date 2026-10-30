@@ -1,6 +1,6 @@
 # OpenCode v2.2.2 sync
 
-Upstream `v2.2.2`, exact commit `098aa7fd6e02b03d6fc410f0b052038c7d4c5e81`. Port version `2.2.2+0`, release `2.2.2.0`. Bun remains exactly 1.4.4 for local checks, CI and publication. Effect and the CodeArts peer requirement move to the upstream 4.0.6 pin.
+Upstream `v2.2.2`, exact commit `098aa7fd6e02b03d6fc410f0b052038c7d4c5e81`. Initial sync: port version `2.2.2+0`, release `2.2.2.0`. Follow-up `2.2.2+1` / `2.2.2.1` also derives the SSH/WSL CLI target from this provenance rather than the old 2.2.1 literal; the independent main-plugin IPC keeper verifies that contract. Bun remains exactly 1.4.4 for local checks, CI and publication. Effect and the CodeArts peer requirement move to the upstream 4.0.6 pin.
 
 ## Changes
 

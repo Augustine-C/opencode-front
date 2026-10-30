@@ -14,7 +14,8 @@
       "@/*": [
         "../app/src/*"
       ]
-    }
+    },
+    "resolveJsonModule": true
   },
   "include": [
     "src/front",

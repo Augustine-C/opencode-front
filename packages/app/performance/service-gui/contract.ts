@@ -7,6 +7,7 @@ export const NativeCounter = Ipc.define({
     increment: { input: Schema.Number, output: Schema.Number },
     wait: { output: Schema.Boolean },
     embed: { output: Schema.String },
+    cliVersion: { output: Schema.String },
   },
   events: { changed: Schema.Number, waiting: Schema.Boolean },
 })
