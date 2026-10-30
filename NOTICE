@@ -5,10 +5,10 @@ of OpenCode v2:
 
   Upstream project: OpenCode
   Repository: https://github.com/anomalyco/opencode
-  Source version: 2.2.1
-  Source commit: 3ebcf9a32c7b28f658cfee80775448929361727a
+  Source version: 2.2.2
+  Source commit: 098aa7fd6e02b03d6fc410f0b052038c7d4c5e81
   Source snapshot:
-    https://github.com/anomalyco/opencode/tree/3ebcf9a32c7b28f658cfee80775448929361727a
+    https://github.com/anomalyco/opencode/tree/098aa7fd6e02b03d6fc410f0b052038c7d4c5e81
 
 The upstream copyright notice is retained unchanged:
 
@@ -19,7 +19,7 @@ code, utilities, assets, and dependency patches. It does not include the
 OpenCode backend, core, CLI, or managed sidecar. Package-level provenance is
 recorded in docs/upstream.json in the source repository.
 
-Changes made by this project include the browser plugin SDK and host, the thin
+Changes made by this project include the official native GUI plugin connection adapters, the thin
 Electron desktop shell, service project discovery, and optional project tab
 grouping. These additions and modifications are also released under the MIT
 License. See LICENSE for the full license text.
