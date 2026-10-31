@@ -37,3 +37,5 @@ UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/version.mj
 ```
 
 The first two drive the production app with simulated HTTP/configuration data. The other three drive real adapters with fixture providers; `?history=1` and `?version=1` select those additional fixture surfaces. Set `UX_SCREENSHOT` to a writable destination when retaining a screenshot; it defaults to the original task workspace. No script starts a backend or supplies real credentials. Native platform execution and full virtualized transcripts remain separate acceptance work.
+
+`node packages/app/performance/ux/about.mjs` verifies the production About version clipboard/tooltip and independent port provenance together, using a disposable service fixture. Set CHROMIUM_PATH as above.
