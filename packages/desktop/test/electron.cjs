@@ -106,7 +106,7 @@ const electron = {
   ImageView: View,
   WebContentsView: View,
   nativeImage: { createFromBuffer: () => ({}) },
-  screen: { getDisplayMatching: () => ({ scaleFactor: 1 }) },
+  screen: Object.assign(new EventEmitter(), { getDisplayMatching: () => ({ scaleFactor: 1 }) }),
   powerSaveBlocker: { start: () => 1, stop() {} },
   dialog: {},
 }
