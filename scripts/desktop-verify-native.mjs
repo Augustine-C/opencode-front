@@ -52,11 +52,11 @@ async function until(check, description) {
   throw new Error(`Archived desktop verification timed out: ${description}`)
 }
 try {
-  await send("Runtime.enable")
   const targets = await send("Target.getTargets")
   const target = targets.targetInfos.find((entry) => entry.type === "page" && entry.url.startsWith("oc://renderer/"))
   assert.ok(target, "archived renderer target must exist")
   session = (await send("Target.attachToTarget", { targetId: target.targetId, flatten: true })).sessionId
+  await send("Runtime.enable", {}, session)
   const identity = await evaluate(
     `({os: window.electron?.os, packaged: window.electron?.packaged, node: typeof require})`,
   )
