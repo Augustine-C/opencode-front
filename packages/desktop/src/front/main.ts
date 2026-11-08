@@ -7,6 +7,7 @@ import { Schema } from "effect"
 import type { RpcGroup } from "effect/rpc"
 import { DESKTOP_NATIVE_ENGLISH, DESKTOP_NATIVE_LOCALE_TAGS } from "@opencode/app/i18n/desktop-native"
 import { createHost, type PluginHost } from "../main/plugin/host"
+import { initialState, type State } from "../main/lifecycle/machine"
 import { openDatabase } from "../main/storage/database"
 import { createStateStore } from "../main/storage/state"
 import { setNativeTranslations } from "../main/native/translations"
@@ -37,6 +38,8 @@ let active: { key: string; host: PluginHost; close(): void } | undefined
 let queued = Promise.resolve()
 let wanted = ""
 let generation = 0
+let appState: State = initialState()
+app.on("before-quit", () => { appState = { status: "quitting" } })
 const log = (message: string, data: Record<string, unknown>) => console.error(`[plugin] ${message}`, data)
 
 function broadcast(event: Parameters<typeof emitIpcEvent>[1]) {
@@ -62,7 +65,7 @@ function select(connection?: Connection) {
       active = undefined
       if (previous) {
         try {
-          await previous.host.dispose()
+          await previous.host.stop()
         } finally {
           previous.close()
         }
@@ -82,13 +85,14 @@ function select(connection?: Connection) {
         state,
         subscriptions,
         servers,
+        appState: () => appState,
         cli: {
           version: upstream.version,
           command: [process.env.OPENCODE_FRONT_CLI ?? "opencode"],
           binary: process.env.OPENCODE_FRONT_CLI,
           development: false,
         },
-        restart: async (handoff) => {
+        restart: async (_keep, handoff) => {
           await handoff?.()
           app.relaunch()
           app.quit()

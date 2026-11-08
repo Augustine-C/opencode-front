@@ -25,20 +25,21 @@ export function DesktopPluginConnection() {
     )
     // A plugin-managed endpoint (SSH/WSL) belongs to the main host that created it.
     // Keep that host alive while using the contributed server.
-    return selected?.type === "http"
+    return selected && selected.type !== "plugin"
       ? selected
       : (connections.find(
-          (connection) => connection.type === "http" && ServerConnection.key(connection) === source.key,
-        ) ?? connections.find((connection) => connection.type === "http"))
+          (connection) => connection.type !== "plugin" && ServerConnection.key(connection) === source.key,
+        ) ?? connections.find((connection) => connection.type !== "plugin"))
   })
   createEffect(() => {
     const connection = selected()
     const key = connection && ServerConnection.key(connection)
     setSource({ key, ready: false })
-    const endpoint = connection && {
+    const http = connection && ServerConnection.http(connection)
+    const endpoint = key && http && {
       id: key,
-      url: connection.http.url,
-      ...(connection.http.password ? { password: connection.http.password } : {}),
+      url: http.url,
+      ...(http.password ? { password: http.password } : {}),
     }
     let disposed = false
     onCleanup(() => {
@@ -48,7 +49,7 @@ export function DesktopPluginConnection() {
       .then(() => {
         if (!disposed) setSource("ready", true)
       })
-      .catch((cause) => console.error("[plugin] service selection failed", cause))
+      .catch((cause: unknown) => console.error("[plugin] service selection failed", cause))
   })
   onCleanup(() => setSource("key", undefined))
   return null

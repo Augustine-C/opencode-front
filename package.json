@@ -1,6 +1,6 @@
 {
   "name": "opencode-front",
-  "version": "2.2.5+0",
+  "version": "2.2.6+0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -10,17 +10,17 @@
       "packages/*"
     ],
     "catalog": {
-      "@effect/opentelemetry": "4.0.6",
-      "@effect/platform-node": "4.0.6",
-      "@effect/platform-node-shared": "4.0.6",
-      "@effect/sql-sqlite-bun": "4.0.6",
+      "@effect/opentelemetry": "4.1.0",
+      "@effect/platform-node": "4.1.0",
+      "@effect/platform-node-shared": "4.1.0",
+      "@effect/sql-sqlite-bun": "4.1.0",
       "@npmcli/arborist": "9.4.0",
       "@types/bun": "1.4.3",
       "@types/cross-spawn": "6.0.6",
       "@octokit/rest": "22.0.0",
-      "@opentui/core": "0.8.0",
-      "@opentui/keymap": "0.8.0",
-      "@opentui/solid": "0.8.0",
+      "@opentui/core": "0.8.1",
+      "@opentui/keymap": "0.8.1",
+      "@opentui/solid": "0.8.1",
       "@tanstack/solid-virtual": "3.13.37",
       "@standard-schema/spec": "1.1.0",
       "@kobalte/core": "0.13.13",
@@ -44,7 +44,7 @@
       "dompurify": "3.4.17",
       "drizzle-kit": "1.0.0-rc.5-ab785fc",
       "drizzle-orm": "1.0.0-rc.5-169397b",
-      "effect": "4.0.6",
+      "effect": "4.1.0",
       "fast-check": "4.9.0",
       "cross-spawn": "7.0.6",
       "hono": "4.13.13",
@@ -73,21 +73,23 @@
       "solid-js": "1.9.17",
       "solid-sonner": "0.3.1",
       "vite-plugin-solid": "2.11.10",
-      "@lydell/node-pty": "1.2.0-beta.12"
+      "@lydell/node-pty": "1.2.0-beta.12",
+      "@effect/sql-sqlite-node": "4.1.0",
+      "@hona/strobe": "0.14.0"
     }
   },
   "scripts": {
     "dev": "bun run --cwd packages/app dev",
     "build": "bun run --cwd packages/app build && bun run scripts/desktop-build.ts",
     "typecheck": "bun run --cwd packages/app typecheck && bun run --cwd packages/codearts-proxy-extension typecheck && bun run typecheck:upstream && bun run --cwd packages/desktop typecheck",
-    "test": "bun test --conditions=browser --preload ./packages/ui/test/solid-jsx.ts packages/app/test scripts/upstream/test packages/codearts-proxy-extension/test scripts/desktop/test scripts/build/test packages/desktop/src/main/plugin",
+    "test": "bun test --conditions=browser --preload ./packages/ui/test/solid-jsx.ts scripts/upstream/test packages/codearts-proxy-extension/test scripts/desktop/test scripts/build/test packages/desktop/src/main/plugin && bun test --conditions=browser --preload ./packages/ui/test/solid-jsx.ts --preload ./packages/app/happydom.ts packages/app/test",
     "check": "bun run upstream:check && bun run typecheck && bun run test && bun run test:desktop-plugins",
     "desktop": "bun run scripts/desktop.ts",
     "upstream:check": "bun run scripts/upstream/check.ts check",
     "upstream:plan": "bun run scripts/upstream/check.ts plan",
     "typecheck:upstream": "tsc --ignoreConfig --noEmit --module ESNext --moduleResolution Bundler --target ESNext --types bun --skipLibCheck scripts/upstream/check.ts scripts/upstream/model.ts scripts/upstream/test/imports.test.ts",
     "upstream:record": "bun run scripts/upstream/check.ts record",
-    "test:desktop-plugins": "bun run scripts/desktop-build.ts && bun --bun node_modules/vite/bin/vite.js build --config packages/app/performance/service-gui/vite.config.ts && node packages/desktop/test/native-host.mjs"
+    "test:desktop-plugins": "bun run scripts/desktop-build.ts && bun run --cwd packages/app --bun node_modules/vite/bin/vite.js build --config performance/service-gui/vite.config.ts && node packages/desktop/test/native-host.mjs"
   },
   "devDependencies": {
     "@electron/packager": "19.0.1",
@@ -97,7 +99,8 @@
     "typescript": "catalog:",
     "electron": "44.9.1",
     "solid-js": "catalog:",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "@hona/strobe": "catalog:"
   },
   "trustedDependencies": [
     "esbuild",
@@ -113,6 +116,7 @@
     "@tanstack/virtual-core@3.17.8": "patches/@tanstack%2Fvirtual-core@3.17.8.patch",
     "vite@8.2.4": "patches/vite@8.2.4.patch",
     "@corvu/drawer@0.2.4": "patches/@corvu%2Fdrawer@0.2.4.patch",
-    "@pierre/trees@1.0.0-beta.6": "patches/@pierre%2Ftrees@1.0.0-beta.6.patch"
+    "@pierre/trees@1.0.0-beta.6": "patches/@pierre%2Ftrees@1.0.0-beta.6.patch",
+    "@modelcontextprotocol/client@2.3.1": "patches/@modelcontextprotocol%2Fclient@2.3.1.patch"
   }
 }

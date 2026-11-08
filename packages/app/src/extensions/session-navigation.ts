@@ -7,7 +7,7 @@ export function createMessageNavigation(input: {
   sessionKey: Accessor<string>
   messages: Accessor<readonly Message[]>
   scroller: Accessor<HTMLDivElement | undefined>
-  unpin: () => void
+  unpin?: () => void
   reveal: (id: string) => void
 }) {
   const [state, setState] = createStore({ activeID: "", previewID: "", dragging: false, visible: true })
@@ -30,7 +30,7 @@ export function createMessageNavigation(input: {
     const id = pendingID
     pendingID = ""
     if (!indexes().has(id)) return
-    input.unpin()
+    input.unpin?.()
     input.reveal(id)
   }
   const select = (index: number) => {

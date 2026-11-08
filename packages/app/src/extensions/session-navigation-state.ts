@@ -16,7 +16,6 @@ export function createSessionNavigation(session: SessionModel, timeline: Session
     sessionKey: session.identity.sessionKey,
     messages,
     scroller: timeline.scroller,
-    unpin: timeline.view.unpin,
     reveal: timeline.actions.revealMessage,
   })
   const previewResponse = createMemo(() => {
@@ -63,31 +62,32 @@ export function createSessionNavigation(session: SessionModel, timeline: Session
     cancel,
     searchMore: async (matches: () => number) => {
       if (state.continuing || history.loading || !history.more) return
-      const owner = session.ownership.capture()
+      const identity = session.identity.sessionKey()
+      const current = () => session.identity.sessionKey() === identity
       const token = ++continuation
       const before = matches()
       setState("continuing", true)
       try {
         // A new explicit action is required after five pages, even when no matches were found.
-        for (let page = 0; page < 5 && token === continuation && owner.current() && history.more; page++) {
+        for (let page = 0; page < 5 && token === continuation && current() && history.more; page++) {
           if (!(await history.load())) break
           if (matches() > before) break
         }
       } finally {
-        if (token === continuation && owner.current()) setState("continuing", false)
+        if (token === continuation && current()) setState("continuing", false)
       }
     },
     load: async () => {
       const id = session.identity.sessionID()
       if (!id || history.loading || !history.more) return
-      const owner = session.ownership.capture()
+      const identity = session.identity.sessionKey()
+      const current = () => session.identity.sessionKey() === identity
       setState("error", false)
-      timeline.view.unpin()
       try {
         await session.shared.data.session.message.loadMore(id)
-        return owner.current()
+        return current()
       } catch {
-        if (owner.current()) setState("error", true)
+        if (current()) setState("error", true)
         return false
       }
     },

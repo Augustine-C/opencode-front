@@ -60,6 +60,7 @@ Object.assign(app, {
   getVersion: () => "2.2.1",
   isPackaged: false,
   getName: () => "test",
+  commandLine: { hasSwitch: () => false },
   relaunch() {},
   quit() {},
 })

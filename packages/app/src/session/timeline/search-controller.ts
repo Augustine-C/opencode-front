@@ -1,18 +1,22 @@
 import { useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useData } from "@/runtime/server/current"
-import { Timeline } from "@opencode/session-ui/timeline/projection"
-import { createEffect, createMemo, createSignal, on, onCleanup } from "solid-js"
-import { createStore } from "solid-js/store"
+import { createEffect, createMemo, createSignal, on, onCleanup, untrack } from "solid-js"
+import {
+  createTimelineSearchState,
+  extractSearchableParts,
+  findMatchesInParts,
+  normalizeSearchQuery,
+  timelineSearchView,
+  transitionTimelineSearch,
+  type SearchablePart,
+  type TimelineSearchEffect,
+  type TimelineSearchEvent,
+} from "./search-machine"
 
-export type TimelineSearchMatch = {
-  messageID: string
-  role: "user" | "assistant"
-  revealID: string
-  partID: string
-  occurrence: number
-  text: string
-}
+const NO_PARTS: readonly SearchablePart[] = Object.freeze([])
+
+const CLOSED_CORPUS = Object.freeze({ sessionID: undefined, parts: NO_PARTS })
 
 const HIGHLIGHT_HIT = "timeline-search-hit"
 
@@ -43,7 +47,6 @@ function collectRanges(
 ) {
   const hits: Range[] = []
   const active: Range[] = []
-  if (!query) return { hits, active }
   const lower = query.toLowerCase()
   const bodies = root.querySelectorAll<HTMLElement>(TEXT_SELECTORS)
 
@@ -102,7 +105,6 @@ function applyHighlights(
 
 export function createTimelineSearchController(input: {
   sessionID: () => string | undefined
-  sessionKey?: () => string
   scrollRef: () => HTMLDivElement | undefined
   revealMessage: (id: string, partID?: string) => void
   pauseAutoScroll: () => void
@@ -110,91 +112,52 @@ export function createTimelineSearchController(input: {
   const command = useCommand()
   const language = useLanguage()
   const data = useData()
-  const [state, setState] = createStore({ value: "", active: "", visible: false })
-  const [focusTick, setFocusTick] = createSignal(0)
+  const [searchState, setSearchState] = createSignal(createTimelineSearchState())
+  const view = createMemo(() => timelineSearchView(searchState()))
+  const visible = createMemo(() => view().visible)
+  const query = createMemo(() => view().query)
+  const searching = createMemo(() => query() !== "")
+  const activePartID = createMemo(() => view().activePartID)
+  const activeOccurrence = createMemo(() => view().activeOccurrence)
   let inputEl: HTMLInputElement | undefined
-  let searchFrame: number | undefined
-  const cancelSearchScroll = () => {
-    if (searchFrame !== undefined) cancelAnimationFrame(searchFrame)
-    searchFrame = undefined
-  }
-  onCleanup(cancelSearchScroll)
+  let focusFrame: number | undefined
+  let seekFrame: number | undefined
 
-  const query = createMemo(() => state.value.trim().toLowerCase())
+  const searchableParts = (sessionID: string | undefined) =>
+    sessionID ? extractSearchableParts(data.session.message.list(sessionID)) : NO_PARTS
 
-  const matches = createMemo<TimelineSearchMatch[]>(() => {
-    const value = query()
-
-    if (!value) return []
+  // Reads the transcript only while a query exists, so a closed or empty Find bar costs nothing while a reply
+  // streams, and typing reuses the lowercased parts.
+  const corpus = createMemo(() => {
+    if (!visible()) return CLOSED_CORPUS
     const sessionID = input.sessionID()
 
-    if (!sessionID) return []
-    const messages = data.session.message.list(sessionID)
-    const result: TimelineSearchMatch[] = []
-    let revealID = ""
-
-    for (const message of messages) {
-      if (message.type === "user" || message.type === "shell") revealID = message.id
-
-      if (message.type !== "user" && message.type !== "assistant") continue
-
-      const visibleParts =
-        message.type === "user"
-          ? [{ id: `${message.id}:text:0`, content: { type: "text" as const, text: message.text } }]
-          : Timeline.contentEntries(message)
-
-      for (const textPart of visibleParts) {
-        if (textPart.content.type !== "text") continue
-        const text = textPart.content.text
-
-        if (!text) continue
-        const lower = text.toLowerCase()
-        let from = 0
-        let occurrence = 0
-        let at = lower.indexOf(value, from)
-
-        while (at !== -1) {
-          result.push({
-            messageID: message.id,
-            role: message.type,
-            revealID,
-            partID: textPart.id,
-            occurrence,
-            text,
-          })
-          occurrence += 1
-          from = at + value.length
-          at = lower.indexOf(value, from)
-        }
-      }
-    }
-
-    return result
+    return { sessionID, parts: searching() ? searchableParts(sessionID) : NO_PARTS }
   })
 
-  const activeIndex = createMemo(() => {
-    const list = matches()
+  createEffect(
+    on(
+      corpus,
+      (next) => {
+        const current = searchState()
 
-    if (list.length === 0) return 0
-
-    const index = list.findIndex((match) => JSON.stringify([match.partID, match.occurrence]) === state.active)
-    return Math.max(0, index)
-  })
-
-  // Pagination can supply the first hit without an input event, so retain that resolved selection too.
-  createEffect(() => {
-    const match = matches()[activeIndex()]
-    if (match) setState("active", JSON.stringify([match.partID, match.occurrence]))
-  })
-
-  const activePartID = createMemo(() => matches()[activeIndex()]?.partID)
-  const activeOccurrence = createMemo(() => matches()[activeIndex()]?.occurrence)
+        if (current.status === "closed") return
+        const matches = findMatchesInParts(next.parts, current.query)
+        dispatch({
+          type: next.sessionID === current.sessionID ? "matches.synced" : "session.changed",
+          sessionID: next.sessionID,
+          matches,
+        })
+      },
+      { defer: true },
+    ),
+  )
 
   createEffect(() => {
     const root = input.scrollRef()
     const q = query()
 
-    if (!root || !state.visible || !q) {
+    if (!root || !q) {
       clearHighlights()
 
       return
@@ -207,8 +170,6 @@ export function createTimelineSearchController(input: {
       if (frame !== undefined) return
       frame = requestAnimationFrame(() => {
         frame = undefined
-
-        if (!state.visible) return
         applyHighlights(root, query(), activePartID(), activeOccurrence())
       })
     }
@@ -223,15 +184,7 @@ export function createTimelineSearchController(input: {
     })
   })
 
-  createEffect(
-    on(focusTick, () => {
-      if (!state.visible) return
-      requestAnimationFrame(() => {
-        inputEl?.focus()
-        inputEl?.select()
-      })
-    }),
-  )
+  onCleanup(() => dispatch({ type: "disposed" }))
 
   command.register("session.search", () => [
     {
@@ -239,117 +192,155 @@ export function createTimelineSearchController(input: {
       title: language.t("session.search.placeholder"),
       keybind: "mod+f",
       hidden: true,
-      onSelect: () => open(),
+      onSelect: open,
     },
   ])
-  const onOpenRequest = () => open()
-  document.addEventListener("opencode:timeline-search-open", onOpenRequest)
-  onCleanup(() => document.removeEventListener("opencode:timeline-search-open", onOpenRequest))
 
   function open() {
-    setState("visible", true)
-    setFocusTick((t) => t + 1)
+    dispatch({ type: "open", sessionID: untrack(input.sessionID) })
   }
 
-  function close() {
-    cancelSearchScroll()
-    setState({ value: "", active: "", visible: false })
-    inputEl?.blur()
+  function dispatch(event: TimelineSearchEvent) {
+    const current = untrack(searchState)
+    const next = transitionTimelineSearch(current, event)
+
+    if (next.state !== current) setSearchState(next.state)
+    next.effects.forEach(run)
   }
 
-  createEffect(on(input.sessionKey ?? input.sessionID, close, { defer: true }))
+  function run(effect: TimelineSearchEffect) {
+    if (effect.type === "focus-input") {
+      cancelFocusFrame()
+      focusFrame = requestAnimationFrame(() => {
+        focusFrame = undefined
 
-  function setValue(value: string) {
-    cancelSearchScroll()
-    setState("value", value)
-    const list = matches()
-    const match = list[0]
-
-    if (!value.trim() || !match) {
-      setState("active", "")
+        if (!inputEl?.isConnected) return
+        inputEl.focus()
+        inputEl.select()
+      })
 
       return
     }
 
-    setState("active", JSON.stringify([match.partID, match.occurrence]))
-    input.pauseAutoScroll()
-    input.revealMessage(match.revealID, match.partID)
-    scrollToMatch(match)
-  }
+    if (effect.type === "blur-input") {
+      cancelFocusFrame()
+      inputEl?.blur()
 
-  function scrollToMatch(match: TimelineSearchMatch) {
-    cancelSearchScroll()
-    let attempts = 0
-
-    const seek = () => {
-      searchFrame = undefined
-      if (!state.visible) return
-      const root = input.scrollRef()
-
-      if (!root) return
-      const { active } = collectRanges(root, query(), match.partID, match.occurrence)
-
-      if (active.length === 0) {
-        if (attempts++ < 12) searchFrame = requestAnimationFrame(seek)
-        return
-      }
-
-      const rect = active[0].getBoundingClientRect()
-
-      const fold = active[0].startContainer.parentElement?.closest<HTMLElement>(
-        '[data-slot="user-message-fold"][data-folded]',
-      )
-
-      // A match in or past a folded message's fading last lines opens the message, then scrolls to it.
-      const toggle =
-        fold && rect.bottom > fold.getBoundingClientRect().bottom - FOLD_FADE
-          ? root.querySelector<HTMLElement>(`${FOLD_TOGGLE}[aria-controls="${CSS.escape(fold.id)}"]`)
-          : null
-
-      if (toggle) {
-        toggle.click()
-        requestAnimationFrame(seek)
-
-        return
-      }
-
-      const rootRect = root.getBoundingClientRect()
-      const sticky = root.querySelector("[data-session-title]")
-      const inset = sticky instanceof HTMLElement ? sticky.offsetHeight : 0
-      const top = rect.top - rootRect.top + root.scrollTop - inset - (rootRect.height - rect.height) / 2
-      root.scrollTo({ top: Math.max(0, top), behavior: "auto" })
+      return
     }
-    searchFrame = requestAnimationFrame(seek)
+
+    if (effect.type === "reveal") {
+      input.pauseAutoScroll()
+      input.revealMessage(effect.revealID, effect.partID)
+
+      return
+    }
+
+    if (effect.type === "seek.schedule") {
+      cancelSeekFrame()
+      seekFrame = requestAnimationFrame(() => {
+        seekFrame = undefined
+        dispatch(probeSeek(effect))
+      })
+
+      return
+    }
+
+    if (effect.type === "unfold") {
+      input
+        .scrollRef()
+        ?.querySelector<HTMLElement>(`${FOLD_TOGGLE}[aria-controls="${CSS.escape(effect.foldID)}"]`)
+        ?.click()
+
+      return
+    }
+
+    if (effect.type === "scroll") {
+      input.scrollRef()?.scrollTo({ top: effect.top, behavior: "auto" })
+
+      return
+    }
+
+    if (effect.type === "cancel-frames") cancelFocusFrame()
+
+    // `seek.cancel` and `cancel-frames`.
+    cancelSeekFrame()
   }
 
-  function move(delta: number) {
-    const list = matches()
+  // Reads the DOM only; the machine decides whether the result is still current before anything is clicked or scrolled.
+  function probeSeek(effect: Extract<TimelineSearchEffect, { type: "seek.schedule" }>): TimelineSearchEvent {
+    const root = input.scrollRef()
 
-    if (list.length === 0) return
-    const next = (activeIndex() + delta + list.length) % list.length
-    setState("active", JSON.stringify([list[next].partID, list[next].occurrence]))
-    const match = list[next]
+    if (!root) return { type: "seek.missing", attempt: effect.attempt }
+    const range = collectRanges(root, effect.query, effect.partID, effect.occurrence).active[0]
 
-    if (!match) return
-    input.pauseAutoScroll()
-    input.revealMessage(match.revealID, match.partID)
-    scrollToMatch(match)
+    if (!range) return { type: "seek.missing", attempt: effect.attempt }
+    const rect = range.getBoundingClientRect()
+
+    // A match in or past a folded message's fading last lines opens the message, then scrolls to it.
+    const fold = effect.allowUnfold
+      ? range.startContainer.parentElement?.closest<HTMLElement>('[data-slot="user-message-fold"][data-folded]')
+      : undefined
+
+    if (
+      fold?.id &&
+      rect.bottom > fold.getBoundingClientRect().bottom - FOLD_FADE &&
+      root.querySelector(`${FOLD_TOGGLE}[aria-controls="${CSS.escape(fold.id)}"]`)
+    ) {
+      return { type: "seek.folded", attempt: effect.attempt, foldID: fold.id }
+    }
+
+    const rootRect = root.getBoundingClientRect()
+    const sticky = root.querySelector("[data-session-title]")
+    const inset = sticky instanceof HTMLElement ? sticky.offsetHeight : 0
+    const top = rect.top - rootRect.top + root.scrollTop - inset - (rootRect.height - rect.height) / 2
+
+    return { type: "seek.ready", attempt: effect.attempt, top: Math.max(0, top) }
+  }
+
+  function cancelFocusFrame() {
+    if (focusFrame !== undefined) cancelAnimationFrame(focusFrame)
+    focusFrame = undefined
+  }
+
+  function cancelSeekFrame() {
+    if (seekFrame !== undefined) cancelAnimationFrame(seekFrame)
+    seekFrame = undefined
+  }
+
+  function setValue(value: string) {
+    const current = untrack(searchState)
+
+    if (current.status === "closed") return
+    const next = normalizeSearchQuery(value)
+
+    if (next === current.query) {
+      dispatch({ type: "query.changed", value, matches: current.matches })
+
+      return
+    }
+
+    // The corpus holds parts only once a query exists, so the first character reads the transcript directly.
+    const parts = current.query ? untrack(corpus).parts : untrack(() => searchableParts(current.sessionID))
+    dispatch({ type: "query.changed", value, matches: findMatchesInParts(parts, next) })
   }
 
   return {
-    visible: () => state.visible,
+    visible,
     query: {
-      value: () => state.value,
+      value: () => view().value,
       placeholder: () => language.t("session.search.placeholder"),
       noResults: () => language.t("session.search.noResults"),
       open,
-      close,
+      close: () => dispatch({ type: "close" }),
       setValue,
     },
     result: {
-      activeIndex,
-      count: () => matches().length,
-      move,
+      showCount: () => view().showCount,
+      activeDisplay: () => view().activeDisplay,
+      activeIndex: () => view().activeDisplay - 1,
+      count: () => view().count,
+      move: (delta: number) => dispatch({ type: "move", delta }),
     },
     element: {
       setInput: (element: HTMLInputElement) => (inputEl = element),

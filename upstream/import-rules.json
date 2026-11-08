@@ -136,7 +136,8 @@
       "only": [
         "package.json",
         "src/rpc.ts",
-        "src/proxy.ts"
+        "src/proxy.ts",
+        "src/proxy-machine.ts"
       ]
     },
     {
@@ -148,7 +149,8 @@
         "@tanstack%2Fvirtual-core@3.17.8.patch",
         "solid-js@1.9.17.patch",
         "vite@8.2.4.patch",
-        "@corvu%2Fdrawer@0.2.4.patch"
+        "@corvu%2Fdrawer@0.2.4.patch",
+        "@modelcontextprotocol%2Fclient@2.3.1.patch"
       ]
     },
     {
@@ -224,7 +226,14 @@
         "src/main/storage/keys.ts",
         "src/shared/ipc-rpc/plugins.ts",
         "src/shared/ipc-rpc/events.ts",
-        "src/renderer/plugins.ts"
+        "src/renderer/plugins.ts",
+        "src/renderer/plugins-machine.ts",
+        "src/main/lifecycle/machine.ts",
+        "src/main/service/sidecar-credentials.ts",
+        "src/main/plugin/host-machine.ts",
+        "src/main/plugin/lifecycle-machine.ts",
+        "src/main/storage/write-behind-machine.ts",
+        "src/shared/ipc-contract.ts"
       ]
     }
   ],

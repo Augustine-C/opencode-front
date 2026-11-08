@@ -26,7 +26,10 @@ export function FrontVersionInfo() {
     (global.servers.list().length === 1 ? ServerConnection.key(global.servers.list()[0]) : "")
   const connection = createMemo(() => global.servers.list().find((conn) => ServerConnection.key(conn) === selected()))
   const health = () => (connection() ? global.servers.health[ServerConnection.key(connection()!)] : undefined)
-  const serviceVersion = () => (health()?.healthy ? health()?.version : undefined)
+  const serviceVersion = () => {
+    const value = health()
+    return value?.type === "healthy" ? value.version : undefined
+  }
   const serviceTag = () => {
     const version = serviceVersion()?.replace(/^v/, "")
     return version && /^\d+\.\d+\.\d+(?:-[\da-z.-]+)?$/i.test(version) ? `v${version}` : undefined
@@ -62,7 +65,7 @@ export function FrontVersionInfo() {
             <option value="">{language.t("settings.about.front.noInstance")}</option>
             <For each={global.servers.list()}>
               {(conn) => (
-                <option value={ServerConnection.key(conn)} title={conn.http.url}>
+                <option value={ServerConnection.key(conn)} title={ServerConnection.http(conn)?.url}>
                   {serverName(conn)}
                 </option>
               )}

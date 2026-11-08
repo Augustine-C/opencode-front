@@ -42,11 +42,11 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
     return new Map(
       input.tabs().map((tab) => {
         const conn = connections().get(instanceKey(tab))
-        const ctx = conn ? global.ensureServerCtx(conn) : undefined
+        const ctx = conn ? global.serverCtx(ServerConnection.key(conn)) : undefined
         const session = tab.type === "session" ? ctx?.data.session.get(tab.sessionId) : undefined
         const draft = tab.type === "draft" ? tab : tabs.pendingSession(tab.server, tab.sessionId)?.draft
         const directory = session?.location.directory ?? draft?.directory ?? tabs.info[tabKey(tab)]?.directory
-        const project = tabProject(draft?.worktree ?? directory, session?.projectID, ctx?.sync.data.project ?? [])
+        const project = tabProject(draft?.worktree ?? directory, session?.projectID, ctx?.projects.list() ?? [])
         const root = project?.worktree ?? draft?.worktree ?? directory
         const label = root
           ? displayName({ name: project?.name, worktree: root })
@@ -105,7 +105,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
       const health = global.servers.health[tab.server]
       const status = avatar.needsAttention()
         ? ("attention" as const)
-        : health && !health.healthy && !health.checking
+        : health && !["healthy", "checking", "starting", "auth"].includes(health.type)
           ? ("offline" as const)
           : avatar.loading()
             ? ("running" as const)
@@ -121,7 +121,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
   const instanceOrder = () => [...settings.appearance.tabInstanceOrder(), ...connections().keys()]
   const projectOrder = (instance: string) => {
     const conn = connections().get(instance)
-    const projects = conn ? global.ensureServerCtx(conn).sync.data.project : []
+    const projects = conn ? global.serverCtx(ServerConnection.key(conn))?.projects.list() ?? [] : []
     return [
       ...settings.appearance.tabProjectOrder(instance),
       ...projects.map((project) => JSON.stringify([conn && ServerConnection.key(conn), pathKey(project.worktree)])),

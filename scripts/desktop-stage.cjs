@@ -18,7 +18,7 @@ fs.cpSync(renderer, path.join(stage, "packages/app/dist"), { recursive: true })
 for (const file of ["desktop-main.cjs", "desktop-preload.cjs", "desktop-window-state.cjs", "desktop-protocol.cjs"])
   fs.copyFileSync(path.join(root, "scripts", file), path.join(stage, "scripts", file))
 fs.cpSync(path.join(root, "dist/native"), path.join(stage, "dist/native"), { recursive: true })
-stageDependencies(root, stage, ["lighthouse"])
+stageDependencies(path.join(root, "packages/desktop"), stage, ["lighthouse"])
 for (const file of ["LICENSE", "NOTICE"]) fs.copyFileSync(path.join(root, file), path.join(stage, file))
 fs.writeFileSync(
   path.join(stage, "package.json"),
