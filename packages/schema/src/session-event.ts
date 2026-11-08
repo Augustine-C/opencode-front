@@ -50,7 +50,7 @@ export const Created = Event.durable({
     agent: Agent.ID.pipe(optional),
     model: Model.Ref.pipe(optional),
     /** Host-supplied annotations resolved at creation, including any inherited from a parent. */
-    metadata: SessionMetadata.pipe(optional),
+    metadata: Schema.optionalKey(Schema.UndefinedOr(SessionMetadata)),
     permissions: Permission.Ruleset.pipe(optional),
     version: Schema.String,
   },
@@ -199,7 +199,7 @@ export const Forked = Event.durable({
     ...Base,
     parentID: SessionID,
     boundary: SessionFork.Boundary,
-    instructions: Instruction.Values.pipe(optional),
+    instructions: Schema.optionalKey(Schema.UndefinedOr(Instruction.Values)),
     instructionEntries: InstructionEntry.Snapshot.pipe(optional),
   },
 })
@@ -365,7 +365,7 @@ export namespace Step {
       assistantMessageID: SessionMessage.ID,
       finish: FinishReason,
       rawFinish: Schema.String.pipe(optional),
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
       cost: Money.USD,
       tokens: TokenUsage.Info,
       snapshot: Snapshot.ID.pipe(optional),
@@ -383,7 +383,7 @@ export namespace Step {
       error: SessionError.Error,
       finish: Schema.Literals(["content-filter"]).pipe(optional),
       rawFinish: Schema.String.pipe(optional),
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
       cost: Money.USD.pipe(optional),
       tokens: TokenUsage.Info.pipe(optional),
       snapshot: Snapshot.ID.pipe(optional),
@@ -425,7 +425,7 @@ export namespace Text {
       assistantMessageID: SessionMessage.ID,
       ordinal: NonNegativeInt,
       text: Schema.String,
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
     },
   })
   export type Ended = typeof Ended.Type
@@ -439,7 +439,7 @@ export namespace Reasoning {
       ...Base,
       assistantMessageID: SessionMessage.ID,
       ordinal: NonNegativeInt,
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
     },
   })
   export type Started = typeof Started.Type
@@ -464,7 +464,7 @@ export namespace Reasoning {
       assistantMessageID: SessionMessage.ID,
       ordinal: NonNegativeInt,
       text: Schema.String,
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
     },
   })
   export type Ended = typeof Ended.Type
@@ -516,7 +516,7 @@ export namespace Tool {
       ...ToolBase,
       input: Schema.Record(Schema.String, Schema.Unknown),
       executed: Schema.Boolean,
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
     },
   })
   export type Called = typeof Called.Type
@@ -543,7 +543,7 @@ export namespace Tool {
       content: Schema.NonEmptyArray(Content),
       metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
       executed: Schema.Boolean,
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
     },
   })
   export type Success = typeof Success.Type
@@ -565,7 +565,7 @@ export namespace Tool {
       content: Schema.NonEmptyArray(Content).pipe(optional),
       metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
       executed: Schema.Boolean,
-      native: SessionMessage.Native.pipe(optional),
+      native: Schema.optionalKey(Schema.UndefinedOr(SessionMessage.Native)),
     },
   })
   export type Failed = typeof Failed.Type

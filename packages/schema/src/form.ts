@@ -130,7 +130,7 @@ const InfoBase = {
   // on non-session owners anywhere else.
   sessionID: Schema.String,
   title: Schema.String,
-  metadata: Metadata.pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Metadata)),
 }
 
 export const Info = Schema.Struct({

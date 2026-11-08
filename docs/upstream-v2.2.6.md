@@ -6,6 +6,6 @@ Imported the selected v2.2.6 frontend, client/protocol/schema, GUI plugin host a
 
 ## Scope and validation
 
-Validation: `upstream:check` reports 3,760 pristine files, 75 adapted files and 209 local files with no errors; typecheck passes for app, CodeArts extension, upstream boundary tooling and desktop. `bun run test` passes 60 tests / 216 assertions outside the app and 15 app tests / 80 assertions. `test:desktop-plugins` passes, including the native host fixture. `bun run build` and `node scripts/desktop-stage.cjs` pass with staged version 2.2.6+0 / release version 2.2.6.0.
+Validation: `upstream:check` reports 3,757 pristine files, 78 adapted files and 209 local files with no errors; typecheck passes for app, CodeArts extension, upstream boundary tooling and desktop. `bun run test` passes 60 tests / 216 assertions outside the app and 15 app tests / 80 assertions. `test:desktop-plugins` passes, including the native host fixture. `bun run build` and `node scripts/desktop-stage.cjs` pass with staged version 2.2.6+0 / release version 2.2.6.0.
 
 The timeline strobe benchmark could not run: this checkout has no `origin/dev` ref, and the v2.2.6 benchmark fixture imports `packages/app/e2e/utils/mock-server`, which is absent from the imported workspace. The benchmark command fails before recording measurements. Production build emits upstream CSS `::highlight` and chunk-size warnings; the build completes successfully.

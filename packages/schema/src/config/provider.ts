@@ -22,13 +22,13 @@ const JsonRecord = Schema.Record(Schema.String, Schema.Json)
 export const Overlays = {
   settings: Settings.pipe(optional),
   headers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
-  body: JsonRecord.pipe(optional),
+  body: Schema.optionalKey(Schema.UndefinedOr(JsonRecord)),
 }
 
 const ModelOverlays = {
   settings: ModelSettings.pipe(optional),
   headers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
-  body: JsonRecord.pipe(optional),
+  body: Schema.optionalKey(Schema.UndefinedOr(JsonRecord)),
 }
 
 export class Request extends Schema.Class<Request>("Config.Provider.Request")({

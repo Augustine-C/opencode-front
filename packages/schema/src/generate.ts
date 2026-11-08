@@ -74,7 +74,7 @@ export const ImageResult = Schema.Struct({
   images: Schema.Array(ImageOutput),
   cost: Money.USD.pipe(optional),
   tokens: Usage.pipe(optional),
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
 }).annotate({ identifier: "Generate.ImageResult" })
 
 // ---------------------------------------------------------------------------
@@ -199,5 +199,5 @@ export const DecisionResult = Schema.Struct({
   answers: Schema.Array(DecisionAnswer).annotate(description("One answer per question, in question order")),
   cost: Money.USD.pipe(optional),
   tokens: Usage.pipe(optional),
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
 }).annotate({ identifier: "Generate.DecisionResult" })

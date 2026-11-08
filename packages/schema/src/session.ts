@@ -56,7 +56,7 @@ export const Info = Schema.Struct({
   title: Schema.String.pipe(optional),
   location: Location.Ref,
   subpath: RelativePath.pipe(optional),
-  metadata: Metadata.pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Metadata)),
   /** Evaluated after the agent's rules; the last matching rule wins. */
   permissions: Permission.Ruleset.pipe(optional),
   revert: Revert.pipe(optional),

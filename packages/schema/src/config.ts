@@ -97,7 +97,7 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   instructions: Schema.String.pipe(Schema.Array, optional).annotate({
     description: "Additional paths or URLs supplying ambient instructions",
   }),
-  references: ConfigReference.Info.pipe(optional).annotate({
+  references: Schema.optionalKey(Schema.UndefinedOr(ConfigReference.Info)).annotate({
     description: "Named local directories or Git repositories available as external context",
   }),
   websearch: ConfigWebSearch.Selection.pipe(optional).annotate({

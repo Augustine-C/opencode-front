@@ -173,7 +173,7 @@ export const AssistantTool = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   executed: Schema.Boolean.pipe(optional),
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
   state: ToolState,
   time: Schema.Struct({
     created: DateTimeUtcFromMillis,
@@ -186,14 +186,14 @@ export interface AssistantText extends Schema.Schema.Type<typeof AssistantText> 
 export const AssistantText = Schema.Struct({
   type: Schema.tag("text"),
   text: Schema.String,
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
 }).annotate({ identifier: "Session.Message.Assistant.Text" })
 
 export interface AssistantReasoning extends Schema.Schema.Type<typeof AssistantReasoning> {}
 export const AssistantReasoning = Schema.Struct({
   type: Schema.tag("reasoning"),
   text: Schema.String,
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
   time: Schema.Struct({
     created: DateTimeUtcFromMillis,
     completed: DateTimeUtcFromMillis.pipe(optional),
@@ -232,7 +232,7 @@ export const Assistant = Schema.Struct({
   finish: FinishReason.pipe(optional),
   rawFinish: Schema.String.pipe(optional),
   /** Step-level native data, such as a provider's reason for blocking a response. */
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
   cost: Money.USD.pipe(optional),
   tokens: TokenUsage.Info.pipe(optional),
   error: SessionError.Error.pipe(optional),
@@ -268,7 +268,7 @@ export const CompactionCompleted = Schema.Struct({
   reason: Schema.Literals(["auto", "manual"]),
   model: Model.Ref.pipe(optional),
   /** A provider compaction stores its replacement window in `native.messages`, replayed instead of `summary`. */
-  native: Native.pipe(optional),
+  native: Schema.optionalKey(Schema.UndefinedOr(Native)),
   summary: Schema.String,
   ...CompactionUsage,
 }).annotate({ identifier: "Session.Message.Compaction.Completed" })
