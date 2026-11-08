@@ -61,7 +61,7 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   policies: ConfigPolicy.Info.pipe(Schema.Array, optional).annotate({
     description: "Ordered policies controlling access to providers, tools, and integrations",
   }),
-  agents: Schema.Record(Schema.String, ConfigAgent.Info).pipe(optional).annotate({
+  agents: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, ConfigAgent.Info))).annotate({
     description: "Named built-in agent overrides and custom agent definitions",
   }),
   snapshots: Schema.Boolean.pipe(optional).annotate({
@@ -91,7 +91,7 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   skills: Schema.String.pipe(Schema.Array, optional).annotate({
     description: "Additional paths or URLs to discover skills from",
   }),
-  commands: Schema.Record(Schema.String, ConfigCommand.Info).pipe(optional).annotate({
+  commands: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, ConfigCommand.Info))).annotate({
     description: "Named slash command definitions",
   }),
   instructions: Schema.String.pipe(Schema.Array, optional).annotate({
@@ -112,7 +112,7 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   warming: ConfigWarming.Warming.pipe(optional).annotate({
     description: "Keep recently active sessions warm with transient model requests (default: false)",
   }),
-  providers: Schema.Record(Schema.String, ConfigProvider.Info).pipe(optional),
+  providers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, ConfigProvider.Info))),
   experimental: ConfigExperimental.Info.pipe(optional),
 }) {}
 

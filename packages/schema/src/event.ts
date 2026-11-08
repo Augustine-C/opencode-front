@@ -108,7 +108,7 @@ export function durable<
   return Schema.Struct({
     id: ID,
     created: Schema.Finite,
-    metadata: optional(Schema.Record(Schema.String, Schema.Unknown)),
+    metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
     type: Schema.Literal(input.type),
     durable,
     location: optional(Location.Ref),
@@ -133,7 +133,7 @@ export function ephemeral<
   return Schema.Struct({
     id: ID,
     created: Schema.Finite,
-    metadata: optional(Schema.Record(Schema.String, Schema.Unknown)),
+    metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
     type: Schema.Literal(input.type),
     location: optional(Location.Ref),
     data,

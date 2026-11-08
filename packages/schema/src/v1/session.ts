@@ -49,9 +49,9 @@ export const APIError = namedError("APIError", {
   message: Schema.String,
   statusCode: Schema.optional(NonNegativeInt),
   isRetryable: Schema.Boolean,
-  responseHeaders: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  responseHeaders: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
   responseBody: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
 })
 export type APIError = Schema.Schema.Type<typeof APIError.Schema>
 export const ContextOverflowError = namedError("ContextOverflowError", {
@@ -111,7 +111,7 @@ export const TextPart = Schema.Struct({
       end: Schema.optional(NonNegativeInt),
     }),
   ),
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
 }).annotate({ identifier: "SessionV1.TextPart" })
 export type TextPart = Types.DeepMutable<Schema.Schema.Type<typeof TextPart>>
 
@@ -119,7 +119,7 @@ export const ReasoningPart = Schema.Struct({
   ...partBase,
   type: Schema.Literal("reasoning"),
   text: Schema.String,
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
   time: Schema.Struct({
     start: NonNegativeInt,
     end: Schema.optional(NonNegativeInt),
@@ -267,7 +267,7 @@ export const ToolStateRunning = Schema.Struct({
   status: Schema.Literal("running"),
   input: Schema.Record(Schema.String, Schema.Any),
   title: Schema.optional(Schema.String),
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
   time: Schema.Struct({
     start: NonNegativeInt,
   }),
@@ -293,7 +293,7 @@ export const ToolStateError = Schema.Struct({
   status: Schema.Literal("error"),
   input: Schema.Record(Schema.String, Schema.Any),
   error: Schema.String,
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
   time: Schema.Struct({
     start: NonNegativeInt,
     end: NonNegativeInt,
@@ -318,7 +318,7 @@ export const ToolPart = Schema.Struct({
   callID: Schema.String,
   tool: Schema.String,
   state: ToolState,
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
 }).annotate({ identifier: "SessionV1.ToolPart" })
 export type ToolPart = Omit<Types.DeepMutable<Schema.Schema.Type<typeof ToolPart>>, "state"> & {
   state: ToolState
@@ -350,7 +350,7 @@ export const User = Schema.Struct({
     variant: Schema.optional(Schema.String),
   }),
   system: Schema.optional(Schema.String),
-  tools: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
+  tools: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Boolean))),
 }).annotate({ identifier: "SessionV1.UserMessage" })
 export type User = Types.DeepMutable<Schema.Schema.Type<typeof User>>
 
@@ -406,7 +406,7 @@ export const TextPartInput = Schema.Struct({
       end: Schema.optional(NonNegativeInt),
     }),
   ),
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
 }).annotate({ identifier: "SessionV1.TextPartInput" })
 export type TextPartInput = Types.DeepMutable<Schema.Schema.Type<typeof TextPartInput>>
 
@@ -547,7 +547,7 @@ export const SessionInfo = Schema.Struct({
   agent: optional(Schema.String),
   model: optional(SessionModel),
   version: Schema.String,
-  metadata: optional(Schema.Record(Schema.String, Schema.Any)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
   time: Schema.Struct({
     created: NonNegativeInt,
     updated: NonNegativeInt,

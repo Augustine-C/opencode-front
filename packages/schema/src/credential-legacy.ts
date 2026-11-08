@@ -10,7 +10,7 @@ import { optional } from "./schema.js"
  * their setup-form answers in `configuration`; they now live in `metadata`. Only decoders for stored rows and
  * `auth export` files use these schemas, so the public credential contract never sees the old field.
  */
-const Key = Schema.Struct({ ...Credential.Key.fields, configuration: optional(Form.Answer) }).pipe(
+const Key = Schema.Struct({ ...Credential.Key.fields, configuration: Schema.optionalKey(Schema.UndefinedOr(Form.Answer)) }).pipe(
   Schema.decodeTo(
     Credential.Key,
     SchemaTransformation.transform({

@@ -64,7 +64,7 @@ export const CreateInput = Schema.Struct({
   command: Schema.String,
   cwd: optional(Schema.String),
   timeout: optional(NonNegativeInt),
-  metadata: optional(Metadata),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Metadata)),
 })
 export interface CreateInput extends Schema.Schema.Type<typeof CreateInput> {}
 

@@ -64,7 +64,7 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
       query: LocationQuery,
       payload: Schema.Struct({
         key: Schema.String,
-        answer: Schema.optional(Form.Answer),
+        answer: Schema.optionalKey(Schema.UndefinedOr(Form.Answer)),
         label: Schema.optional(Schema.String),
       }),
       success: HttpApiSchema.NoContent,
@@ -85,7 +85,7 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
       query: LocationQuery,
       payload: Schema.Struct({
         methodID: Integration.MethodID,
-        answer: Schema.optional(Form.Answer),
+        answer: Schema.optionalKey(Schema.UndefinedOr(Form.Answer)),
         label: Schema.optional(Schema.String),
       }),
       success: HttpApiSchema.NoContent,
@@ -106,7 +106,7 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
       query: LocationQuery,
       payload: Schema.Struct({
         methodID: Integration.MethodID,
-        answer: Schema.optional(Form.Answer),
+        answer: Schema.optionalKey(Schema.UndefinedOr(Form.Answer)),
         label: Schema.optional(Schema.String),
       }),
       success: Location.response(Integration.Attempt),

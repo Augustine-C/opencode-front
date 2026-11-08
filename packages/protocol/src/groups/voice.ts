@@ -68,7 +68,7 @@ export const VoiceGroup = HttpApiGroup.make("server.voice")
     HttpApiEndpoint.post("voice.session", "/api/experimental/voice/session", {
       payload: Schema.Struct({
         model: Schema.String,
-        session: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+        session: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
         transport: VoiceTransportInput,
       }),
       success: Schema.Struct({

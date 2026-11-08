@@ -167,7 +167,7 @@ const toolMetadata = Schema.decodeUnknownSync(
     files: optional(Schema.Array(Schema.Unknown)),
     loaded: optional(Schema.Array(Schema.Unknown)),
     answers: optional(Schema.Array(Schema.Unknown)),
-    diagnostics: optional(Schema.Record(Schema.String, Schema.Array(Schema.Unknown))),
+    diagnostics: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Array(Schema.Unknown)))),
   }).pipe(Schema.catchDecoding(() => Effect.succeed(Option.some({})))),
 )
 

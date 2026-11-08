@@ -45,7 +45,7 @@ export const CreateInput = Schema.Struct({
   args: optional(Schema.Array(Schema.String)),
   cwd: optional(Schema.String),
   title: optional(Schema.String),
-  env: optional(Schema.Record(Schema.String, Schema.String)),
+  env: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
 })
 export interface CreateInput extends Schema.Schema.Type<typeof CreateInput> {}
 

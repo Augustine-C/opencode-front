@@ -13,7 +13,7 @@ const Legacy = Schema.Struct({
       Schema.String,
       Schema.Struct({
         package: Schema.String,
-        options: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+        options: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
       }),
     ]),
   ),

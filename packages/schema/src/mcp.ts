@@ -29,7 +29,7 @@ export class LocalConfig extends Schema.Class<LocalConfig>("Mcp.LocalConfig")({
   cwd: Schema.String.pipe(optional).annotate({
     description: "Working directory for the MCP server process. Relative paths resolve from the workspace directory.",
   }),
-  environment: Schema.Record(Schema.String, Schema.String).pipe(optional),
+  environment: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
   disabled: Schema.Boolean.pipe(optional),
   codemode: Schema.Boolean.pipe(optional).annotate({
     description: "Expose this server's tools through Code Mode. Defaults to true.",
@@ -57,7 +57,7 @@ export class OAuthConfig extends Schema.Class<OAuthConfig>("Mcp.OAuthConfig")({
 export class RemoteConfig extends Schema.Class<RemoteConfig>("Mcp.RemoteConfig")({
   type: Schema.Literal("remote"),
   url: Schema.String,
-  headers: Schema.Record(Schema.String, Schema.String).pipe(optional),
+  headers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
   oauth: Schema.Union([OAuthConfig, Schema.Literal(false)]).pipe(optional),
   disabled: Schema.Boolean.pipe(optional),
   codemode: Schema.Boolean.pipe(optional).annotate({

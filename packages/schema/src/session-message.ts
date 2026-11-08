@@ -30,7 +30,7 @@ export type ID = typeof ID.Type
 
 const Base = {
   id: ID,
-  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
   time: Schema.Struct({ created: DateTimeUtcFromMillis }),
 }
 
@@ -150,7 +150,7 @@ export const ToolStateCompleted = Schema.Struct({
   status: Schema.tag("completed"),
   input: Schema.Record(Schema.String, Schema.Unknown),
   content: Schema.NonEmptyArray(Content),
-  metadata: Schema.Record(Schema.String, Schema.Json).pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
 }).annotate({ identifier: "Session.Message.ToolState.Completed" })
 
 export interface ToolStateError extends Schema.Schema.Type<typeof ToolStateError> {}
@@ -159,7 +159,7 @@ export const ToolStateError = Schema.Struct({
   input: Schema.Record(Schema.String, Schema.Unknown),
   error: SessionError.Error,
   content: Schema.NonEmptyArray(Content).pipe(optional),
-  metadata: Schema.Record(Schema.String, Schema.Json).pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
 }).annotate({ identifier: "Session.Message.ToolState.Error" })
 
 export const ToolState = Schema.Union([ToolStateStreaming, ToolStateRunning, ToolStateCompleted, ToolStateError]).pipe(

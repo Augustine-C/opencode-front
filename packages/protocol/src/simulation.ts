@@ -504,7 +504,7 @@ export namespace Backend {
     name: ToolName,
     description: Schema.String,
     inputSchema: Schema.Record(Schema.String, Schema.Json),
-    outputSchema: Schema.optionalKey(Schema.Record(Schema.String, Schema.Json)),
+    outputSchema: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
     permission: Schema.optionalKey(Schema.NonEmptyString),
     options: Schema.optionalKey(
       Schema.Struct({

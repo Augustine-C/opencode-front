@@ -14,7 +14,7 @@ export type Delivery = typeof Delivery.Type
 export interface UserPayload extends Schema.Schema.Type<typeof UserPayload> {}
 export const UserPayload = Schema.Struct({
   ...Prompt.fields,
-  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
 }).annotate({ identifier: "Session.Inbox.UserPayload" })
 
 /** A {@link UserPayload} whose files may stay on the server, for clients that opt into `experimental-media-uri`. */
@@ -28,7 +28,7 @@ export interface SyntheticPayload extends Schema.Schema.Type<typeof SyntheticPay
 export const SyntheticPayload = Schema.Struct({
   text: Schema.String,
   description: Schema.String.pipe(optional),
-  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
 }).annotate({ identifier: "Session.Inbox.SyntheticPayload" })
 
 export interface CompactionPayload extends Schema.Schema.Type<typeof CompactionPayload> {}

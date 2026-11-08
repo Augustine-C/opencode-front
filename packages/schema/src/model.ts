@@ -70,8 +70,8 @@ const VariantSettings = Schema.StructWithRest(
 
 export const Overlays = {
   settings: Settings.pipe(optional),
-  headers: Schema.Record(Schema.String, Schema.String).pipe(optional),
-  body: Schema.Record(Schema.String, Schema.Any).pipe(optional),
+  headers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
+  body: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Any))),
 }
 
 export interface Capabilities extends Schema.Schema.Type<typeof Capabilities> {}

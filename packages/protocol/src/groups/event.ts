@@ -7,14 +7,14 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/ht
 
 const fields = {
   id: Event.ID,
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
   location: Schema.optional(Location.PublicRef),
 }
 
 const rpcEvent = Schema.Struct({
   id: Event.ID,
   created: Schema.Finite,
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
   type: Schema.TemplateLiteral(["rpc.", Schema.String]),
   location: Location.PublicRef,
   data: Schema.Record(Schema.String, Schema.Unknown),

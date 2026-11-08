@@ -18,5 +18,5 @@ export type Protocol = Mcp.Protocol
 
 export class Info extends Schema.Class<Info>("Config.MCP")({
   timeout: Timeout.pipe(optional),
-  servers: Schema.Record(Schema.String, Server).pipe(optional),
+  servers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Server))),
 }) {}

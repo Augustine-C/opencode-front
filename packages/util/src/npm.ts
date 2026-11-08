@@ -118,12 +118,12 @@ interface ArboristTree {
 }
 
 const PackageJson = Schema.Struct({
-  dependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  dependencies: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
   version: Schema.optional(Schema.String),
 })
 
 const PackageLock = Schema.Struct({
-  packages: Schema.optional(Schema.Record(Schema.String, Schema.Struct({ resolved: Schema.optional(Schema.String) }))),
+  packages: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Struct({ resolved: Schema.optional(Schema.String) })))),
 })
 
 const retention = 7 * 24 * 60 * 60 * 1_000

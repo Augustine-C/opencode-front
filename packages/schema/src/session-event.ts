@@ -288,7 +288,7 @@ export const Synthetic = Event.durable({
     ...Base,
     text: Schema.String,
     description: Schema.String.pipe(optional),
-    metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
+    metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
   },
 })
 export type Synthetic = typeof Synthetic.Type
@@ -541,7 +541,7 @@ export namespace Tool {
     schema: {
       ...ToolBase,
       content: Schema.NonEmptyArray(Content),
-      metadata: Schema.Record(Schema.String, Schema.Json).pipe(optional),
+      metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
       executed: Schema.Boolean,
       native: SessionMessage.Native.pipe(optional),
     },
@@ -563,7 +563,7 @@ export namespace Tool {
       ...ToolBase,
       error: SessionError.Error,
       content: Schema.NonEmptyArray(Content).pipe(optional),
-      metadata: Schema.Record(Schema.String, Schema.Json).pipe(optional),
+      metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Json))),
       executed: Schema.Boolean,
       native: SessionMessage.Native.pipe(optional),
     },

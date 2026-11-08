@@ -298,7 +298,7 @@ const BundleDefinition = Schema.Struct({
     ),
   ),
   // A plugin's catalog ships every locale inline; only built-ins load locales lazily.
-  i18n: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.String))),
+  i18n: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.String)))),
   setup: Schema.optional(Setup),
   main: Schema.optional(Setup),
 })

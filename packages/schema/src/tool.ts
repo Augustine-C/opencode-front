@@ -61,7 +61,7 @@ type OutputValue<S> = S extends undefined
 export class Error extends Schema.TaggedError<Error>()("Tool.Error", {
   message: Schema.String,
   error: Schema.optional(Schema.Defect()),
-  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  metadata: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.Unknown))),
 }) {}
 
 export interface TextContent extends Schema.Schema.Type<typeof TextContent> {}

@@ -21,13 +21,13 @@ const JsonRecord = Schema.Record(Schema.String, Schema.Json)
 
 export const Overlays = {
   settings: Settings.pipe(optional),
-  headers: Schema.Record(Schema.String, Schema.String).pipe(optional),
+  headers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
   body: JsonRecord.pipe(optional),
 }
 
 const ModelOverlays = {
   settings: ModelSettings.pipe(optional),
-  headers: Schema.Record(Schema.String, Schema.String).pipe(optional),
+  headers: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, Schema.String))),
   body: JsonRecord.pipe(optional),
 }
 
@@ -117,5 +117,5 @@ export class Info extends Schema.Class<Info>("Config.Provider")({
   // Defaults for every model of this provider; model compatibility overrides individual fields.
   compatibility: ProviderCompatibility.pipe(optional),
   ...Overlays,
-  models: Schema.Record(Schema.String, ModelConfig).pipe(optional),
+  models: Schema.optionalKey(Schema.UndefinedOr(Schema.Record(Schema.String, ModelConfig))),
 }) {}
