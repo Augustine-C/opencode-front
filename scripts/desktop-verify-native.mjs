@@ -16,6 +16,10 @@ const pending = new Map()
 let sequence = 0
 socket.addEventListener("message", ({ data }) => {
   const message = JSON.parse(data)
+  if (message.method === "Runtime.exceptionThrown")
+    console.error("Archived renderer exception:", JSON.stringify(message.params.exceptionDetails))
+  if (message.method === "Runtime.consoleAPICalled")
+    console.error("Archived renderer console:", JSON.stringify(message.params))
   const request = pending.get(message.id)
   if (!request) return
   pending.delete(message.id)
@@ -48,6 +52,7 @@ async function until(check, description) {
   throw new Error(`Archived desktop verification timed out: ${description}`)
 }
 try {
+  await send("Runtime.enable")
   const targets = await send("Target.getTargets")
   const target = targets.targetInfos.find((entry) => entry.type === "page" && entry.url.startsWith("oc://renderer/"))
   assert.ok(target, "archived renderer target must exist")
@@ -90,7 +95,10 @@ try {
     }),
   )
 } catch (cause) {
-  if (session) console.error("Archived renderer:", await evaluate("document.body.innerText").catch(() => "unavailable"))
+  if (session) {
+    const state = await evaluate(`({text: document.body.innerText, html: document.documentElement.outerHTML, scripts: [...document.scripts].map(script => script.src), resources: performance.getEntriesByType("resource").map(entry => entry.name)})`).catch(() => "unavailable")
+    console.error("Archived renderer state:", JSON.stringify(state))
+  }
   throw cause
 } finally {
   if (session) await evaluate(`window.electron.invoke('NativeSelect', null)`).catch(() => undefined)
