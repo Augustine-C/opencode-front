@@ -315,6 +315,14 @@
       "adapters": []
     },
     {
+      "id": "optional-record-schema-compatibility",
+      "reason": "Adapt the shared optional-field helper to Effect 4.1, which requires UndefinedOr for optional dynamic Record fields.",
+      "files": [
+        "packages/schema/src/schema.ts"
+      ],
+      "adapters": []
+    },
+    {
       "id": "frontend-tooling",
       "reason": "Frontend-only build, package configuration, environment types, and contributor instructions.",
       "files": [

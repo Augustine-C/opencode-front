@@ -2,7 +2,7 @@
 
 Upstream v2.2.6 at `dc2ffcf8bf26f9e669b6aa22b95f50e12be15e06`; port `2.2.6+0`, release `2.2.6.0`. Bun remains 1.4.4 in local validation and release setup.
 
-Imported the selected v2.2.6 frontend, client/protocol/schema, GUI plugin host and Electron native host sources. Retained existing-service connection, official GUI plugin integration, CodeArts Proxy extension, project tab grouping, session navigation, localization, and frontend version information. Imported the upstream MCP client patch update and synchronized the frontend dependency catalog.
+Imported the selected v2.2.6 frontend, client/protocol/schema, GUI plugin host and Electron native host sources. Retained existing-service connection, official GUI plugin integration, CodeArts Proxy extension, project tab grouping, session navigation, localization, and frontend version information. Imported the upstream MCP client patch update and synchronized the frontend dependency catalog. Added a port compatibility overlay for Effect 4.1 `Schema.UndefinedOr`; the new Effect version rejects optional wrappers on dynamic Record fields, which otherwise prevented the packaged renderer from starting.
 
 ## Scope and validation
 
