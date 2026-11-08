@@ -81,7 +81,7 @@ jobs:
           -C dist/desktop OpenCode-Front-darwin-${{ matrix.arch }}
       - name: Build independent native GUI verification plugin
         if: runner.os == 'macOS'
-        run: bun --bun packages/app/node_modules/vite/bin/vite.js build --config packages/app/performance/service-gui/vite.config.ts
+        run: bun --bun node_modules/vite/bin/vite.js build --config packages/app/performance/service-gui/vite.config.ts
       - name: Verify archived macOS signatures and launch
         if: runner.os == 'macOS'
         env:

@@ -89,7 +89,7 @@
     "upstream:plan": "bun run scripts/upstream/check.ts plan",
     "typecheck:upstream": "tsc --ignoreConfig --noEmit --module ESNext --moduleResolution Bundler --target ESNext --types bun --skipLibCheck scripts/upstream/check.ts scripts/upstream/model.ts scripts/upstream/test/imports.test.ts",
     "upstream:record": "bun run scripts/upstream/check.ts record",
-    "test:desktop-plugins": "bun run scripts/desktop-build.ts && bun run --cwd packages/app --bun node_modules/vite/bin/vite.js build --config performance/service-gui/vite.config.ts && node packages/desktop/test/native-host.mjs"
+    "test:desktop-plugins": "bun run scripts/desktop-build.ts && bun run --cwd packages/app vite build --config performance/service-gui/vite.config.ts && node packages/desktop/test/native-host.mjs"
   },
   "devDependencies": {
     "@electron/packager": "19.0.1",
