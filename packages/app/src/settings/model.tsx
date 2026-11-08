@@ -150,7 +150,7 @@ const appearanceSchema = Persistence.struct({
   sidebarOpen: Persistence.optional(Schema.Boolean),
   reduceMotion: Schema.Literals(["system", "on", "off"]),
   groupTabsByProject: Persistence.fallback(Schema.Boolean, () => false),
-  collapsedTabGroups: Persistence.record(Persistence.optional(Schema.Boolean)),
+  collapsedTabGroups: Persistence.record(Schema.Boolean),
   tabInstanceOrder: Persistence.array(Schema.String),
   tabProjectOrder: Persistence.record(Persistence.array(Schema.String)),
 })
