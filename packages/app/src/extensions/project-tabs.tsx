@@ -25,6 +25,7 @@ type ProjectGroup = {
   search: readonly string[]
   src?: string
   variant?: ProjectAvatarStyle
+  updated?: number
 }
 
 export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Accessor<Tab | undefined> }) {
@@ -70,6 +71,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
             title: [label, root, conn ? serverName(conn) : undefined].filter(Boolean).join(" · "),
             src: getProjectAvatarSource(project?.id, project?.icon),
             variant: getProjectAvatarVariant(project?.icon?.color),
+            updated: session?.time.updated,
           },
         ] as const
       }),
@@ -107,11 +109,9 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
         ? ("attention" as const)
         : health && !["healthy", "checking", "starting", "auth"].includes(health.type)
           ? ("offline" as const)
-          : avatar.loading()
-            ? ("running" as const)
-            : avatar.unread()
-              ? ("unread" as const)
-              : undefined
+          : avatar.unread()
+            ? ("unread" as const)
+            : undefined
       return { groups: [instanceKey(tab), key(tab)], status }
     }
   })
@@ -134,6 +134,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
           project: key,
           instances: instanceOrder(),
           projects: projectOrder,
+          updated: (tab) => groups().get(tabKey(tab))?.updated,
         })
       : input.tabs(),
   )

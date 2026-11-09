@@ -38,7 +38,7 @@ export function orderedGroupKeys(keys: readonly string[], preferred: readonly st
   return [...new Set([...preferred.filter((key) => available.has(key)), ...keys])]
 }
 
-export function groupTabs<T>(tabs: readonly T[], key: (tab: T) => string, order: readonly string[] = []): T[] {
+export function groupTabs<T>(tabs: readonly T[], key: (tab: T) => string, order: readonly string[] = [], updated?: (tab: T) => number | undefined): T[] {
   const groups = new Map<string, T[]>()
   for (const tab of tabs) {
     const project = key(tab)
@@ -46,7 +46,10 @@ export function groupTabs<T>(tabs: readonly T[], key: (tab: T) => string, order:
     if (group) group.push(tab)
     else groups.set(project, [tab])
   }
-  return orderedGroupKeys([...groups.keys()], order).flatMap((key) => groups.get(key) ?? [])
+  return orderedGroupKeys([...groups.keys()], order).flatMap((key) => {
+    const group = groups.get(key) ?? []
+    return updated ? group.sort((a, b) => (updated(b) ?? 0) - (updated(a) ?? 0)) : group
+  })
 }
 
 export function groupInstanceTabs<T>(
@@ -56,6 +59,7 @@ export function groupInstanceTabs<T>(
     project: (tab: T) => string
     instances: readonly string[]
     projects: (instance: string) => readonly string[]
+    updated?: (tab: T) => number | undefined
   },
 ) {
   const instances = new Map<string, T[]>()
@@ -66,7 +70,7 @@ export function groupInstanceTabs<T>(
     else instances.set(key, [tab])
   }
   return orderedGroupKeys([...instances.keys()], input.instances).flatMap((instance) =>
-    groupTabs(instances.get(instance) ?? [], input.project, input.projects(instance)),
+    groupTabs(instances.get(instance) ?? [], input.project, input.projects(instance), input.updated),
   )
 }
 
@@ -95,7 +99,7 @@ export function aggregateTabGroupStatus(entries: readonly { groups: readonly str
   const priority: Record<TabGroupStatus, number> = { attention: 0, offline: 1, running: 2, unread: 3 }
   const result = new Map<string, TabGroupStatus>()
   for (const entry of entries) {
-    if (!entry.status) continue
+    if (!entry.status || entry.status === "running") continue
     for (const key of entry.groups) {
       const previous = result.get(key)
       if (!previous || priority[entry.status] < priority[previous]) result.set(key, entry.status)

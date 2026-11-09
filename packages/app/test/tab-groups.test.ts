@@ -53,7 +53,7 @@ describe("project tab groups", () => {
     expect(index([tabs[1], tabs[3]]).projectFirst.get("local/a")).toBe("a2")
     expect(index([]).position.size).toBe(0)
   })
-  test("folded status prioritizes action over connection, running and unread within its own instance", () => {
+  test("group status omits running and prioritizes action over connection and unread", () => {
     const entries = [
       { groups: ["local", "local/project"], status: "unread" as const },
       { groups: ["local", "local/project"], status: "running" as const },
@@ -68,8 +68,26 @@ describe("project tab groups", () => {
       ["remote/project", "unread"],
     ])
     expect(aggregateTabGroupStatus(entries.slice(0, 3)).get("local")).toBe("offline")
-    expect(aggregateTabGroupStatus(entries.slice(0, 2)).get("local")).toBe("running")
+    expect(aggregateTabGroupStatus(entries.slice(0, 2)).get("local")).toBe("unread")
+    expect(aggregateTabGroupStatus(entries.slice(1, 2)).size).toBe(0)
     expect(aggregateTabGroupStatus([]).size).toBe(0)
+  })
+  test("orders sessions by most recent update within each project", () => {
+    const tabs = [
+      { id: "old", project: "a", updated: 1 },
+      { id: "other", project: "b", updated: 9 },
+      { id: "new", project: "a", updated: 3 },
+      { id: "tie", project: "a", updated: 3 },
+      { id: "draft", project: "a", updated: undefined },
+    ]
+    const result = groupInstanceTabs(tabs, {
+      instance: () => "local",
+      project: (tab) => tab.project,
+      instances: [],
+      projects: () => [],
+      updated: (tab) => tab.updated,
+    })
+    expect(result.map((tab) => tab.id)).toEqual(["new", "tie", "old", "draft", "other"])
   })
   test("keeps each instance contiguous and honors independent instance and project preferences", () => {
     const input = [

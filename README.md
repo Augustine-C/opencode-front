@@ -58,7 +58,7 @@ Hover or focus a project heading to reveal **+**. It opens a new session tab wit
 
 Horizontal layout uses one compact **Browse conversations** entry showing the current instance/project, rather than separate wide headings in the tab row. Open it to browse the grouped conversation list, collapse groups, drag their headings, or select a conversation. Escape or a click outside closes the list. The horizontal row keeps all conversation tabs available, with light spacing between groups; sidebar collapse preferences do not hide those tabs.
 
-Grouped session tabs omit repeated project icons; running sessions retain their progress indicator, and unread activity or attention requests show a dot. Drafts and worktree sessions join their project, and different servers remain separate. Drag tabs within an expanded project to reorder them; keyboard cycling and numbered shortcuts retain the grouped order, including folded tabs.
+Grouped session tabs omit repeated project icons; running sessions retain their progress indicator, and unread activity or attention requests show a dot. Instance and project headings show attention, offline, and unread status, but not running indicators. Drafts and worktree sessions join their project, and different servers remain separate. Sessions within a project are ordered by most recent update; keyboard cycling and numbered shortcuts retain the grouped order, including folded tabs.
 
 ## Customize the interface
 
