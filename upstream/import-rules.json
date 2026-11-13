@@ -150,7 +150,7 @@
         "solid-js@1.9.17.patch",
         "vite@8.2.4.patch",
         "@corvu%2Fdrawer@0.2.4.patch",
-        "@modelcontextprotocol%2Fclient@2.3.1.patch"
+        "@modelcontextprotocol%2Fclient@2.4.0.patch"
       ]
     },
     {
@@ -283,14 +283,15 @@
     },
     {
       "id": "project-tabs",
-      "reason": "Optional instance/project grouping with drag ordering, quiet sidebar headings and compact horizontal conversation navigation.",
+      "reason": "Optional project grouping with single or layered project/session sidebars and compact session status.",
       "files": [
         "packages/app/src/settings/general/general.tsx",
         "packages/app/src/settings/model.tsx",
         "packages/app/src/shell/titlebar/tab-nav.tsx",
         "packages/app/src/shell/titlebar/tab-strip.tsx",
         "packages/app/src/shell/titlebar/titlebar.tsx",
-        "packages/app/src/shell/layout/project-avatar-state.ts"
+        "packages/app/src/shell/layout/project-avatar-state.ts",
+        "packages/app/src/shell/shell.tsx"
       ],
       "adapters": [
         "packages/app/src/extensions/project-tabs.tsx",
@@ -298,7 +299,8 @@
         "packages/app/src/extensions/tab-group-heading.tsx",
         "packages/app/src/extensions/tab-group-navigator.tsx",
         "packages/app/src/extensions/project-tabs.css",
-        "packages/app/src/extensions/grouped-tab-status.tsx"
+        "packages/app/src/extensions/grouped-tab-status.tsx",
+        "packages/app/src/extensions/project-tab-layers.tsx"
       ]
     },
     {

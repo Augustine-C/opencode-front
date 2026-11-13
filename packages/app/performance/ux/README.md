@@ -1,6 +1,6 @@
 # GUI interaction fixture
 
-Production bundles of the real project grouping adapter and navigator, with deterministic mock connection/session/settings providers. No server, private data, or production test switch is used. It measures local adapter rendering and fixture selection, not transcript rendering or network/session entry.
+Production bundles of the real project grouping adapter, layered sidebar, native session rows and navigator, with deterministic mock connection/session/settings providers. No server, private data, or production test switch is used. It measures local adapter rendering and fixture selection, not transcript rendering or network/session entry.
 
 From the repository root:
 
@@ -32,6 +32,8 @@ With the production app preview at port 4444 and the fixture preview at 4445, ru
 node packages/app/performance/ux/connection.mjs
 node packages/app/performance/ux/plugins.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/groups.mjs
+UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/sidebar.mjs
+node packages/app/performance/ux/project-layout-settings.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/history.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/version.mjs
 ```
@@ -39,3 +41,5 @@ UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/version.mj
 The first two drive the production app with simulated HTTP/configuration data. The other three drive real adapters with fixture providers; `?history=1` and `?version=1` select those additional fixture surfaces. Set `UX_SCREENSHOT` to a writable destination when retaining a screenshot; it defaults to the original task workspace. No script starts a backend or supplies real credentials. Native platform execution and full virtualized transcripts remain separate acceptance work.
 
 `node packages/app/performance/ux/about.mjs` verifies the production About version clipboard/tooltip and independent port provenance together, using a disposable service fixture. Set CHROMIUM_PATH as above.
+
+`sidebar.mjs` owns layered project selection, server isolation, navigation reveal, native row icon/status/close behavior, collapse preservation, empty state and responsive fallback. `project-layout-settings.mjs` verifies the actual production preference defaults and persistence after reload, independent side-tab selection, and plugin settings. It needs the disposable service fixture bundle produced by `bun run test:desktop-plugins`.

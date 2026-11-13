@@ -5,6 +5,7 @@ import desktopPlugin from "../../vite.js"
 const root = fileURLToPath(new URL(".", import.meta.url))
 const source = fileURLToPath(new URL("../../src/", import.meta.url))
 const overrides = [
+  "runtime/platform/platform",
   "runtime/server/current",
   "settings/surface",
   "shell/commands/command",

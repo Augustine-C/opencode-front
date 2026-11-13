@@ -7,7 +7,11 @@ export const items = Array.from({ length: size }, (_, i) => ({
   sessionId: `s${i}`,
 }))
 export const [state, setState] = createStore({
-  current: items[0],
+  current: { ...items[0] },
+  projectLayout: "layered",
+  grouped: true,
+  vertical: true,
+  removed: [] as string[],
   collapsed: {} as Record<string, boolean>,
   status: "idle",
   unread: false,
@@ -25,16 +29,18 @@ const projects = Array.from({ length: 5 }, (_, i) => ({
   name: `Project ${i}`,
   worktree: `/code/project-${i}`,
 }))
-const session = (id: string) => {
+export const session = (id: string) => {
   const i = Number(id.slice(1))
   return {
     id,
+    time: { created: i, idle: i },
     title: `Conversation ${i} 同名会话`,
     projectID: `p${i % 5}`,
     location: { directory: `/code/project-${i % 5}${i % 5 === 1 ? "/worktrees/feature" : ""}` },
   }
 }
 const data = {
+  on: () => () => {},
   session: {
     get: session,
     list: () => items.map((t) => session(t.sessionId)),
@@ -46,22 +52,28 @@ const data = {
     form: { list: () => [] },
   },
 }
+const serverContext = {
+  data,
+  sync: { data: { project: projects, path: { home: "/home/fixture" } } },
+  projects: {
+    list: () => projects,
+    forSession: (session) => projects.find((p) => p.id === session.projectID),
+    forDirectory: (dir) => projects.find((p) => dir.startsWith(p.worktree)),
+  },
+  notification: { session: { unread: () => state.unread, manuallyUnread: () => false, ready: () => true } },
+}
 export const useGlobal = () => ({
   servers: {
     list: () => connections,
     get health() {
-      return Object.fromEntries(
-        connections.map((c, i) => [c.http.url, { healthy: !state.offline, version: `2.0.${20 + i}` }]),
-      )
+      return Object.fromEntries(connections.map((c) => [c.http.url, { type: state.offline ? "unhealthy" : "healthy" }]))
     },
   },
-  ensureServerCtx: () => ({
-    data,
-    sync: { data: { project: projects } },
-    notification: { session: { unread: () => state.unread } },
-  }),
+  serverCtx: () => serverContext,
 })
-export const useServerCtx = () => () => ({ data, notification: { session: { unread: () => state.unread } } })
+export const useServerCtx = () => () => serverContext
+export const useServers = () => ({ list: connections, tag: (conn) => conn.displayName })
+export const usePlatform = () => ({ platform: "web" })
 export const ServerConnection = { key: (conn) => conn.http.url }
 export const serverName = (conn) => conn.displayName
 export const tabKey = (tab) => `${tab.server}\n${tab.sessionId}`
@@ -75,7 +87,8 @@ export const useSettings = () => ({
   ready: () => true,
   permissions: { autoApproves: () => false },
   appearance: {
-    groupTabsByProject: () => true,
+    groupTabsByProject: () => state.grouped,
+    projectTabLayout: () => state.projectLayout,
     tabInstanceOrder: () => [],
     tabProjectOrder: () => [],
     tabGroupCollapsed: (key) => !!state.collapsed[key],
@@ -90,6 +103,7 @@ export const useSessionTabAvatarState = () => ({
   needsAttention: () => state.attention,
 })
 export const useLanguage = () => ({
+  direction: () => "ltr",
   t: (key, params = {}) =>
     Object.entries(params).reduce((s, [k, v]) => s.replaceAll(`{{${k}}}`, String(v)), en[key] ?? key),
   plural: (key, count) => `${count}`,

@@ -150,6 +150,7 @@ const appearanceSchema = Persistence.struct({
   sidebarOpen: Persistence.optional(Schema.Boolean),
   reduceMotion: Schema.Literals(["system", "on", "off"]),
   groupTabsByProject: Persistence.fallback(Schema.Boolean, () => false),
+  projectTabLayout: Persistence.fallback(Schema.Literals(["single", "layered"]), () => "single" as const),
   collapsedTabGroups: Persistence.record(Schema.Boolean),
   tabInstanceOrder: Persistence.array(Schema.String),
   tabProjectOrder: Persistence.record(Persistence.array(Schema.String)),
@@ -323,6 +324,7 @@ export const defaultSettings: Settings = {
     tabLayout: "horizontal",
     reduceMotion: "system",
     groupTabsByProject: false,
+    projectTabLayout: "single",
     collapsedTabGroups: {},
     tabInstanceOrder: [],
     tabProjectOrder: {},
@@ -480,6 +482,10 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         groupTabsByProject: withFallback(() => store.appearance?.groupTabsByProject, false),
         setGroupTabsByProject(value: boolean) {
           setStore("appearance", "groupTabsByProject", value)
+        },
+        projectTabLayout: withFallback(() => store.appearance?.projectTabLayout, "single" as const),
+        setProjectTabLayout(value: "single" | "layered") {
+          setStore("appearance", "projectTabLayout", value)
         },
         tabGroupCollapsed(key: string) {
           return store.appearance?.collapsedTabGroups?.[key] === true

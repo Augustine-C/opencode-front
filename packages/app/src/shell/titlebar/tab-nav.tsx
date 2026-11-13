@@ -14,6 +14,8 @@ import { displayName } from "@opencode/ui/project-avatar"
 import { SessionTabAvatarView } from "@/shell/layout/session-tab-avatar"
 import type { SessionInfo } from "@opencode/client/promise"
 import { showToast } from "@/shell/notifications/toast"
+import { createSessionExporter } from "@/session/commands/export-session"
+import { SessionReadMenuItem } from "@/session/session-read-menu-item"
 import { sessionTabTitle } from "./tab-title"
 import { TabPreviewPopover } from "./tab-popover"
 import {
@@ -81,6 +83,7 @@ export function TabNavItem(
     dragging?: boolean
     pressed?: boolean
     hidden?: boolean
+    grouped?: boolean
     orientation?: "horizontal" | "vertical"
   },
 ) {
@@ -103,11 +106,15 @@ export function TabNavItem(
   const servers = useServers()
   const serverCtx = useServerCtx(() => servers.list.find((item) => ServerConnection.key(item) === props.server))
 
+  const exporter = createSessionExporter()
+
   // The project icon stays put; status shows where the close button appears on hover.
   const status = () => {
     if (props.preparing || props.loading) return "busy"
 
-    if (!props.session || props.active) return
+    if (!props.session) return
+
+    if (props.active && !serverCtx()?.notification.session.manuallyUnread(props.session.id)) return
 
     if (props.attention) return "attention"
 
@@ -448,19 +455,21 @@ export function TabNavItem(
         }}
         class="flex h-full min-w-0 flex-1 flex-row items-center gap-1.5 text-[13px] font-medium text-v2-text-text-faint group-data-[active='true']:text-v2-text-text-base group-data-[editing='true']:text-v2-text-text-base [-webkit-user-drag:none]"
       >
-        <span data-slot="project-avatar-slot" class="flex size-4 shrink-0 items-center justify-center">
-          <Show
-            when={props.session?.location.directory ?? props.fallbackDirectory}
-            fallback={
-              <span class="block size-4 rounded-[3px] border border-v2-border-border-muted" aria-hidden="true" />
-            }
-          >
-            {(directory) => <SessionTabAvatarView project={project()} directory={directory()} unread={false} />}
-          </Show>
-          <Show when={dotted()}>
-            <span data-slot="tab-avatar-unread-dot" aria-hidden="true" />
-          </Show>
-        </span>
+        <Show when={!props.grouped}>
+          <span data-slot="project-avatar-slot" class="flex size-4 shrink-0 items-center justify-center">
+            <Show
+              when={props.session?.location.directory ?? props.fallbackDirectory}
+              fallback={
+                <span class="block size-4 rounded-[3px] border border-v2-border-border-muted" aria-hidden="true" />
+              }
+            >
+              {(directory) => <SessionTabAvatarView project={project()} directory={directory()} unread={false} />}
+            </Show>
+            <Show when={dotted()}>
+              <span data-slot="tab-avatar-unread-dot" aria-hidden="true" />
+            </Show>
+          </span>
+        </Show>
         <span
           ref={(el) => {
             titleEl = el
@@ -571,6 +580,18 @@ export function TabNavItem(
           <Menu.Item disabled={!props.session} onSelect={() => startRename("menu")}>
             {language.t("common.rename")}
           </Menu.Item>
+          <Menu.Item
+            disabled={!props.session || exporter.exporting({ server: props.server, sessionID: props.session.id })}
+            onSelect={() => {
+              const session = props.session
+
+              if (session) exporter.export({ server: props.server, sessionID: session.id })
+            }}
+          >
+            {language.t("common.export")}…
+          </Menu.Item>
+          <SessionReadMenuItem server={props.server} session={props.session} />
+          <Menu.Separator />
           <TabCloseMenuItems
             orientation={props.orientation}
             onClose={props.onClose}
@@ -578,8 +599,8 @@ export function TabNavItem(
             onCloseAfter={props.onCloseAfter}
           />
           <Menu.Separator />
-          <Menu.Item data-variant="critical" disabled={!props.session} onSelect={props.onDelete}>
-            {language.t("session.delete.title")}…
+          <Menu.Item disabled={!props.session} onSelect={props.onDelete}>
+            {language.t("common.delete")}…
           </Menu.Item>
         </Menu.Context.Content>
       </Menu.Context.Portal>

@@ -1,3 +1,4 @@
+import { useProjectTabLayers } from "@/extensions/project-tab-layers"
 import {
   createComputed,
   createEffect,
@@ -137,6 +138,7 @@ function SessionTabSlot(
         unread={props.unread}
         attention={props.attention}
         loading={props.loading}
+        grouped={!!props.group}
         fallbackTitle={props.fallbackTitle}
         fallbackDirectory={props.fallbackDirectory}
         onRememberTitle={props.onRememberTitle}
@@ -587,6 +589,12 @@ export function TitlebarTabStrip(props: {
     displayedTabs().filter((tab) => tab.type === "draft" || !!views().get(tabKey(tab))?.visible),
   )
 
+  const projectLayers = useProjectTabLayers({
+    groups: projectGroups,
+    tabs: visibleTabs,
+    current: () => props.currentTab,
+    vertical,
+  })
   const visibleTabIds = () => visibleTabs().map(tabKey)
 
   // Tells the closed sidebar's toggle whether any row here shows its unread dot, which the current tab never does.
@@ -671,6 +679,7 @@ export function TitlebarTabStrip(props: {
       data-slot={vertical() ? "vertical-tabs" : "titlebar-tabs"}
       data-orientation={vertical() ? "vertical" : "horizontal"}
       data-grouped={grouped()}
+      data-project-layout={projectLayers.enabled() ? "layered" : "single"}
       class="relative min-w-0"
       classList={{ "min-h-0 overflow-hidden": vertical() }}
     >
@@ -682,6 +691,7 @@ export function TitlebarTabStrip(props: {
           onNavigate={(tab) => props.onNavigate(tab)}
         />
       </Show>
+      {projectLayers.sidebar()}
       <div
         ref={scrollRef}
         data-slot={vertical() ? "vertical-tabs-scroll" : "titlebar-tabs-scroll"}
@@ -699,6 +709,7 @@ export function TitlebarTabStrip(props: {
           if (vertical()) measureFade()
         }}
       >
+        {projectLayers.header()}
         <DragDropProvider
           sensors={[
             PointerSensor.configure({
@@ -758,9 +769,7 @@ export function TitlebarTabStrip(props: {
                     return current.map((key) => (ids.has(key) ? moved[at++] : key))
                   })()
                 : moved
-              props.onReorder(
-                mergeVisibleTabOrder(props.tabs.map(tabKey), current, next),
-              )
+              props.onReorder(mergeVisibleTabOrder(props.tabs.map(tabKey), current, next))
             }
           }}
         >
@@ -778,7 +787,8 @@ export function TitlebarTabStrip(props: {
                 const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
                 const groupIndex = () => projectGroups.index(tab, visibleTabs()) ?? visibleIndex()
                 const group = () => (grouped() ? groupKey(tab) : undefined)
-                const collapsed = () => vertical() && projectGroups.collapsed(tab)
+                const collapsed = () =>
+                  projectLayers.enabled() ? projectLayers.hidden(tab) : vertical() && projectGroups.collapsed(tab)
                 const boundary = () => projectGroups.boundary(tab, visibleTabs())
                 const contextTitle = () => (grouped() && !vertical() ? projectGroups.tooltip(tab) : undefined)
 
@@ -805,7 +815,7 @@ export function TitlebarTabStrip(props: {
                 if (tab.type === "session") {
                   return (
                     <>
-                      {projectGroups.heading(tab, visibleTabs)}
+                      <Show when={!projectLayers.enabled()}>{projectGroups.heading(tab, visibleTabs)}</Show>
                       <SessionTabEntry
                         tab={tab}
                         currentTab={props.currentTab}
@@ -836,7 +846,7 @@ export function TitlebarTabStrip(props: {
 
                 return (
                   <>
-                    {projectGroups.heading(tab, visibleTabs)}
+                    <Show when={!projectLayers.enabled()}>{projectGroups.heading(tab, visibleTabs)}</Show>
                     <DraftTabSlot
                       tab={tab}
                       id={id}

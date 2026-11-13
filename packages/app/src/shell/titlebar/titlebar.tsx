@@ -207,6 +207,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
               if (
                 settings.appearance.tabLayout() === "vertical" &&
                 settings.general.sidebarOrganize() === "projects" &&
+                !(settings.appearance.groupTabsByProject() && settings.appearance.projectTabLayout() === "layered") &&
                 !mobile()
               )
                 return
@@ -442,6 +443,16 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
             command.register("tabs", () => {
               const current = currentTab()
 
+              const closeCurrent = () => {
+                if (current === tabs.preview()) {
+                  tabs.closePreview()
+
+                  return
+                }
+
+                tabsStoreActions.closeTab(tabsStore.findIndex((tab) => current === tab))
+              }
+
               return [
                 {
                   ...newTabCommand,
@@ -456,15 +467,14 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                   title: language.t("command.tab.close"),
                   keybind: "mod+w",
                   hidden: true,
-                  onSelect: () => {
-                    if (current === tabs.preview()) {
-                      tabs.closePreview()
-
-                      return
-                    }
-
-                    tabsStoreActions.closeTab(tabsStore.findIndex((tab) => current === tab))
-                  },
+                  onSelect: closeCurrent,
+                },
+                current && {
+                  id: "tab.closeSession",
+                  category: "tab",
+                  title: language.t("command.tab.closeSession"),
+                  keybind: "mod+alt+w",
+                  onSelect: closeCurrent,
                 },
                 {
                   id: "tab.reopenClosed",
@@ -793,7 +803,13 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                                 when={settings.appearance.tabLayout() === "inbox"}
                                 fallback={
                                   <Show
-                                    when={settings.general.sidebarOrganize() === "projects"}
+                                    when={
+                                      settings.general.sidebarOrganize() === "projects" &&
+                                      !(
+                                        settings.appearance.groupTabsByProject() &&
+                                        settings.appearance.projectTabLayout() === "layered"
+                                      )
+                                    }
                                     fallback={verticalTabStrip()}
                                   >
                                     <SidebarOrganized currentTab={currentTab()}>{verticalTabStrip}</SidebarOrganized>

@@ -270,6 +270,20 @@ export const SettingsGeneral: Component = () => {
           </div>
         </SettingsRow>
 
+        <Show when={settings.appearance.groupTabsByProject()}>
+          <SettingsRow
+            title={language.t("settings.appearance.row.projectTabLayout.title")}
+            description={language.t("settings.appearance.row.projectTabLayout.description")}
+          >
+            <Select
+              options={["single", "layered"] as const}
+              current={settings.appearance.projectTabLayout()}
+              label={(mode) => language.t(`settings.appearance.projectTabLayout.${mode}`)}
+              onSelect={(mode) => mode && settings.appearance.setProjectTabLayout(mode)}
+              aria-label={language.t("settings.appearance.row.projectTabLayout.title")}
+            />
+          </SettingsRow>
+        </Show>
         <WorkspaceDestinationSetting />
         <AutoApprovePermissionsSetting />
 

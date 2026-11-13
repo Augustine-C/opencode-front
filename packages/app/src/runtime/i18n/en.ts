@@ -1,6 +1,11 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "settings.appearance.row.projectTabLayout.title": "Project group layout",
+  "settings.appearance.row.projectTabLayout.description": "Choose a single sidebar or separate project and session columns for side tabs.",
+  "settings.appearance.projectTabLayout.single": "Single sidebar",
+  "settings.appearance.projectTabLayout.layered": "Layered",
+  "session.tab.group.projects": "Projects",
   "settings.about.front.title": "Version information",
   "settings.about.front.build": "OpenCode Front",
   "settings.about.front.gui": "Upstream GUI",
@@ -140,6 +145,7 @@ export const dict = {
   "command.file.open": "Open file",
   "command.tab.close": "Close tab",
   "command.tab.reopenClosed": "Reopen closed tab",
+  "command.tab.closeSession": "Close session tab",
   "command.context.addSelection": "Add selection to context",
   "command.context.addSelection.description": "Add selected lines from the current file",
   "command.input.focus": "Focus input",
@@ -1269,6 +1275,9 @@ export const dict = {
   "settings.permissions.tool.external_directory.description": "Access files outside the project directory",
   "settings.permissions.tool.doom_loop.title": "Doom Loop",
   "settings.permissions.tool.doom_loop.description": "Detect repeated tool calls with identical input",
+
+  "session.markRead": "Mark as read",
+  "session.markUnread": "Mark as unread",
 
   "session.delete.failed.title": "Failed to delete session",
   "session.delete.title": "Delete session",

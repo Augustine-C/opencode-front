@@ -44,12 +44,14 @@ export default function Layout(props: ParentProps) {
   const mobile = createMediaQuery("(max-width: 767px)")
 
   const [state, setState] = createStore<{
+    layeredTabsWidth: number
     tabsWidth: number
     tabsMount: HTMLElement | undefined
     tabsAside: HTMLElement | undefined
     tabsPanel: HTMLElement | undefined
   }>({
     tabsWidth: 240,
+    layeredTabsWidth: 480,
     tabsMount: undefined,
     tabsAside: undefined,
     tabsPanel: undefined,
@@ -57,8 +59,16 @@ export default function Layout(props: ParentProps) {
 
   const verticalTabs = () => preferences.appearance.tabLayout() !== "horizontal" && !mobile()
 
+  const layeredTabs = () =>
+    preferences.appearance.tabLayout() === "vertical" &&
+    preferences.appearance.groupTabsByProject() &&
+    preferences.appearance.projectTabLayout() === "layered"
+  const sidebarWidth = () => (layeredTabs() ? state.layeredTabsWidth : state.tabsWidth)
+
   const organizedSidebar = () =>
-    preferences.appearance.tabLayout() === "vertical" && preferences.general.sidebarOrganize() === "projects"
+    preferences.appearance.tabLayout() === "vertical" &&
+    !layeredTabs() &&
+    preferences.general.sidebarOrganize() === "projects"
 
   const toggleSidebar = () => preferences.appearance.setSidebarOpen(!preferences.appearance.sidebarOpen())
 
@@ -116,16 +126,16 @@ export default function Layout(props: ParentProps) {
       sidebar.closed = closed
       const aside = state.tabsAside
 
-      if (aside) aside.style.width = `${state.tabsWidth * (1 - closed)}px`
+      if (aside) aside.style.width = `${sidebarWidth() * (1 - closed)}px`
 
       // Dims the contents, background included, as they leave and brightens them as they arrive.
       paintSidebarContents()
       paintCollapsedSlots(closed)
     },
-    measure: () => measureSidebarToggles(state.tabsWidth * sidebarHidden()),
+    measure: () => measureSidebarToggles(sidebarWidth() * sidebarHidden()),
     // A dock from a peek already shows the sidebar, so reduced motion has nothing to fade in.
     element: () => (peek.handedOff() ? undefined : state.tabsPanel),
-    distance: () => state.tabsWidth,
+    distance: () => sidebarWidth(),
   })
 
   const peek = createSidebarPeek({
@@ -245,7 +255,7 @@ export default function Layout(props: ParentProps) {
             data-slot="vertical-tabs-sidebar"
             data-state={preferences.appearance.sidebarOpen() ? "open" : "closed"}
             data-peek={peek.shown() ? "" : undefined}
-            style={{ "--sidebar-peek-width": `${state.tabsWidth}px` }}
+            style={{ "--sidebar-peek-width": `${sidebarWidth()}px` }}
             ref={(element) => setState("tabsAside", element)}
             class="relative z-10 h-full min-h-0 shrink-0"
           >
@@ -267,14 +277,14 @@ export default function Layout(props: ParentProps) {
                 data-slot="vertical-tabs-peek-surface"
                 aria-hidden="true"
                 class="pointer-events-none absolute inset-y-0 end-0 bg-v2-background-bg-deep shadow-[var(--v2-elevation-floating)]"
-                style={{ width: `${state.tabsWidth}px` }}
+                style={{ width: `${sidebarWidth()}px` }}
               />
               <div
                 ref={(element) => setState("tabsMount", element)}
                 data-slot="vertical-tabs-mount"
                 class="absolute inset-y-0 end-0 contain-strict [overflow-clip-margin:var(--sidebar-divider-bleed,0px)] will-change-[opacity] flex min-h-0 flex-col bg-v2-background-bg-deep ps-[var(--sidebar-inset-start)] pe-[var(--sidebar-inset-end)] pb-[var(--shell-bottom-inset,8px)] pt-[var(--shell-top-inset,8px)]"
                 style={{
-                  width: `${state.tabsWidth}px`,
+                  width: `${sidebarWidth()}px`,
                   "padding-bottom": "max(10px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
                 }}
               />
@@ -287,10 +297,10 @@ export default function Layout(props: ParentProps) {
             <Show when={preferences.appearance.sidebarOpen()}>
               <ResizeHandle
                 direction="horizontal"
-                size={state.tabsWidth}
-                min={136}
+                size={sidebarWidth()}
+                min={layeredTabs() ? 360 : 136}
                 max={640}
-                onResize={(width) => setState("tabsWidth", width)}
+                onResize={(width) => setState(layeredTabs() ? "layeredTabsWidth" : "tabsWidth", width)}
                 onDraggingChange={setPanelResizing}
               />
             </Show>

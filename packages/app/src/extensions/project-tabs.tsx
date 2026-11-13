@@ -257,6 +257,7 @@ export function useProjectTabGroups(input: { tabs: Accessor<Tab[]>; current: Acc
     enabled,
     key,
     instanceKey,
+    status: (tab: Tab) => statuses().get(key(tab)),
     instanceLabel,
     tooltip: (tab: Tab) =>
       [groups().get(tabKey(tab))?.title, groups().get(tabKey(tab))?.conversation].filter(Boolean).join("\n"),
