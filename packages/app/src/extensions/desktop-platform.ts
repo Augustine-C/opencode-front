@@ -7,6 +7,7 @@ export function withDesktopPlatform(web: Platform): Platform {
   return {
     ...web,
     platform: "desktop",
+    nativeTitlebar: true,
     os: native.os,
     windowID: native.windowID,
     plugins: createPluginBridge(),

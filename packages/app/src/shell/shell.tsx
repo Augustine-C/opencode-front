@@ -1,3 +1,4 @@
+import { useProjectSidebarLayout } from "@/extensions/project-sidebar-layout"
 import { Show, startTransition, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
@@ -44,14 +45,12 @@ export default function Layout(props: ParentProps) {
   const mobile = createMediaQuery("(max-width: 767px)")
 
   const [state, setState] = createStore<{
-    layeredTabsWidth: number
     tabsWidth: number
     tabsMount: HTMLElement | undefined
     tabsAside: HTMLElement | undefined
     tabsPanel: HTMLElement | undefined
   }>({
     tabsWidth: 240,
-    layeredTabsWidth: 480,
     tabsMount: undefined,
     tabsAside: undefined,
     tabsPanel: undefined,
@@ -63,7 +62,8 @@ export default function Layout(props: ParentProps) {
     preferences.appearance.tabLayout() === "vertical" &&
     preferences.appearance.groupTabsByProject() &&
     preferences.appearance.projectTabLayout() === "layered"
-  const sidebarWidth = () => (layeredTabs() ? state.layeredTabsWidth : state.tabsWidth)
+  const projectSizing = useProjectSidebarLayout()
+  const sidebarWidth = () => (layeredTabs() ? projectSizing.width() : state.tabsWidth)
 
   const organizedSidebar = () =>
     preferences.appearance.tabLayout() === "vertical" &&
@@ -285,6 +285,8 @@ export default function Layout(props: ParentProps) {
                 class="absolute inset-y-0 end-0 contain-strict [overflow-clip-margin:var(--sidebar-divider-bleed,0px)] will-change-[opacity] flex min-h-0 flex-col bg-v2-background-bg-deep ps-[var(--sidebar-inset-start)] pe-[var(--sidebar-inset-end)] pb-[var(--shell-bottom-inset,8px)] pt-[var(--shell-top-inset,8px)]"
                 style={{
                   width: `${sidebarWidth()}px`,
+                  "padding-inline-start": layeredTabs() ? "0px" : undefined,
+                  "padding-inline-end": layeredTabs() ? "0px" : undefined,
                   "padding-bottom": "max(10px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",
                 }}
               />
@@ -298,9 +300,9 @@ export default function Layout(props: ParentProps) {
               <ResizeHandle
                 direction="horizontal"
                 size={sidebarWidth()}
-                min={layeredTabs() ? 360 : 136}
-                max={640}
-                onResize={(width) => setState(layeredTabs() ? "layeredTabsWidth" : "tabsWidth", width)}
+                min={layeredTabs() ? projectSizing.min() : 136}
+                max={layeredTabs() ? projectSizing.max() : 640}
+                onResize={(width) => (layeredTabs() ? projectSizing.resize(width) : setState("tabsWidth", width))}
                 onDraggingChange={setPanelResizing}
               />
             </Show>

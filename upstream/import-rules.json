@@ -291,7 +291,9 @@
         "packages/app/src/shell/titlebar/tab-strip.tsx",
         "packages/app/src/shell/titlebar/titlebar.tsx",
         "packages/app/src/shell/layout/project-avatar-state.ts",
-        "packages/app/src/shell/shell.tsx"
+        "packages/app/src/shell/shell.tsx",
+        "packages/app/src/runtime/platform/platform.tsx",
+        "packages/app/src/shell/sidebar-toggle.tsx"
       ],
       "adapters": [
         "packages/app/src/extensions/project-tabs.tsx",
@@ -300,7 +302,10 @@
         "packages/app/src/extensions/tab-group-navigator.tsx",
         "packages/app/src/extensions/project-tabs.css",
         "packages/app/src/extensions/grouped-tab-status.tsx",
-        "packages/app/src/extensions/project-tab-layers.tsx"
+        "packages/app/src/extensions/project-tab-layers.tsx",
+        "packages/app/src/extensions/project-sidebar-layout.ts",
+        "packages/app/src/extensions/sidebar-toolbar.tsx",
+        "packages/app/src/extensions/sidebar-layout.css"
       ]
     },
     {

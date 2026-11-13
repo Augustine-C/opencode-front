@@ -34,6 +34,8 @@ export type FatalRendererErrorLog = {
 }
 
 type PlatformBase = {
+  /** The shell provides native title bars and window controls outside the renderer. */
+  nativeTitlebar?: boolean
   requestMicrophone?(): Promise<boolean>
   setVoiceCallActive?(active: boolean): Promise<void>
   /** App version */

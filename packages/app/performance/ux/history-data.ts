@@ -41,4 +41,4 @@ export const historyData = {
 export const finishPage = () => resolve?.()
 export const failPage = () => reject?.(new Error("synthetic load error"))
 export const useData = () => ({ session: { message: historyData } })
-export const useCommand = () => ({ register: () => {} })
+export const useCommand = () => ({ register: () => {}, trigger: () => {} })

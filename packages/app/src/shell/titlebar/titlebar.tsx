@@ -1,3 +1,4 @@
+import { SidebarToolbar } from "@/extensions/sidebar-toolbar"
 import { createEffect, createMemo, createSignal, Match, on, onCleanup, Show, Switch, untrack } from "solid-js"
 import { Portal } from "solid-js/web"
 import { useLocation } from "@solidjs/router"
@@ -84,12 +85,14 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
   const mac = createMemo(() => platform.platform === "desktop" && platform.os === "macos")
   const windows = createMemo(() => platform.platform === "desktop" && platform.os === "windows")
   const linux = createMemo(() => platform.platform === "desktop" && platform.os === "linux")
-  const macTrafficLights = createMemo(() => mac() && !platform.windowFullscreen?.())
-  const macVerticalTabs = createMemo(() => mac() && !!props.verticalTabs)
+  const nativeFrame = () => platform.nativeTitlebar === true
+  const macTrafficLights = createMemo(() => mac() && !nativeFrame() && !platform.windowFullscreen?.())
+  const macVerticalTabs = createMemo(() => mac() && !nativeFrame() && !!props.verticalTabs)
   const zoom = () => platform.webviewZoom?.() ?? 1
   const titlebarZoom = () => (windows() ? Math.max(zoom(), minTitlebarZoom) : zoom())
 
   const minHeight = () => {
+    if (nativeFrame()) return undefined
     if (mac()) return `${titlebarHeight / zoom()}px`
 
     if (windows()) return `env(titlebar-area-height, ${windowsTitlebarHeight / Math.min(titlebarZoom(), 1)}px)`
@@ -103,7 +106,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
 
   // Native buttons stay 14pt tall while the renderer scales. The tabs center in the row's padded content box.
   createEffect(() => {
-    if (!mac()) return
+    if (!mac() || nativeFrame()) return
 
     const scale = zoom()
 
@@ -140,8 +143,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
   const path = () => `${location.pathname}${location.search}${location.hash}`
 
   const titlebarItems = useTitlebarItems()
-  const hideVerticalTitlebar = createMemo(() => !!props.verticalTabs && !windows())
-  const homeInSidebarHeader = () => !windows() && !macTrafficLights()
+  const hideVerticalTitlebar = createMemo(() => !!props.verticalTabs && (!windows() || nativeFrame()))
 
   command.register(() => [
     {
@@ -187,8 +189,10 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
         "min-height": minHeight(),
         // Keep native macOS traffic lights clear even when the desktop window is narrow.
         "padding-left": macTrafficLights() ? `${macTrafficLightsBaseWidth / zoom()}px` : 0,
-        width: windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
-        "max-width": windows() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
+        width:
+          windows() && !nativeFrame() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
+        "max-width":
+          windows() && !nativeFrame() ? `env(titlebar-area-width, calc(100vw - ${windowsControlsWidth()}))` : undefined,
         // Native Windows caption controls remain on the physical right in both writing directions.
         "margin-right": windows() ? "auto" : undefined,
       }}
@@ -575,10 +579,10 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                   "ps-3.5": windows() && !props.verticalTabs,
                 }}
               >
-                <Show when={windows() || linux()}>
+                <Show when={(windows() || linux()) && !(nativeFrame() && props.verticalTabs)}>
                   <WindowsAppMenu command={command} platform={platform} />
                 </Show>
-                <Show when={windows() && props.verticalTabs}>
+                <Show when={windows() && props.verticalTabs && !settings.appearance.sidebarOpen()}>
                   <SidebarToggle />
                 </Show>
                 <Show when={!mobile() && !props.verticalTabs}>
@@ -754,50 +758,40 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                             mount={mount}
                             ref={(element) => (element.className = "flex size-full min-h-0 flex-col")}
                           >
-                            <Show when={!windows()}>
-                              {/* Shares the session header's 48px center line. Without traffic lights, Home fills the
-                                  start so the row doesn't leave an empty band. */}
+                            <Show when={macTrafficLights()}>
                               <div
-                                data-slot="sidebar-header"
-                                data-home={homeInSidebarHeader() ? "" : undefined}
-                                class="flex w-full shrink-0 gap-2"
-                                classList={{
-                                  "items-start pt-2.5 pb-[3px]": homeInSidebarHeader(),
-                                  "mb-0.5 h-12 items-center": !homeInSidebarHeader(),
-                                }}
-                                style={{
-                                  "min-height": macVerticalTabs()
-                                    ? `${macTrafficLightsTopClearance / zoom()}px`
-                                    : undefined,
-                                }}
+                                data-slot="sidebar-window-clearance"
+                                style={{ height: `${macTrafficLightsTopClearance / zoom()}px` }}
                                 data-tauri-drag-region
-                              >
-                                <Show when={macTrafficLights()}>
-                                  {/* The sidebar's start padding already covers part of the traffic lights. */}
-                                  <div
-                                    class="shrink-0"
-                                    style={{
-                                      width: `calc(${macVerticalTrafficLights(zoom()).width / zoom()}px - var(--sidebar-inset-start))`,
-                                    }}
-                                    aria-hidden="true"
-                                  />
-                                </Show>
-                                <Show when={homeInSidebarHeader()} fallback={<div class="flex-1" />}>
-                                  <div class="min-w-0 flex-1">{homeButton(true)}</div>
-                                </Show>
-                                <SidebarToggle handoff="out" />
+                              />
+                            </Show>
+                            <SidebarToolbar
+                              menu={
+                                nativeFrame() && (windows() || linux()) ? (
+                                  <WindowsAppMenu command={command} platform={platform} />
+                                ) : undefined
+                              }
+                              home={homeButton()}
+                              search={searchButton(true)}
+                              toggle={<SidebarToggle handoff="out" />}
+                            />
+                            <Show
+                              when={
+                                !(
+                                  settings.appearance.groupTabsByProject() &&
+                                  settings.appearance.projectTabLayout() === "layered" &&
+                                  settings.appearance.tabLayout() === "vertical"
+                                )
+                              }
+                            >
+                              <div data-slot="sidebar-session-actions">
+                                <RecentlyClosedTabsMenu
+                                  vertical
+                                  onNewTab={openNewTab}
+                                  keybind={command.keybindParts("tab.new")}
+                                />
                               </div>
                             </Show>
-                            <div class="flex w-full shrink-0 flex-col gap-[3px]">
-                              <Show when={!homeInSidebarHeader()}>{homeButton(true)}</Show>
-                              {searchButton(true)}
-                              <RecentlyClosedTabsMenu
-                                vertical
-                                onNewTab={openNewTab}
-                                keybind={command.keybindParts("tab.new")}
-                              />
-                            </div>
-                            <div class="h-4 w-full shrink-0" aria-hidden="true" />
                             <div class="flex min-h-0 flex-1 flex-col gap-1">
                               <Show
                                 when={settings.appearance.tabLayout() === "inbox"}

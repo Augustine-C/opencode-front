@@ -34,6 +34,7 @@ node packages/app/performance/ux/plugins.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/groups.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/sidebar.mjs
 node packages/app/performance/ux/project-layout-settings.mjs
+node packages/app/performance/ux/desktop-layout.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/history.mjs
 UX_FIXTURE_URL=http://127.0.0.1:4445 node packages/app/performance/ux/version.mjs
 ```
@@ -43,3 +44,5 @@ The first two drive the production app with simulated HTTP/configuration data. T
 `node packages/app/performance/ux/about.mjs` verifies the production About version clipboard/tooltip and independent port provenance together, using a disposable service fixture. Set CHROMIUM_PATH as above.
 
 `sidebar.mjs` owns layered project selection, server isolation, navigation reveal, native row icon/status/close behavior, collapse preservation, empty state and responsive fallback. `project-layout-settings.mjs` verifies the actual production preference defaults and persistence after reload, independent side-tab selection, and plugin settings. It needs the disposable service fixture bundle produced by `bun run test:desktop-plugins`.
+
+`desktop-layout.mjs` renders the production app through the real native host test bridge, configured as a standard Windows frame. It verifies removal of the duplicate renderer title bar, the 38px toolbar, one visible new-session entry, inner/outer divider changes persisting after reload, compact project icons and closing/reopening the sidebar. It simulates the bridge and HTTP data; it does not launch a physical Windows window. The sidebar keeper additionally covers keyboard resizing, instance scoping and project session filters. The mock fixture uses the production titlebar/resize styles so it exercises their specificity together.

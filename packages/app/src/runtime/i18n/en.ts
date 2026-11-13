@@ -1,6 +1,11 @@
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
+  "session.tab.group.openProject": "Open a project",
+  "session.tab.group.allInstances": "All instances",
+  "session.tab.group.resizeProjects": "Resize project column",
+  "session.tab.group.openSessions.one": "{{count}} open session",
+  "session.tab.group.openSessions.other": "{{count}} open sessions",
   "settings.appearance.row.projectTabLayout.title": "Project group layout",
   "settings.appearance.row.projectTabLayout.description": "Choose a single sidebar or separate project and session columns for side tabs.",
   "settings.appearance.projectTabLayout.single": "Single sidebar",

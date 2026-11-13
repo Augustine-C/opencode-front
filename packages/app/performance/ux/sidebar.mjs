@@ -91,13 +91,79 @@ try {
   await page.locator("#orientation").click()
   assert.equal(await rail.count(), 20)
 
+  const toolbar = sidebar.locator('[data-slot="sidebar-toolbar"]')
+  assert.equal(Math.round((await toolbar.boundingBox()).height), 38)
+  const heading = sidebar.locator('[data-slot="tab-project-rail-container"]')
+  const projectWidth = (await heading.boundingBox()).width
+  const sidebarWidth = (await sidebar.boundingBox()).width
+  const drag = async (handle, distance) => {
+    const box = await handle.boundingBox()
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2 + distance, box.y + box.height / 2, { steps: 8 })
+    await page.mouse.up()
+  }
+  const divider = heading.getByRole("separator", { name: "Resize project column" })
+  await divider.focus()
+  await page.keyboard.press("ArrowRight")
+  assert.ok(Math.abs((await heading.boundingBox()).width - projectWidth - 10) <= 1)
+  assert.ok(Math.abs((await sidebar.boundingBox()).width - sidebarWidth) <= 1)
+  await page.keyboard.press("ArrowLeft")
+  await drag(heading.locator('[data-component="resize-handle"]'), 40)
+  assert.ok(Math.abs((await heading.boundingBox()).width - projectWidth - 40) <= 1)
+  assert.ok(Math.abs((await sidebar.boundingBox()).width - sidebarWidth) <= 1)
+  await drag(sidebar.locator(':scope > [data-component="resize-handle"]'), 40)
+  assert.ok(Math.abs((await sidebar.boundingBox()).width - sidebarWidth - 40) <= 1)
+
+  // Instance filtering changes the browsed project without navigating the current conversation.
+  await sidebar.locator('[data-slot="tab-project-server-picker"]').click()
+  await page.getByRole("menuitem", { name: "Instance 2", exact: true }).click()
+  assert.equal(await rail.count(), 5)
+  assert.equal(await header.locator("strong").innerText(), "Project 0")
+  assert.equal(await page.locator("#selection").innerText(), "s99")
+  await header.getByRole("button", { name: "New session", exact: true }).click()
+  assert.deepEqual(JSON.parse(await page.locator("#created-draft").innerText()), {
+    server: "server-2",
+    directory: "/code/project-0",
+  })
+  const disclosure = header.locator('[data-slot="tab-project-filter"]')
+  await disclosure.locator("summary").click()
+  await disclosure.getByRole("searchbox").fill("Conversation 60")
+  assert.equal(await rows.count(), 1)
+  await disclosure.getByRole("searchbox").fill("not-a-session")
+  assert.equal(await rows.count(), 0)
+  await header.getByRole("status").waitFor()
+  await rail.nth(1).click()
+  assert.equal(await disclosure.getByRole("searchbox").inputValue(), "")
+  assert.equal(await rows.count(), 5)
+  await disclosure.locator("summary").click()
+  await sidebar.locator('[data-slot="tab-project-server-picker"]').click()
+  await page.getByRole("menuitem", { name: "All instances", exact: true }).click()
+  assert.equal(await rail.count(), 20)
+
+  await page.setViewportSize({ width: 1000, height: 900 })
+  await page.waitForFunction(() => document.querySelector('[data-project-compact="true"]'))
+  assert.equal(Math.round((await heading.boundingBox()).width), 54)
+  assert.equal(await heading.locator('[data-component="resize-handle"]').count(), 0)
+  assert.equal(await rail.first().locator('[data-slot="tab-project-rail-label"]').isVisible(), false)
+  assert.ok((await rail.first().getAttribute("aria-label")).includes("Project"))
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.waitForFunction(() => document.querySelector('[data-project-compact="false"]'))
+  assert.ok(Math.abs((await heading.boundingBox()).width - projectWidth - 40) <= 1)
+
   await page.locator("#close-all").click()
   assert.equal(await rail.count(), 0)
-  assert.equal(await header.count(), 0)
+  assert.equal(await header.count(), 1)
+  assert.equal(await header.locator("strong").innerText(), "Tabs")
+  assert.equal(await header.getByRole("button", { name: "New session", exact: true }).count(), 1)
   assert.equal(await rows.count(), 0)
   assert.deepEqual(errors, [])
   console.log(
     JSON.stringify({
+      toolbar: true,
+      resizeColumns: true,
+      filter: true,
+      compactProjects: true,
       projectBrowsing: true,
       serverIsolation: true,
       newSessionTarget: true,

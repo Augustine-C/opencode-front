@@ -145,8 +145,12 @@ function useCollapsedSlot() {
   const platform = usePlatform()
   const settings = useSettings()
   const desktop = createMediaQuery("(min-width: 768px)")
-  const windows = () => platform.platform === "desktop" && platform.os === "windows"
-  const mac = () => platform.platform === "desktop" && platform.os === "macos" && !platform.windowFullscreen?.()
+  const windows = () => platform.platform === "desktop" && platform.os === "windows" && !platform.nativeTitlebar
+  const mac = () =>
+    platform.platform === "desktop" &&
+    platform.os === "macos" &&
+    !platform.nativeTitlebar &&
+    !platform.windowFullscreen?.()
 
   return {
     visible: () => desktop() && !windows() && settings.appearance.tabLayout() !== "horizontal",

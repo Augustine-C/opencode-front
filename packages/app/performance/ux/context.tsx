@@ -10,6 +10,7 @@ export const [state, setState] = createStore({
   current: { ...items[0] },
   projectLayout: "layered",
   grouped: true,
+  widths: { projects: 200, sessions: 244 },
   vertical: true,
   removed: [] as string[],
   collapsed: {} as Record<string, boolean>,
@@ -89,6 +90,8 @@ export const useSettings = () => ({
   appearance: {
     groupTabsByProject: () => state.grouped,
     projectTabLayout: () => state.projectLayout,
+    projectTabWidths: () => state.widths,
+    setProjectTabWidths: (projects, sessions) => setState("widths", { projects, sessions }),
     tabInstanceOrder: () => [],
     tabProjectOrder: () => [],
     tabGroupCollapsed: (key) => !!state.collapsed[key],
@@ -111,4 +114,8 @@ export const useLanguage = () => ({
 
 export { useData, useCommand } from "./history-data"
 
-export const useSettingsSurface = () => ({ route: () => ({ type: "session", server: state.current.server }) })
+export const useSettingsSurface = () => ({
+  open: () => {},
+  openProject: () => {},
+  route: () => ({ type: "session", server: state.current.server }),
+})

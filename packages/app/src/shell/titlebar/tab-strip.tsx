@@ -1,3 +1,4 @@
+import { RecentlyClosedTabsMenu } from "./recently-closed-tabs-menu"
 import { useProjectTabLayers } from "@/extensions/project-tab-layers"
 import {
   createComputed,
@@ -680,6 +681,8 @@ export function TitlebarTabStrip(props: {
       data-orientation={vertical() ? "vertical" : "horizontal"}
       data-grouped={grouped()}
       data-project-layout={projectLayers.enabled() ? "layered" : "single"}
+      data-project-compact={projectLayers.enabled() && projectLayers.compact()}
+      style={projectLayers.enabled() ? { "--project-column-width": `${projectLayers.projectColumn()}px` } : undefined}
       class="relative min-w-0"
       classList={{ "min-h-0 overflow-hidden": vertical() }}
     >
@@ -692,146 +695,179 @@ export function TitlebarTabStrip(props: {
         />
       </Show>
       {projectLayers.sidebar()}
-      <div
-        ref={scrollRef}
-        data-slot={vertical() ? "vertical-tabs-scroll" : "titlebar-tabs-scroll"}
-        class="flex min-w-0 no-scrollbar [app-region:no-drag]"
-        classList={{
-          "flex-row items-center gap-1.5 overflow-x-auto": !vertical(),
-          "max-h-full flex-col overflow-y-auto overflow-x-hidden": vertical(),
-        }}
-        style={
-          vertical()
-            ? { "--vertical-tabs-fade-top": `${fade.top}px`, "--vertical-tabs-fade-bottom": `${fade.bottom}px` }
-            : undefined
-        }
-        onScroll={() => {
-          if (vertical()) measureFade()
-        }}
-      >
-        {projectLayers.header()}
-        <DragDropProvider
-          sensors={[
-            PointerSensor.configure({
-              activationConstraints: (event) =>
-                event.pointerType === "touch"
-                  ? [new PointerActivationConstraints.Distance({ value: 8 })]
-                  : [new PointerActivationConstraints.Distance({ value: 4 })],
-              preventActivation: (event) =>
-                grouped() ||
-                (event.target instanceof Element &&
-                  !!event.target.closest(
-                    '[data-slot="tab-close"], [contenteditable="true"], [contenteditable="plaintext-only"]',
-                  )),
-            }),
-          ]}
-          modifiers={[
-            vertical() ? RestrictToVerticalAxis : RestrictToHorizontalAxis,
-            RestrictToElement.configure({ element: () => listRef }),
-          ]}
-          plugins={(defaults) => [
-            ...defaults.filter((plugin) => plugin !== Accessibility),
-            AutoScroller.configure({ acceleration: 8, threshold: vertical() ? { x: 0, y: 0.05 } : { x: 0.05, y: 0 } }),
-            Feedback.configure({ dropAnimation: null }),
-          ]}
-          onDragStart={(event) => {
-            const source = event.operation.source
-
-            if (!source) return
-            const tab = displayedTabs().find((item) => tabKey(item) === source.id.toString())
-
-            if (!tab) return
-
-            if (vertical()) return
-            const tabEl = source.element?.querySelector<HTMLDivElement>("[data-titlebar-tab]")
-            props.onNavigate(tab, tabEl ?? undefined)
+      <div data-slot="tab-session-column">
+        {projectLayers.header(() => (
+          <RecentlyClosedTabsMenu vertical onNewTab={projectLayers.createSession} />
+        ))}
+        <div
+          ref={scrollRef}
+          data-slot={vertical() ? "vertical-tabs-scroll" : "titlebar-tabs-scroll"}
+          class="flex min-w-0 no-scrollbar [app-region:no-drag]"
+          classList={{
+            "flex-row items-center gap-1.5 overflow-x-auto": !vertical(),
+            "max-h-full flex-col overflow-y-auto overflow-x-hidden": vertical(),
           }}
-          onDragEnd={(event) => {
-            const current = visibleTabIds()
-            const source = event.operation.source
-
-            if (event.canceled || !isSortable(source)) return
-
-            const { initialIndex, index } = source
-
-            if (initialIndex !== index) {
-              if (grouped() && source.group !== source.initialGroup) return
-              const sortable = grouped()
-                ? visibleTabs()
-                    .filter((tab) => groupKey(tab) === source.initialGroup)
-                    .map(tabKey)
-                : current
-              const moved = arrayMove(sortable, initialIndex, index)
-              const next = grouped()
-                ? (() => {
-                    let at = 0
-                    const ids = new Set(sortable)
-                    return current.map((key) => (ids.has(key) ? moved[at++] : key))
-                  })()
-                : moved
-              props.onReorder(mergeVisibleTabOrder(props.tabs.map(tabKey), current, next))
-            }
+          style={
+            vertical()
+              ? { "--vertical-tabs-fade-top": `${fade.top}px`, "--vertical-tabs-fade-bottom": `${fade.bottom}px` }
+              : undefined
+          }
+          onScroll={() => {
+            if (vertical()) measureFade()
           }}
         >
-          <div
-            data-titlebar-tab-list
-            data-orientation={vertical() ? "vertical" : "horizontal"}
-            class="flex w-full min-w-0"
-            classList={{ "flex-row items-center": !vertical(), "flex-col items-stretch": vertical() }}
-            ref={listRef}
+          <DragDropProvider
+            sensors={[
+              PointerSensor.configure({
+                activationConstraints: (event) =>
+                  event.pointerType === "touch"
+                    ? [new PointerActivationConstraints.Distance({ value: 8 })]
+                    : [new PointerActivationConstraints.Distance({ value: 4 })],
+                preventActivation: (event) =>
+                  grouped() ||
+                  (event.target instanceof Element &&
+                    !!event.target.closest(
+                      '[data-slot="tab-close"], [contenteditable="true"], [contenteditable="plaintext-only"]',
+                    )),
+              }),
+            ]}
+            modifiers={[
+              vertical() ? RestrictToVerticalAxis : RestrictToHorizontalAxis,
+              RestrictToElement.configure({ element: () => listRef }),
+            ]}
+            plugins={(defaults) => [
+              ...defaults.filter((plugin) => plugin !== Accessibility),
+              AutoScroller.configure({
+                acceleration: 8,
+                threshold: vertical() ? { x: 0, y: 0.05 } : { x: 0.05, y: 0 },
+              }),
+              Feedback.configure({ dropAnimation: null }),
+            ]}
+            onDragStart={(event) => {
+              const source = event.operation.source
+
+              if (!source) return
+              const tab = displayedTabs().find((item) => tabKey(item) === source.id.toString())
+
+              if (!tab) return
+
+              if (vertical()) return
+              const tabEl = source.element?.querySelector<HTMLDivElement>("[data-titlebar-tab]")
+              props.onNavigate(tab, tabEl ?? undefined)
+            }}
+            onDragEnd={(event) => {
+              const current = visibleTabIds()
+              const source = event.operation.source
+
+              if (event.canceled || !isSortable(source)) return
+
+              const { initialIndex, index } = source
+
+              if (initialIndex !== index) {
+                if (grouped() && source.group !== source.initialGroup) return
+                const sortable = grouped()
+                  ? visibleTabs()
+                      .filter((tab) => groupKey(tab) === source.initialGroup)
+                      .map(tabKey)
+                  : current
+                const moved = arrayMove(sortable, initialIndex, index)
+                const next = grouped()
+                  ? (() => {
+                      let at = 0
+                      const ids = new Set(sortable)
+                      return current.map((key) => (ids.has(key) ? moved[at++] : key))
+                    })()
+                  : moved
+                props.onReorder(mergeVisibleTabOrder(props.tabs.map(tabKey), current, next))
+              }
+            }}
           >
-            <For each={displayedTabs()}>
-              {(tab) => {
-                const id = tabKey(tab)
-                let ref!: HTMLDivElement
-                const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
-                const groupIndex = () => projectGroups.index(tab, visibleTabs()) ?? visibleIndex()
-                const group = () => (grouped() ? groupKey(tab) : undefined)
-                const collapsed = () =>
-                  projectLayers.enabled() ? projectLayers.hidden(tab) : vertical() && projectGroups.collapsed(tab)
-                const boundary = () => projectGroups.boundary(tab, visibleTabs())
-                const contextTitle = () => (grouped() && !vertical() ? projectGroups.tooltip(tab) : undefined)
+            <div
+              data-titlebar-tab-list
+              data-orientation={vertical() ? "vertical" : "horizontal"}
+              class="flex w-full min-w-0"
+              classList={{ "flex-row items-center": !vertical(), "flex-col items-stretch": vertical() }}
+              ref={listRef}
+            >
+              <For each={displayedTabs()}>
+                {(tab) => {
+                  const id = tabKey(tab)
+                  let ref!: HTMLDivElement
+                  const visibleIndex = () => visibleTabs().findIndex((item) => tabKey(item) === id)
+                  const groupIndex = () => projectGroups.index(tab, visibleTabs()) ?? visibleIndex()
+                  const group = () => (grouped() ? groupKey(tab) : undefined)
+                  const collapsed = () =>
+                    projectLayers.enabled() ? projectLayers.hidden(tab) : vertical() && projectGroups.collapsed(tab)
+                  const boundary = () => projectGroups.boundary(tab, visibleTabs())
+                  const contextTitle = () => (grouped() && !vertical() ? projectGroups.tooltip(tab) : undefined)
 
-                const others = () => visibleTabs().filter((item) => tabKey(item) !== id)
+                  const others = () => visibleTabs().filter((item) => tabKey(item) !== id)
 
-                const after = () => visibleTabs().slice(visibleIndex() + 1)
+                  const after = () => visibleTabs().slice(visibleIndex() + 1)
 
-                const closeOthers = () => props.onCloseTabs(others(), tab)
+                  const closeOthers = () => props.onCloseTabs(others(), tab)
 
-                const closeAfter = () => props.onCloseTabs(after(), tab)
+                  const closeAfter = () => props.onCloseTabs(after(), tab)
 
-                const element = () => ref
-                tabRefs.set(id, element)
-                onCleanup(() => {
-                  if (tabRefs.get(id) === element) tabRefs.delete(id)
-                })
+                  const element = () => ref
+                  tabRefs.set(id, element)
+                  onCleanup(() => {
+                    if (tabRefs.get(id) === element) tabRefs.delete(id)
+                  })
 
-                const serverCtx = useServerCtx(() => {
-                  if (tab.type !== "session") return
+                  const serverCtx = useServerCtx(() => {
+                    if (tab.type !== "session") return
 
-                  return global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
-                })
+                    return global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
+                  })
 
-                if (tab.type === "session") {
+                  if (tab.type === "session") {
+                    return (
+                      <>
+                        <Show when={!projectLayers.enabled()}>{projectGroups.heading(tab, visibleTabs)}</Show>
+                        <SessionTabEntry
+                          tab={tab}
+                          currentTab={props.currentTab}
+                          id={id}
+                          index={visibleIndex()}
+                          active={props.currentTab === tab}
+                          highlightActive={props.highlightActive}
+                          orientation={vertical() ? "vertical" : "horizontal"}
+                          group={group()}
+                          groupIndex={groupIndex()}
+                          collapsed={collapsed()}
+                          boundary={boundary()}
+                          contextTitle={contextTitle()}
+                          serverCtx={serverCtx()}
+                          view={views().get(id) ?? hiddenTabView}
+                          onUnreadChange={(value) => setUnread(id, value)}
+                          onNavigate={(element) => {
+                            ref = element
+                            props.onNavigate(tab, element)
+                          }}
+                          onClose={() => props.onClose(tab)}
+                          onCloseOthers={others().length ? closeOthers : undefined}
+                          onCloseAfter={after().length ? closeAfter : undefined}
+                        />
+                      </>
+                    )
+                  }
+
                   return (
                     <>
                       <Show when={!projectLayers.enabled()}>{projectGroups.heading(tab, visibleTabs)}</Show>
-                      <SessionTabEntry
+                      <DraftTabSlot
                         tab={tab}
-                        currentTab={props.currentTab}
                         id={id}
                         index={visibleIndex()}
-                        active={props.currentTab === tab}
-                        highlightActive={props.highlightActive}
+                        active={props.currentTab === tab && props.highlightActive !== false}
                         orientation={vertical() ? "vertical" : "horizontal"}
                         group={group()}
                         groupIndex={groupIndex()}
                         collapsed={collapsed()}
                         boundary={boundary()}
                         contextTitle={contextTitle()}
-                        serverCtx={serverCtx()}
-                        view={views().get(id) ?? hiddenTabView}
-                        onUnreadChange={(value) => setUnread(id, value)}
+                        title={language.t("session.tab.session")}
                         onNavigate={(element) => {
                           ref = element
                           props.onNavigate(tab, element)
@@ -842,37 +878,12 @@ export function TitlebarTabStrip(props: {
                       />
                     </>
                   )
-                }
-
-                return (
-                  <>
-                    <Show when={!projectLayers.enabled()}>{projectGroups.heading(tab, visibleTabs)}</Show>
-                    <DraftTabSlot
-                      tab={tab}
-                      id={id}
-                      index={visibleIndex()}
-                      active={props.currentTab === tab && props.highlightActive !== false}
-                      orientation={vertical() ? "vertical" : "horizontal"}
-                      group={group()}
-                      groupIndex={groupIndex()}
-                      collapsed={collapsed()}
-                      boundary={boundary()}
-                      contextTitle={contextTitle()}
-                      title={language.t("session.tab.session")}
-                      onNavigate={(element) => {
-                        ref = element
-                        props.onNavigate(tab, element)
-                      }}
-                      onClose={() => props.onClose(tab)}
-                      onCloseOthers={others().length ? closeOthers : undefined}
-                      onCloseAfter={after().length ? closeAfter : undefined}
-                    />
-                  </>
-                )
-              }}
-            </For>
-          </div>
-        </DragDropProvider>
+                }}
+              </For>
+            </div>
+          </DragDropProvider>
+        </div>
+        {projectLayers.footer()}
       </div>
       <Show when={!vertical()}>
         <div
