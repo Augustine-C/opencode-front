@@ -134,6 +134,7 @@ function SessionScreenContent(props: {
 
   const timelineSearch = createTimelineSearchController({
     sessionID: session.identity.sessionID,
+    sessionKey: session.identity.sessionKey,
     scrollRef: timeline.scroller,
     revealMessage: timeline.actions.revealMessage,
     pauseAutoScroll: () => timeline.follow.dispatch({ type: "detach" }),
@@ -315,7 +316,6 @@ function SessionScreenContent(props: {
             setVisibleRef={timeline.view.setVisibleRef}
             anchor={timeline.view.anchor}
             setRevealMessage={timeline.view.setRevealMessage}
-            setRevealPart={timeline.view.setRevealPart}
             reveal={timeline.view.reveal}
             setScrollToEnd={timeline.view.setScrollToEnd}
             setPage={timeline.view.setPage}
@@ -450,7 +450,6 @@ function SessionScreenContent(props: {
               screen={props.screen}
               model={model}
               suggestionBoundary={timeline.visible}
-              onReveal={timeline.actions.revealPart}
             />
           )}
         </Show>

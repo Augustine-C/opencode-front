@@ -18,7 +18,7 @@
     },
     "packages/app": {
       "name": "@opencode/app",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@corvu/drawer": "catalog:",
         "@dnd-kit/abstract": "0.5.0",
@@ -75,7 +75,7 @@
     },
     "packages/client": {
       "name": "@opencode/client",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@opencode/protocol": "workspace:*",
         "@opencode/schema": "workspace:*",
@@ -136,7 +136,7 @@
     },
     "packages/gui-plugins": {
       "name": "@opencode/gui-plugins",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@betteroffice/docx": "0.4.3",
         "@betteroffice/fonts": "0.4.0",
@@ -181,7 +181,7 @@
     },
     "packages/patchmark": {
       "name": "@opencode/patchmark",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "devDependencies": {
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
@@ -194,7 +194,7 @@
     },
     "packages/plugin": {
       "name": "@opencode/plugin",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@ai-sdk/provider": "3.0.8",
         "@opencode/client": "workspace:*",
@@ -218,7 +218,7 @@
     },
     "packages/plugin-browser": {
       "name": "@opencode/plugin-browser",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@opencode/plugin": "workspace:*",
         "@opencode/schema": "workspace:*",
@@ -233,7 +233,7 @@
     },
     "packages/protocol": {
       "name": "@opencode/protocol",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@opencode/schema": "workspace:*",
         "effect": "catalog:",
@@ -248,7 +248,7 @@
     },
     "packages/schema": {
       "name": "@opencode/schema",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@standard-schema/spec": "catalog:",
         "effect": "catalog:",
@@ -262,7 +262,7 @@
     },
     "packages/session-ui": {
       "name": "@opencode/session-ui",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@kitlangton/solid-motion": "0.2.2",
         "@kobalte/core": "catalog:",
@@ -294,7 +294,7 @@
     },
     "packages/ui": {
       "name": "@opencode/ui",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@kitlangton/solid-motion": "0.2.2",
         "@kobalte/core": "catalog:",
@@ -330,7 +330,7 @@
     },
     "packages/util": {
       "name": "@opencode/util",
-      "version": "2.2.7",
+      "version": "2.3.0",
       "dependencies": {
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
@@ -394,14 +394,14 @@
     "@effect/platform-node-shared": "4.1.0",
     "@effect/sql-sqlite-bun": "4.1.0",
     "@effect/sql-sqlite-node": "4.1.0",
-    "@hona/strobe": "0.14.0",
+    "@hona/strobe": "0.34.0",
     "@kobalte/core": "0.13.13",
     "@lydell/node-pty": "1.2.0-beta.12",
     "@npmcli/arborist": "9.4.0",
     "@octokit/rest": "22.0.0",
-    "@opentui/core": "0.8.1",
-    "@opentui/keymap": "0.8.1",
-    "@opentui/solid": "0.8.1",
+    "@opentui/core": "0.8.4",
+    "@opentui/keymap": "0.8.4",
+    "@opentui/solid": "0.8.4",
     "@pierre/diffs": "1.6.1",
     "@pierre/highlights": "0.2.0",
     "@playwright/test": "1.60.0",
@@ -762,17 +762,19 @@
 
     "@happy-dom/global-registrator": ["@happy-dom/global-registrator@20.0.11", "", { "dependencies": { "@types/node": "^20.0.0", "happy-dom": "^20.0.11" } }, "sha512-GqNqiShBT/lzkHTMC/slKBrvN0DsD4Di8ssBk4aDaVgEn+2WMzE6DXxq701ndSXj7/0cJ8mNT71pM7Bnrr6JRw=="],
 
-    "@hona/strobe": ["@hona/strobe@0.14.0", "", { "optionalDependencies": { "@hona/strobe-darwin-arm64": "0.14.0", "@hona/strobe-darwin-x64": "0.14.0", "@hona/strobe-linux-arm64": "0.14.0", "@hona/strobe-linux-x64": "0.14.0", "@hona/strobe-win32-x64": "0.14.0" }, "bin": { "strobe": "bin/strobe.js" } }, "sha512-TSt1zLmFT7yp1KYALR7ZWxl3QfzOqUeg+CRFigQrba2xTchDsml4AzxOnPdsyW2EhD9ADtY+Cb2CBkrV5MAoSw=="],
+    "@hona/strobe": ["@hona/strobe@0.34.0", "", { "optionalDependencies": { "@hona/strobe-darwin-arm64": "0.34.0", "@hona/strobe-darwin-x64": "0.34.0", "@hona/strobe-linux-arm64": "0.34.0", "@hona/strobe-linux-x64": "0.34.0", "@hona/strobe-win32-arm64": "0.34.0", "@hona/strobe-win32-x64": "0.34.0" }, "bin": { "strobe": "bin/strobe.js" } }, "sha512-3zh8ptLWFd1NP/uMRwLx7WexuoYmlLkQBdkkfMQe7Ntgh+jT2MhwQOiJ5DARL0x9ehEefYlex3VggQv5oV+mUw=="],
 
-    "@hona/strobe-darwin-arm64": ["@hona/strobe-darwin-arm64@0.14.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-oeAbyMW2i8HUdHP4itvav0q8d0OriTmrLqJ8Pic38waxoGVdiTi5JiaItJebY20s3taq1Fn1XKelRA16mR4D+w=="],
+    "@hona/strobe-darwin-arm64": ["@hona/strobe-darwin-arm64@0.34.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-uk67cN/3OfXsXWsADG8vTZluuxyqTS+/A9o3K72F90nJVR4zKE31rGDfjSjvzItNpITe5wkQPOkXWXwh4bC5sg=="],
 
-    "@hona/strobe-darwin-x64": ["@hona/strobe-darwin-x64@0.14.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-wvrSD0Qy+NpusRcI4GBGfKneVrbE9hW9x6lwZlXN/JvhBDyImZuTrNpe9nBxz6ptpaxLLIKLz8zJomFfj2wx6g=="],
+    "@hona/strobe-darwin-x64": ["@hona/strobe-darwin-x64@0.34.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-n0aSQ1/I9RmC5K3n4LxG7AvFa3Jieib6KQApP1Y0s/hj+x13ad4taf3gNf8F2YN7VVW050ASVf2cl8T3YZbYcA=="],
 
-    "@hona/strobe-linux-arm64": ["@hona/strobe-linux-arm64@0.14.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-U7h1rjei1w+kfQNgFJ8tO/hWbqUBkQS/VB3Y4YPzen0MKfRMDf4/jrQqUiwMP6wZQMd+qLME5Xa29vcSvHckeg=="],
+    "@hona/strobe-linux-arm64": ["@hona/strobe-linux-arm64@0.34.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-WtqYcbgZyiP1Uk16dPW7lSRaHC87sn+9lgC9wV5ZHKPjQA3o+EZKik+yKNSJF9dRWzMm+brySf78XpMWxGv0jA=="],
 
-    "@hona/strobe-linux-x64": ["@hona/strobe-linux-x64@0.14.0", "", { "os": "linux", "cpu": "x64" }, "sha512-yDmYV/KCwvJ1fRxYPAFRgP1JwW2feO1So/TzznNpZLQRCUOSXm2yp8UtaqDs7CJeC65q4tjjWinU4GXIhZ09Sw=="],
+    "@hona/strobe-linux-x64": ["@hona/strobe-linux-x64@0.34.0", "", { "os": "linux", "cpu": "x64" }, "sha512-mHBSonDppJzJ/n80gkyqg4fcNqokQgvH26p3CqLk38r8DFtunzYf0FqwcpXbTmxs1z3JD7ToffNtJPky3jb7xg=="],
 
-    "@hona/strobe-win32-x64": ["@hona/strobe-win32-x64@0.14.0", "", { "os": "win32", "cpu": "x64" }, "sha512-n7n+RG177dVSfuQp0xAvPArft/UhT3RU6cAG9aSRaiYBqwgNKarfRfcFysOLSzWuZ4sEkmRY2PFK6HXVBvSXxg=="],
+    "@hona/strobe-win32-arm64": ["@hona/strobe-win32-arm64@0.34.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-XwYdRJFDuj90jDcv2XmBQ8HAyRCoK6ms2RfztT5kuPgGeQdbH2Wi/yNz/e0akHvlg8RigziJ9QYeHdjfzzTgOQ=="],
+
+    "@hona/strobe-win32-x64": ["@hona/strobe-win32-x64@0.34.0", "", { "os": "win32", "cpu": "x64" }, "sha512-moHbYiWex//RLEEhHUaHb4ec9bpmxy4A/YeIfgGccFjgf9VmPmvxNhuccM6gO72KNTcKJsCITqQO9Adr58bCbw=="],
 
     "@ibm/plex": ["@ibm/plex@6.4.1", "", { "dependencies": { "@ibm/telemetry-js": "^1.5.1" } }, "sha512-fnsipQywHt3zWvsnlyYKMikcVI7E2fEwpiPnIHFqlbByXVfQfANAAeJk1IV4mNnxhppUIDlhU0TzwYwL++Rn2g=="],
 

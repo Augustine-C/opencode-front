@@ -105,6 +105,7 @@ function applyHighlights(
 
 export function createTimelineSearchController(input: {
   sessionID: () => string | undefined
+  sessionKey?: () => string | undefined
   scrollRef: () => HTMLDivElement | undefined
   revealMessage: (id: string, partID?: string) => void
   pauseAutoScroll: () => void
@@ -183,6 +184,9 @@ export function createTimelineSearchController(input: {
       clearHighlights()
     })
   })
+
+  // A server change can keep the same session id; never carry its search or pending reveal across owners.
+  createEffect(on(input.sessionKey ?? input.sessionID, () => dispatch({ type: "close" }), { defer: true }))
 
   onCleanup(() => dispatch({ type: "disposed" }))
 

@@ -48,12 +48,14 @@ const data = {
     family: () => [],
     root: (id) => id,
     status: () => state.status,
+    message: { sync: async () => {} },
     pending: { list: () => [] },
     permission: { list: () => [] },
     form: { list: () => [] },
   },
 }
 const serverContext = {
+  sdk: { connection: { status: () => (state.offline ? "disconnected" : "connected") } },
   data,
   sync: { data: { project: projects, path: { home: "/home/fixture" } } },
   projects: {
