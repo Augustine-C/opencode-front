@@ -13,6 +13,8 @@
         "e2e/**",
         "component-tests/**",
         "src/storybook/**",
+        "src/session/story-model.tsx",
+        "src/session/composer/recovery-story.tsx",
         "test-browser/**"
       ]
     },
@@ -150,7 +152,8 @@
         "solid-js@1.9.17.patch",
         "vite@8.2.4.patch",
         "@corvu%2Fdrawer@0.2.4.patch",
-        "@modelcontextprotocol%2Fclient@2.4.0.patch"
+        "@modelcontextprotocol%2Fclient@2.4.0.patch",
+        "@kobalte%2Fcore@0.13.13.patch"
       ]
     },
     {

@@ -100,15 +100,30 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-project-compact="true"]'))
   assert.equal(Math.round((await column.boundingBox()).width), 54)
   await page.screenshot({ path: "work/layout-implementation/desktop-compact.png" })
+  const mount = sidebar.locator('[data-slot="vertical-tabs-mount"]')
+  const dockedWidth = (await mount.boundingBox()).width
   await toolbar.getByRole("button", { name: "Toggle sidebar", exact: true }).click()
   await page.waitForFunction(
     () => document.querySelector('[data-slot="vertical-tabs-sidebar"]').getBoundingClientRect().width < 2,
   )
   const reopen = page.locator('button[aria-controls="vertical-tabs-sidebar"]:visible').last()
+  await reopen.hover()
+  await sidebar.locator(':scope[data-peek]').waitFor({ state: "attached" })
+  assert.ok((await mount.boundingBox()).width > dockedWidth)
   await reopen.click()
   await page.waitForFunction(
     () => document.querySelector('[data-slot="vertical-tabs-sidebar"]').getBoundingClientRect().width > 200,
   )
+  await page.goto(new URL("/settings?tab=experimental", page.url()).href)
+  await page.locator('[data-action="settings-sidebar-organize"]').click()
+  await page.getByRole("option", { name: "Projects", exact: true }).click()
+  await page.getByRole("button", { name: "Back to app", exact: true }).click()
+  const settings = toolbar.getByRole("button", { name: "Settings", exact: true })
+  await settings.waitFor()
+  assert.equal(await toolbar.getByRole("button", { name: "Home", exact: true }).count(), 0)
+  assert.equal(await sidebar.locator('[data-action="vertical-tabs-new-session"]').count(), 1)
+  await settings.click()
+  await page.getByRole("button", { name: "Back to app", exact: true }).waitFor()
   assert.deepEqual(errors, [])
   console.log(
     JSON.stringify({
@@ -118,6 +133,8 @@ try {
       resizePersistence: true,
       compact: true,
       collapseAndReopen: true,
+      peekPreservesLayeredWidth: true,
+      projectNavigationSettings: true,
       errors,
     }),
   )
