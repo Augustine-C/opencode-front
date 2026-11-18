@@ -4,7 +4,7 @@ import { chromium } from "playwright"
 import { createNativeFixture } from "../../../desktop/test/native-fixture.mjs"
 mkdirSync("work/layout-implementation", { recursive: true })
 const fixture = await createNativeFixture()
-const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox"] })
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium", args: ["--no-sandbox"] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 const errors = []
 page.on("pageerror", (e) => errors.push(e.message))

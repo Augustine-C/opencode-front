@@ -69,7 +69,7 @@ export const useGlobal = () => ({
   servers: {
     list: () => connections,
     get health() {
-      return Object.fromEntries(connections.map((c) => [c.http.url, { type: state.offline ? "unhealthy" : "healthy" }]))
+      return Object.fromEntries(connections.map((c) => [c.http.url, { type: state.offline ? "unhealthy" : "healthy", version: `2.0.${20 + Number(c.http.url.split("-").at(-1))}` }]))
     },
   },
   serverCtx: () => serverContext,
@@ -77,7 +77,7 @@ export const useGlobal = () => ({
 export const useServerCtx = () => () => serverContext
 export const useServers = () => ({ list: connections, tag: (conn) => conn.displayName })
 export const usePlatform = () => ({ platform: "web" })
-export const ServerConnection = { key: (conn) => conn.http.url }
+export const ServerConnection = { key: (conn) => conn.http.url, http: (conn) => conn.http }
 export const serverName = (conn) => conn.displayName
 export const tabKey = (tab) => `${tab.server}\n${tab.sessionId}`
 export const useTabs = () => ({

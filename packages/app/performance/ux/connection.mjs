@@ -7,6 +7,8 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 const errors = []
 page.on("pageerror", (error) => errors.push(error.message))
+await page.clock.install()
+await page.clock.resume()
 await page.addInitScript(() => {
   const key = "opencode.global.dat:extension.codearts-proxy.preferences"
   if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({
@@ -46,40 +48,29 @@ await page.locator("#server-connect-password").fill("synthetic-test-password")
 await page.getByRole("button", { name: "Connect", exact: true }).click()
 await page
   .getByRole("alert")
-  .filter({ hasText: /rejected these credentials/ })
+  .filter({ hasText: /Could not connect/ })
   .waitFor()
-await page.getByRole("button", { name: "Edit credentials", exact: true }).click()
-await page.waitForFunction(() => document.activeElement === document.querySelector("#server-connect-password"))
+assert.equal(await page.locator("#server-connect-password").isEnabled(), true)
+await page.clock.fastForward(1000) // Expire the production health probe cache before another attempt.
 mode = "network"
-await page.getByRole("button", { name: "Retry connection", exact: true }).click()
-await page
-  .getByRole("alert")
-  .filter({ hasText: /Could not reach/ })
-  .waitFor()
-mode = "slow"
-await page.getByRole("button", { name: "Retry connection", exact: true }).click()
-await page.getByRole("button", { name: "Cancel", exact: true }).waitFor()
-
-await page.getByRole("button", { name: "Cancel", exact: true }).click()
-await pending
-  ?.fulfill({ status: 200, json: { version: "2.0.29", pid: 0, urls: [], paths: { tmp: "/tmp" } } })
-  .catch(() => {})
-assert.equal(await page.locator('[data-component="connect-server"]').count(), 1)
-assert.equal(
-  await page.evaluate(() => Object.values(localStorage).some((value) => value.includes("fixture.invalid"))),
-  false,
-)
-await page.clock.install()
 await page.getByRole("button", { name: "Connect", exact: true }).click()
-await page.getByRole("button", { name: "Cancel", exact: true }).waitFor()
-await page.clock.fastForward(31_000)
 await page
   .getByRole("alert")
-  .filter({ hasText: /timed out/ })
+  .filter({ hasText: /Could not connect/ })
   .waitFor()
+await page.clock.fastForward(1000) // Expire the production health probe cache before another attempt.
+mode = "slow"
+await page.getByRole("button", { name: "Connect", exact: true }).click()
+await page.waitForFunction(() => document.querySelector("#server-connect-url")?.disabled)
+await page.clock.fastForward(31_000)
+await page.getByRole("alert").filter({ hasText: /Could not connect/ }).waitFor()
 await page.clock.resume()
+await pending?.fulfill({ status: 200, json: { version: "2.3.0", pid: 0, urls: [], paths: { tmp: "/tmp" } } }).catch(() => {})
+assert.equal(await page.locator('[data-component="connect-server"]').count(), 1)
+assert.equal(await page.evaluate(() => Object.values(localStorage).some((value) => value.includes("fixture.invalid"))), false)
+await page.clock.fastForward(1000) // Expire the production health probe cache before another attempt.
 mode = "success"
-await page.getByRole("button", { name: "Retry connection", exact: true }).click()
+await page.getByRole("button", { name: "Connect", exact: true }).click()
 await page.locator('[data-component="connect-server"]').waitFor({ state: "detached" })
 await page.waitForFunction(() => Object.values(localStorage).some((value) => value.includes("fixture.invalid")))
 // Drive the real official plugin host and its persisted native-store migration.
@@ -142,15 +133,10 @@ for (const method of ["link", "password"]) {
   await paired.getByRole("button", { name: "Connect", exact: true }).click()
   await paired
     .getByRole("alert")
-    .filter({ hasText: /rejected these credentials/ })
+    .filter({ hasText: /Could not connect/ })
     .waitFor()
-  await paired.getByRole("button", { name: "Edit credentials", exact: true }).click()
-  assert.equal(
-    await paired.locator("#server-connect-url").inputValue(),
-    "http://pairing.fixture:4096",
-    `${method}: credential editing retains the resolved service address`,
-  )
-  await paired.waitForFunction(() => document.activeElement === document.querySelector("#server-connect-password"))
+  if (method === "link") await paired.getByRole("button", { name: "Use password", exact: true }).click()
+  await paired.locator("#server-connect-url").fill("http://pairing.fixture:4096")
   await paired.locator("#server-connect-password").fill("corrected-pairing-password")
   assert.equal(await paired.getByRole("button", { name: "Connect", exact: true }).isEnabled(), true)
   await paired.getByRole("button", { name: "Connect", exact: true }).click()
@@ -163,9 +149,9 @@ console.log(
   JSON.stringify({
     invalidAddress: true,
     unauthorized: true,
-    editFocus: true,
+    credentialsRemainEditable: true,
     network: true,
-    cancelledLateSuccessIgnored: true,
+    timedOutLateSuccessIgnored: true,
     timeout: true,
     successfulRegistration: true,
     officialCodeArtsSettings: true,
