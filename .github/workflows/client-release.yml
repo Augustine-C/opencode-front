@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   check:
@@ -55,6 +56,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
+      - name: Verify immutable release tag
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release-guard.cjs
       - name: Install dependencies
         # Hoisted installation supports the patched Git dependency in this workspace.
         run: bun install --linker=hoisted
@@ -111,6 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -124,39 +131,8 @@ jobs:
       - name: Archive official CodeArts GUI plugin sources
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: zip -qr "artifacts/opencode-front-codearts-plugin-${RELEASE_TAG}.zip" packages/codearts-proxy-extension
+        run: python3 scripts/archive-codearts.py
       - name: Create release and upload builds
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          NOTES_FILE="docs/releases/${RELEASE_TAG}.md"
-          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            if [[ -f "$NOTES_FILE" ]]; then
-              gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --notes-file "$NOTES_FILE"
-            else
-              gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
-            fi
-          fi
-          gh release upload "$RELEASE_TAG" artifacts/* --clobber
-          if [[ -f "$NOTES_FILE" ]]; then
-            {
-              cat "$NOTES_FILE"
-              printf '\n| File | Platform / contents | Size | SHA-256 |\n| --- | --- | ---: | --- |\n'
-              for artifact in artifacts/*; do
-                name="$(basename "$artifact")"
-                bytes="$(wc -c < "$artifact" | tr -d '[:space:]')"
-                digest="$(sha256sum "$artifact" | cut -d ' ' -f 1)"
-                url="https://github.com/${GH_REPO}/releases/download/${RELEASE_TAG}/${name}"
-                case "$name" in
-                  *macos-arm64*) platform="macOS Apple Silicon" ;;
-                  *windows-x64*) platform="Windows x64" ;;
-                  *codearts-plugin*) platform="Official CodeArts GUI plugin sources" ;;
-                  *) platform="Release asset" ;;
-                esac
-                printf '| [%s](%s) | %s | %s bytes | `%s` |\n' "$name" "$url" "$platform" "$bytes" "$digest"
-              done
-            } > artifacts/RELEASE_NOTES.md
-            gh release edit "$RELEASE_TAG" --notes-file artifacts/RELEASE_NOTES.md
-          fi
+        run: bun scripts/release-publish.cjs
