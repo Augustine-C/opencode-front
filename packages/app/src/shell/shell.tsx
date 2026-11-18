@@ -82,7 +82,7 @@ export default function Layout(props: ParentProps) {
   }
 
   let peekSurface: HTMLDivElement | undefined
-  let peekHome: HTMLElement | null | undefined
+  let peekAction: HTMLElement | null | undefined
 
   // The docked sidebar and its peek are one sidebar, shown as far in as whichever has it further.
   const sidebarHidden = () => (sidebar.peek === undefined ? sidebar.closed : Math.min(sidebar.closed, 1 - sidebar.peek))
@@ -109,17 +109,16 @@ export default function Layout(props: ParentProps) {
       peekSurface.style.transform = shift
     }
 
-    // Without traffic lights, Home starts the sidebar's header right where the collapsed toggle floats over a peek, so
-    // it steps past the toggle until a dock carries the toggle to the header's end.
-    if (peeking && peekHome === undefined)
-      peekHome = mount.querySelector<HTMLElement>('[data-slot="sidebar-header"][data-home] > :first-child')
+    // Step the header action past the floating toggle until a dock carries the toggle to the header's end.
+    if (peeking && peekAction === undefined)
+      peekAction = mount.querySelector<HTMLElement>('[data-slot="sidebar-header"][data-has-action] > :first-child')
 
-    if (peekHome)
-      peekHome.style.transform = peeking
+    if (peekAction)
+      peekAction.style.transform = peeking
         ? `translateX(calc(${(rtl ? -1 : 1) * sidebar.closed} * (${collapsedSidebarToggleEnd}px - var(--sidebar-inset-start))))`
         : ""
 
-    if (!peeking) peekHome = undefined
+    if (!peeking) peekAction = undefined
   }
 
   const sidebarMotion = createPanelMotion({
@@ -135,7 +134,8 @@ export default function Layout(props: ParentProps) {
       paintSidebarContents()
       paintCollapsedSlots(closed)
     },
-    measure: () => measureSidebarToggles(sidebarWidth() * sidebarHidden()),
+    // The contents slide by their own width, which a peek widens past the docked sidebar's.
+    measure: () => measureSidebarToggles((state.tabsMount?.offsetWidth ?? sidebarWidth()) * sidebarHidden()),
     // A dock from a peek already shows the sidebar, so reduced motion has nothing to fade in.
     element: () => (peek.handedOff() ? undefined : state.tabsPanel),
     distance: () => sidebarWidth(),
@@ -258,7 +258,11 @@ export default function Layout(props: ParentProps) {
             data-slot="vertical-tabs-sidebar"
             data-state={preferences.appearance.sidebarOpen() ? "open" : "closed"}
             data-peek={peek.shown() ? "" : undefined}
-            style={{ "--sidebar-peek-width": `${sidebarWidth()}px` }}
+            style={{
+              "--sidebar-peek-width": peek.shown()
+                ? `calc(${sidebarWidth()}px + var(--shell-inline-inset, 8px))`
+                : `${sidebarWidth()}px`,
+            }}
             ref={(element) => setState("tabsAside", element)}
             class="relative z-10 h-full min-h-0 shrink-0"
           >
@@ -280,14 +284,14 @@ export default function Layout(props: ParentProps) {
                 data-slot="vertical-tabs-peek-surface"
                 aria-hidden="true"
                 class="pointer-events-none absolute inset-y-0 end-0 bg-v2-background-bg-deep shadow-[var(--v2-elevation-floating)]"
-                style={{ width: `${sidebarWidth()}px` }}
+                style={{ width: "var(--sidebar-peek-width)" }}
               />
               <div
                 ref={(element) => setState("tabsMount", element)}
                 data-slot="vertical-tabs-mount"
                 class="absolute inset-y-0 end-0 contain-strict [overflow-clip-margin:var(--sidebar-divider-bleed,0px)] will-change-[opacity] flex min-h-0 flex-col bg-v2-background-bg-deep ps-[var(--sidebar-inset-start)] pe-[var(--sidebar-inset-end)] pb-[var(--shell-bottom-inset,8px)] pt-[var(--shell-top-inset,8px)]"
                 style={{
-                  width: `${sidebarWidth()}px`,
+                  width: "var(--sidebar-peek-width)",
                   "padding-inline-start": layeredTabs() ? "0px" : undefined,
                   "padding-inline-end": layeredTabs() ? "0px" : undefined,
                   "padding-bottom": "max(10px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))",

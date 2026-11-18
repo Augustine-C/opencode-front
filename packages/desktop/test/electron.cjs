@@ -19,8 +19,12 @@ class Contents extends EventEmitter {
   getZoomFactor() {
     return 1
   }
-  async capturePage() {
-    return { isEmpty: () => false, toJPEG: () => Buffer.from([1, 2, 3]) }
+  async capturePage({ width, height }) {
+    return {
+      isEmpty: () => false,
+      getSize: () => ({ width, height }),
+      toJPEG: () => Buffer.from([1, 2, 3]),
+    }
   }
   send(channel, event) {
     this.emit("sent", channel, structuredClone(event))
@@ -90,6 +94,9 @@ class View extends EventEmitter {
   }
   setBounds(bounds) {
     this.bounds = bounds
+  }
+  getBounds() {
+    return this.bounds
   }
   setBackgroundBlur() {}
   setImage() {}
