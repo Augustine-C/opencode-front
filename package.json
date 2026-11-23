@@ -1,6 +1,6 @@
 {
   "name": "opencode-front",
-  "version": "2.3.2+0",
+  "version": "2.4.1+0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -18,9 +18,9 @@
       "@types/bun": "1.4.3",
       "@types/cross-spawn": "6.0.6",
       "@octokit/rest": "22.0.0",
-      "@opentui/core": "0.8.4",
-      "@opentui/keymap": "0.8.4",
-      "@opentui/solid": "0.8.4",
+      "@opentui/core": "0.9.4",
+      "@opentui/keymap": "0.9.4",
+      "@opentui/solid": "0.9.4",
       "@tanstack/solid-virtual": "3.13.37",
       "@standard-schema/spec": "1.1.0",
       "@kobalte/core": "0.13.13",
@@ -75,7 +75,7 @@
       "vite-plugin-solid": "2.11.10",
       "@lydell/node-pty": "1.2.0-beta.12",
       "@effect/sql-sqlite-node": "4.1.0",
-      "@hona/strobe": "0.42.0"
+      "@hona/strobe": "0.44.1"
     }
   },
   "scripts": {
@@ -93,14 +93,15 @@
   },
   "devDependencies": {
     "@electron/packager": "19.0.1",
+    "@hona/strobe": "catalog:",
     "@types/bun": "catalog:",
+    "@types/mime-types": "3.0.1",
     "@types/node": "catalog:",
     "@typescript/native": "catalog:",
-    "typescript": "catalog:",
     "electron": "44.9.1",
-    "solid-js": "catalog:",
     "esbuild": "0.25.12",
-    "@hona/strobe": "catalog:"
+    "solid-js": "catalog:",
+    "typescript": "catalog:"
   },
   "trustedDependencies": [
     "esbuild",

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@opencode/plugin-browser",
-  "version": "2.3.2",
+  "version": "2.4.1",
   "description": "OpenCode's desktop browser plugin",
   "type": "module",
   "license": "MIT",
@@ -18,11 +18,14 @@
   ],
   "exports": {
     "./rpc": "./src/rpc.ts",
+    "./workspace": "./src/workspace.ts",
+    "./preview-path": "./src/preview-path.ts",
     "./proxy": "./src/proxy.ts"
   },
   "dependencies": {
     "@opencode/plugin": "workspace:*",
     "@opencode/schema": "workspace:*",
+    "@opencode/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

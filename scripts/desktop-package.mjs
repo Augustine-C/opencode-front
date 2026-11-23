@@ -18,7 +18,7 @@ await packager({
   electronVersion: require("../package.json").devDependencies.electron,
   buildVersion,
   out: "dist/desktop",
-  asar: true,
+  asar: { unpack: "**/*.node" },
   junk: true,
   overwrite: true,
   ...(platform === "darwin"
