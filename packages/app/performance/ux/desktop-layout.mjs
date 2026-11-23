@@ -116,7 +116,7 @@ try {
   )
   await page.goto(new URL("/settings?tab=experimental", page.url()).href)
   await page.locator('[data-action="settings-sidebar-organize"]').click()
-  await page.getByRole("option", { name: "Projects", exact: true }).click()
+  await page.getByRole("option", { name: "Customize", exact: true }).click()
   await page.getByRole("button", { name: "Back to app", exact: true }).click()
   const settings = toolbar.getByRole("button", { name: "Settings", exact: true })
   await settings.waitFor()

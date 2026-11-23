@@ -95,6 +95,7 @@ export function TabNavItem(
     hidden?: boolean
     grouped?: boolean
     orientation?: "horizontal" | "vertical"
+    contextMenuExtra?: () => JSX.Element
   },
 ) {
   const language = useLanguage()
@@ -671,6 +672,14 @@ export function TabNavItem(
                 {language.t("common.export")}…
               </Menu.Item>
               <SessionReadMenuItem server={props.server} session={props.session} />
+              <Show when={props.contextMenuExtra}>
+                {(extra) => (
+                  <>
+                    <Menu.Separator />
+                    {extra()()}
+                  </>
+                )}
+              </Show>
               <Menu.Separator />
               <TabCloseMenuItems
                 orientation={props.orientation}
@@ -726,6 +735,7 @@ export function DraftTabItem(
     pressed?: boolean
     hidden?: boolean
     orientation?: "horizontal" | "vertical"
+    contextMenuExtra?: () => JSX.Element
   },
 ) {
   const language = useLanguage()
@@ -855,6 +865,14 @@ export function DraftTabItem(
       </div>
       <Menu.Context.Portal>
         <Menu.Context.Content>
+          <Show when={props.contextMenuExtra}>
+            {(extra) => (
+              <>
+                {extra()()}
+                <Menu.Separator />
+              </>
+            )}
+          </Show>
           <TabCloseMenuItems
             orientation={props.orientation}
             onClose={props.onClose}

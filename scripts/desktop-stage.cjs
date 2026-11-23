@@ -18,7 +18,9 @@ fs.cpSync(renderer, path.join(stage, "packages/app/dist"), { recursive: true })
 for (const file of ["desktop-main.cjs", "desktop-preload.cjs", "desktop-window-state.cjs", "desktop-protocol.cjs"])
   fs.copyFileSync(path.join(root, "scripts", file), path.join(stage, "scripts", file))
 fs.cpSync(path.join(root, "dist/native"), path.join(stage, "dist/native"), { recursive: true })
-stageDependencies(path.join(root, "packages/desktop"), stage, ["lighthouse"])
+const desktopDependencies = require("../packages/desktop/package.json").dependencies
+const runtimeDependencies = { "ffi-rs": desktopDependencies["ffi-rs"], lighthouse: desktopDependencies.lighthouse }
+stageDependencies(path.join(root, "packages/desktop"), stage, Object.keys(runtimeDependencies))
 for (const file of ["LICENSE", "NOTICE"]) fs.copyFileSync(path.join(root, file), path.join(stage, file))
 fs.writeFileSync(
   path.join(stage, "package.json"),
@@ -29,7 +31,7 @@ fs.writeFileSync(
       version,
       releaseVersion,
       main: "scripts/desktop-main.cjs",
-      dependencies: { lighthouse: require("../packages/desktop/package.json").dependencies.lighthouse },
+      dependencies: runtimeDependencies,
       license: "MIT",
     },
     null,

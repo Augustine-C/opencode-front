@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/anomalyco/opencode",
-  "commit": "c0ad18b402eb2827fc1ee71c171b1177b3fc02d1",
-  "version": "2.3.2",
+  "commit": "6f0514052a3c859894ad01bb14cc14dda1e44b96",
+  "version": "2.4.1",
   "packages": [
     "app",
     "ui",
@@ -30,7 +30,10 @@
   "partialPackages": {
     "plugin-browser": [
       "src/rpc.ts",
-      "src/proxy.ts"
+      "src/proxy.ts",
+      "src/proxy-machine.ts",
+      "src/preview-path.ts",
+      "src/workspace.ts"
     ],
     "plugin": [
       "src/gui",
