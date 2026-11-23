@@ -30,7 +30,10 @@
   "partialPackages": {
     "plugin-browser": [
       "src/rpc.ts",
-      "src/proxy.ts"
+      "src/proxy.ts",
+      "src/proxy-machine.ts",
+      "src/preview-path.ts",
+      "src/workspace.ts"
     ],
     "plugin": [
       "src/gui",
