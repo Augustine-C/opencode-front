@@ -43,6 +43,7 @@ import { RecentlyClosedTabsMenu } from "./recently-closed-tabs-menu"
 import { useSettingsCommand, useSettingsDialog } from "@/settings/command"
 import { TitlebarItems, useTitlebarItems } from "@/runtime/plugin/titlebar-items"
 import { createRouteTabSync } from "./route-sync"
+import { createAutoTabSections } from "./auto-tab-sections"
 import {
   INITIAL_MOBILE_TABS_STATE,
   selectMobileTabsOpen,
@@ -187,7 +188,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
 
   const titlebarItems = useTitlebarItems()
   const hideVerticalTitlebar = createMemo(() => !!props.verticalTabs && (!windows() || nativeFrame()))
-  const actionInSidebarHeader = () => !windows() && !macTrafficLights()
+  const actionInSidebarHeader = () => !windows() && !macTrafficLights() && !linux()
 
   command.register(() => [
     {
@@ -701,6 +702,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                   const prototype = () => settings.appearance.navigationPrototype()
                   const pinnedTop = createPinnedLeading("horizontal")
                   const pinnedSide = createPinnedLeading("vertical")
+                  const grouped = createAutoTabSections({ hidden: pins.holds, currentTab })
 
                   const pinMenu = (tab: Tab) => {
                     const ref = pins.refOf(tab)
@@ -732,6 +734,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                     <TitlebarTabStrip
                       orientation="vertical"
                       leading={pinnedSide()}
+                      sections={grouped.vertical()}
                       hidden={pins.holds}
                       tabContextMenu={pinMenu}
                       tabs={tabsStore}
@@ -790,7 +793,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                         "ps-3.5": windows() && !props.verticalTabs,
                       }}
                     >
-                      <Show when={(windows() || linux()) && !(nativeFrame() && props.verticalTabs)}>
+                      <Show when={(windows() || linux()) && !hideVerticalTitlebar()}>
                         <WindowsAppMenu command={command} platform={platform} />
                       </Show>
                       <Show when={windows() && props.verticalTabs && !settings.appearance.sidebarOpen()}>
@@ -941,6 +944,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                               </Show>
                               <TitlebarTabStrip
                                 leading={prototype() ? pinnedTop() : undefined}
+                                sections={prototype() ? grouped.horizontal() : undefined}
                                 hidden={prototype() ? pins.holds : undefined}
                                 tabContextMenu={prototype() ? pinMenu : undefined}
                                 tabs={tabsStore}
@@ -983,7 +987,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                                           <Show when={!windows()}>
                                             <div
                                               data-slot="sidebar-header"
-                                              data-has-action={actionInSidebarHeader() ? "" : undefined}
+                                              data-has-action={actionInSidebarHeader() || linux() ? "" : undefined}
                                               class="flex w-full shrink-0 gap-2"
                                               classList={{
                                                 "items-start pt-2.5 pb-[3px]": actionInSidebarHeader(),
@@ -1005,6 +1009,12 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                                                   }}
                                                   aria-hidden="true"
                                                 />
+                                              </Show>
+                                              <Show when={linux()}>
+                                                {/* The menu glyph sits 2px further into its slot than the sidebar icons sit into their rows. */}
+                                                <div class="-ms-0.5 shrink-0">
+                                                  <WindowsAppMenu command={command} platform={platform} />
+                                                </div>
                                               </Show>
                                               <Show when={actionInSidebarHeader()} fallback={<div class="flex-1" />}>
                                                 <div class="min-w-0 flex-1">{firstSidebarAction()}</div>
